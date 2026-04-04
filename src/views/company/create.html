@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-8 px-4">
+  <h1 class="text-3xl font-bold mb-8">Create Your Company Profile</h1>
+  
+  <form action="/company" method="POST" class="space-y-6">
+    <div class="form-control">
+      <label class="label"><span class="label-text">Company Name</span></label>
+      <input type="text" name="name" required class="input input-bordered" />
+    </div>
+    
+    <div class="form-control">
+      <label class="label"><span class="label-text">Description</span></label>
+      <textarea name="description" required class="textarea textarea-bordered" rows="4"></textarea>
+    </div>
+    
+    <div class="form-control">
+      <label class="label"><span class="label-text">Industry</span></label>
+      <select name="industry" required class="select select-bordered">
+        <option value="">Select Industry</option>
+        <option value="Technology">Technology</option>
+        <option value="Finance">Finance</option>
+        <option value="Healthcare">Healthcare</option>
+        <option value="Education">Education</option>
+        <option value="Retail">Retail</option>
+        <option value="Manufacturing">Manufacturing</option>
+        <option value="Media">Media</option>
+        <option value="Consulting">Consulting</option>
+        <option value="Other">Other</option>
+      </select>
+    </div>
+    
+    <div class="form-control">
+      <label class="label"><span class="label-text">Company Size</span></label>
+      <select name="size" required class="select select-bordered">
+        <option value="">Select Size</option>
+        <option value="1-10">1-10 employees</option>
+        <option value="11-50">11-50 employees</option>
+        <option value="51-200">51-200 employees</option>
+        <option value="201-500">201-500 employees</option>
+        <option value="501-1000">501-1000 employees</option>
+        <option value="1000+">1000+ employees</option>
+      </select>
+    </div>
+    
+    <div class="form-control">
+      <label class="label"><span class="label-text">Headquarters</span></label>
+      <input type="text" name="headquarters" class="input input-bordered" />
+    </div>
+    
+    <div class="form-control">
+      <label class="label"><span class="label-text">Website</span></label>
+      <input type="url" name="website" class="input input-bordered" placeholder="https://example.com" />
+    </div>
+    
+    <button type="submit" class="btn btn-primary btn-block">Create Company Profile</button>
+  </form>
+</div>
+{% endblock %}

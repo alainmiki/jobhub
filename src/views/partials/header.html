@@ -1,0 +1,79 @@
+<header class="navbar bg-base-100 shadow-sm sticky top-0 z-40 border-b border-base-200">
+  <div class="container mx-auto">
+    <div class="flex-1">
+      <a href="/" class="flex items-center gap-2 text-xl font-bold text-primary hover:opacity-80 transition-opacity">
+        <i class="fa-solid fa-briefcase"></i>
+        <span>JobHub</span>
+      </a>
+    </div>
+    
+    <!-- Desktop Navigation -->
+    <nav class="hidden md:flex items-center gap-1">
+      <a href="/jobs" class="btn btn-ghost btn-sm rounded-md hover:bg-base-200">
+        <i class="fa-solid fa-search mr-2"></i>Browse Jobs
+      </a>
+      <a href="/matches" class="btn btn-ghost btn-sm rounded-md hover:bg-base-200">
+        <i class="fa-solid fa-users mr-2"></i>Matches
+      </a>
+      
+      {% if user %}
+      <div class="dropdown dropdown-end ml-2">
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:ring ring-primary ring-offset-base-100 ring-offset-2">
+          {% if user.image %}
+          <div class="w-10 rounded-full">
+            <img src="{{ user.image }}" alt="{{ user.name }}" />
+          </div>
+          {% else %}
+          <div class="bg-primary text-primary-content rounded-full w-10 flex items-center justify-center">
+            <span class="font-semibold text-sm">{{ user.name[0] | upper }}</span>
+          </div>
+          {% endif %}
+        </div>
+        <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-xl bg-base-100 rounded-box w-56 mt-3 border border-base-200">
+          <li class="menu-title px-2 py-1 border-b border-base-200">
+            <span class="font-semibold">{{ user.name }}</span>
+            <span class="text-xs opacity-60 lowercase">{{ user.email }}</span>
+          </li>
+          <li><a href="/dashboard/{{ user.role }}" class="rounded-md"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
+          <li><a href="/profile" class="rounded-md"><i class="fa-solid fa-user mr-2"></i>My Profile</a></li>
+          <li><a href="/applications/my-applications" class="rounded-md"><i class="fa-solid fa-file-lines mr-2"></i>My Applications</a></li>
+          <li><a href="/notifications" class="rounded-md"><i class="fa-solid fa-bell mr-2"></i>Notifications</a></li>
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <a href="/api/auth/sign-out" class="rounded-md text-error hover:bg-error/10"><i class="fa-solid fa-right-from-bracket mr-2"></i>Logout</a>
+          </li>
+        </ul>
+      </div>
+      {% else %}
+      <div class="flex items-center gap-2 ml-4">
+        <a href="/sign-in" class="btn btn-ghost btn-sm rounded-md">Sign In</a>
+        <a href="/sign-up" class="btn btn-primary btn-sm rounded-md">Get Started</a>
+      </div>
+      {% endif %}
+    </nav>
+    
+    <!-- Mobile Menu Button -->
+    <div class="flex-none md:hidden">
+      <div class="dropdown dropdown-end">
+        <button class="btn btn-ghost btn-circle">
+          <i class="fa-solid fa-bars text-xl"></i>
+        </button>
+        <ul class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 border border-base-200">
+          <li><a href="/jobs" class="rounded-md"><i class="fa-solid fa-search mr-2"></i>Browse Jobs</a></li>
+          <li><a href="/matches" class="rounded-md"><i class="fa-solid fa-users mr-2"></i>Matches</a></li>
+          {% if user %}
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <a href="/dashboard/{{ user.role }}" class="rounded-md"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a>
+          </li>
+          <li><a href="/profile" class="rounded-md"><i class="fa-solid fa-user mr-2"></i>Profile</a></li>
+          <li><a href="/api/auth/sign-out" class="rounded-md text-error"><i class="fa-solid fa-right-from-bracket mr-2"></i>Logout</a></li>
+          {% else %}
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <a href="/sign-in" class="rounded-md">Sign In</a>
+          </li>
+          <li><a href="/sign-up" class="rounded-md btn-primary text-primary-content">Get Started</a></li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </div>
+</header>

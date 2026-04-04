@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <a href="/applications" class="btn btn-ghost btn-sm mb-4">
+      <i class="fas fa-arrow-left"></i> Back to Applications
+    </a>
+    
+    <div class="card bg-base-100 shadow">
+      <div class="card-body">
+        <h1 class="card-title text-3xl mb-4">{{ application.job.title }}</h1>
+        
+        <div class="flex items-center gap-4 mb-6">
+          <span class="badge {% if application.status == 'accepted' %}badge-success{% elif application.status == 'rejected' %}badge-error{% elif application.status == 'shortlisted' %}badge-info{% else %}badge-warning{% endif %} text-lg">
+            {{ application.status }}
+          </span>
+          <span class="text-base-content/70">
+            Applied on {{ application.createdAt.toLocaleDateString() }}
+          </span>
+        </div>
+
+        <div class="grid gap-6">
+          <div>
+            <h3 class="font-semibold text-lg">Cover Letter</h3>
+            <p class="mt-2 whitespace-pre-wrap">{{ application.coverLetter }}</p>
+          </div>
+          
+          {% if application.resume %}
+          <div>
+            <h3 class="font-semibold text-lg">Resume</h3>
+            <a href="{{ application.resume }}" target="_blank" class="btn btn-primary btn-sm mt-2">
+              <i class="fas fa-download"></i> View Resume
+            </a>
+          </div>
+          {% endif %}
+          
+          {% if application.notes %}
+          <div>
+            <h3 class="font-semibold text-lg">Notes</h3>
+            <p class="mt-2 text-base-content/70">{{ application.notes }}</p>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if application.job.postedBy.toString() === userId or application.applicantUserId.toString() === userId %}
+        <div class="card-actions justify-end mt-6">
+          <form action="/applications/{{ application._id }}/status" method="POST" class="flex gap-2">
+            <select name="status" class="select select-bordered">
+              <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+              <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
+              <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Update Status</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

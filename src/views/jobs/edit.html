@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <a href="/jobs" class="btn btn-ghost btn-sm mb-4">
+      <i class="fas fa-arrow-left"></i> Back to Jobs
+    </a>
+    
+    <h1 class="text-3xl font-bold mb-6">Edit Job</h1>
+    
+    <form method="POST" action="/jobs/{{ job._id }}?_method=PUT" class="space-y-6">
+      <div class="card bg-base-100 shadow">
+        <div class="card-body">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Job Title</span>
+            </label>
+            <input type="text" name="title" value="{{ job.title }}" required class="input input-bordered" />
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Description</span>
+            </label>
+            <textarea name="description" required class="textarea textarea-bordered h-32">{{ job.description }}</textarea>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Location</span>
+              </label>
+              <input type="text" name="location" value="{{ job.location }}" required class="input input-bordered" />
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Job Type</span>
+              </label>
+              <select name="jobType" class="select select-bordered" required>
+                <option value="full-time" {% if job.jobType == 'full-time' %}selected{% endif %}>Full Time</option>
+                <option value="part-time" {% if job.jobType == 'part-time' %}selected{% endif %}>Part Time</option>
+                <option value="internship" {% if job.jobType == 'internship' %}selected{% endif %}>Internship</option>
+                <option value="contract" {% if job.jobType == 'contract' %}selected{% endif %}>Contract</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Salary Min</span>
+              </label>
+              <input type="number" name="salaryMin" value="{{ job.salaryMin }}" class="input input-bordered" />
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Salary Max</span>
+              </label>
+              <input type="number" name="salaryMax" value="{{ job.salaryMax }}" class="input input-bordered" />
+            </div>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Requirements (comma separated)</span>
+            </label>
+            <input type="text" name="requirements" value="{{ job.requirements.join(', ') }}" class="input input-bordered" placeholder="React, Node.js, MongoDB" />
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Skills (comma separated)</span>
+            </label>
+            <input type="text" name="skills" value="{{ job.skills.join(', ') }}" class="input input-bordered" placeholder="JavaScript, TypeScript, REST APIs" />
+          </div>
+        </div>
+      </div>
+      
+      <div class="flex gap-2">
+        <button type="submit" class="btn btn-primary">Update Job</button>
+        <a href="/jobs/{{ job._id }}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

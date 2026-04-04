@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h1 class="card-title text-3xl">{{ profile.userId.name }}</h1>
+        
+        <p class="text-base-content/70">{{ profile.userId.email }}</p>
+        
+        {% if profile.role %}
+        <div class="mt-2">
+          <span class="badge badge-primary">{{ profile.role }}</span>
+        </div>
+        {% endif %}
+        
+        {% if profile.bio %}
+        <div class="mt-4">
+          <h2 class="font-semibold">Bio</h2>
+          <p class="mt-2">{{ profile.bio }}</p>
+        </div>
+        {% endif %}
+        
+        {% if profile.skills and profile.skills.length %}
+        <div class="mt-4">
+          <h2 class="font-semibold">Skills</h2>
+          <div class="flex flex-wrap gap-2 mt-2">
+            {% for skill in profile.skills %}
+            <span class="badge badge-outline">{{ skill }}</span>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+        
+        {% if profile.location %}
+        <div class="mt-4">
+          <span class="font-semibold">Location:</span> {{ profile.location }}
+        </div>
+        {% endif %}
+        
+        {% if profile.resume %}
+        <div class="mt-4">
+          <a href="{{ profile.resume.url }}" class="btn btn-outline btn-sm" target="_blank">View Resume</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

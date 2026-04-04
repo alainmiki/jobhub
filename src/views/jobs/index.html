@@ -1,0 +1,149 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30">
+  <!-- Header -->
+  <div class="bg-base-100 border-b border-base-200">
+    <div class="max-w-6xl mx-auto py-8 px-4">
+      <h1 class="text-3xl md:text-4xl font-bold mb-2">Browse Jobs</h1>
+      <p class="text-base-content/60">Find your next opportunity from thousands of openings</p>
+    </div>
+  </div>
+
+  <div class="max-w-6xl mx-auto py-8 px-4">
+    <div class="flex flex-col lg:flex-row gap-8">
+      <!-- Filters Sidebar -->
+      <aside class="w-full lg:w-72 flex-shrink-0">
+        <div class="card bg-base-100 border border-base-200 sticky top-24">
+          <div class="card-body p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-lg"><i class="fa-solid fa-filter mr-2"></i>Filters</h3>
+              <a href="/jobs" class="btn btn-ghost btn-xs text-error">Clear</a>
+            </div>
+            
+            <form action="/jobs/search" method="GET" class="space-y-4">
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Search</span>
+                </label>
+                <div class="relative">
+                  <input type="text" name="q" value="{{ filters.q }}" placeholder="Job title, skills..." class="input input-bordered w-full pl-10" />
+                  <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+                </div>
+              </div>
+              
+              <div class="divider my-2"></div>
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Job Type</span>
+                </label>
+                <select name="type" class="select select-bordered">
+                  <option value="">All Types</option>
+                  <option value="Full-time" {% if filters.type === 'Full-time' %}selected{% endif %}>Full-time</option>
+                  <option value="Part-time" {% if filters.type === 'Part-time' %}selected{% endif %}>Part-time</option>
+                  <option value="Internship" {% if filters.type === 'Internship' %}selected{% endif %}>Internship</option>
+                  <option value="Contract" {% if filters.type === 'Contract' %}selected{% endif %}>Contract</option>
+                </select>
+              </div>
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Location</span>
+                </label>
+                <select name="location" class="select select-bordered">
+                  <option value="">All Locations</option>
+                  <option value="Remote" {% if filters.location === 'Remote' %}selected{% endif %}>Remote</option>
+                  <option value="On-site" {% if filters.location === 'On-site' %}selected{% endif %}>On-site</option>
+                  <option value="Hybrid" {% if filters.location === 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                </select>
+              </div>
+              
+              <div class="form-control">
+                <label class="label">
+                  <span class="label-text font-medium">Category</span>
+                </label>
+                <select name="category" class="select select-bordered">
+                  <option value="">All Categories</option>
+                  <option value="Technology" {% if filters.category === 'Technology' %}selected{% endif %}>Technology</option>
+                  <option value="Finance" {% if filters.category === 'Finance' %}selected{% endif %}>Finance</option>
+                  <option value="Marketing" {% if filters.category === 'Marketing' %}selected{% endif %}>Marketing</option>
+                  <option value="Design" {% if filters.category === 'Design' %}selected{% endif %}>Design</option>
+                </select>
+              </div>
+              
+              <button type="submit" class="btn btn-primary btn-block rounded-full">
+                <i class="fa-solid fa-filter mr-2"></i>Apply Filters
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+      
+      <!-- Jobs List -->
+      <div class="flex-1">
+        {% if jobs.length === 0 %}
+        <div class="card bg-base-100 border border-base-200">
+          <div class="card-body text-center py-16">
+            <div class="w-24 h-24 mx-auto mb-6 rounded-full bg-base-200 flex items-center justify-center">
+              <i class="fas fa-search text-4xl text-base-content/30"></i>
+            </div>
+            <h3 class="font-bold text-xl mb-2">No Jobs Found</h3>
+            <p class="text-base-content/60 mb-6">Try adjusting your filters to find more opportunities</p>
+            <a href="/jobs" class="btn btn-primary">Clear Filters</a>
+          </div>
+        </div>
+        {% else %}
+        <div class="flex items-center justify-between mb-6">
+          <p class="text-base-content/60"><span class="font-bold text-primary">{{ jobs.length }}</span> jobs found</p>
+        </div>
+        
+        <div class="space-y-4">
+          {% for job in jobs %}
+          <div class="card bg-base-100 border border-base-200 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+            <div class="card-body p-6">
+              <div class="flex flex-col md:flex-row md:items-start gap-4">
+                <div class="w-16 h-16 bg-base-200 rounded-xl flex items-center justify-center flex-shrink-0">
+                  {% if job.company.logo %}
+                  <img src="{{ job.company.logo }}" alt="{{ job.company.name }}" class="w-10 h-10 object-contain" />
+                  {% else %}
+                  <i class="fas fa-building text-2xl text-base-content/40"></i>
+                  {% endif %}
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-xl font-bold hover:text-primary transition-colors">
+                    <a href="/jobs/{{ job._id }}">{{ job.title }}</a>
+                  </h3>
+                  <p class="text-base-content/70 mb-3">{{ job.company.name }}</p>
+                  
+                  <div class="flex flex-wrap gap-4 text-sm text-base-content/60">
+                    <span class="flex items-center gap-1">
+                      <i class="fas fa-location-dot"></i>{{ job.location }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <i class="fas fa-briefcase"></i>{{ job.type }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                      <i class="fas fa-clock"></i>{{ job.createdAt | date('MMM d, YYYY') }}
+                    </span>
+                  </div>
+                </div>
+                
+                <div class="mt-4 md:mt-0 flex items-center gap-2">
+                  <a href="/jobs/{{ job._id }}" class="btn btn-primary btn-sm rounded-full">
+                    View Details
+                    <i class="fa-solid fa-arrow-right ml-2"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

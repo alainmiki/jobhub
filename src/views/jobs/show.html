@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Back Button -->
+    <a href="/jobs" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
+      <i class="fas fa-arrow-left"></i>
+      Back to Jobs
+    </a>
+    
+    <!-- Job Header Card -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg mb-6">
+      <div class="card-body p-8">
+        <div class="flex flex-col md:flex-row items-start gap-6">
+          <div class="w-24 h-24 bg-base-200 rounded-2xl flex items-center justify-center flex-shrink-0">
+            {% if job.company.logo %}
+            <img src="{{ job.company.logo }}" alt="{{ job.company.name }}" class="w-16 h-16 object-contain" />
+            {% else %}
+            <i class="fas fa-building text-4xl text-base-content/40"></i>
+            {% endif %}
+          </div>
+          <div class="flex-1">
+            <h1 class="text-3xl font-bold mb-2">{{ job.title }}</h1>
+            <p class="text-lg text-base-content/70 mb-4">{{ job.company.name }}</p>
+            
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span class="badge badge-lg bg-primary/10 text-primary border-0">
+                <i class="fas fa-briefcase mr-2"></i>{{ job.type }}
+              </span>
+              <span class="badge badge-lg bg-base-200">
+                <i class="fas fa-location-dot mr-2"></i>{{ job.location }}
+              </span>
+              {% if job.category %}
+              <span class="badge badge-lg bg-base-200">
+                <i class="fas fa-tag mr-2"></i>{{ job.category }}
+              </span>
+              {% endif %}
+            </div>
+            
+            <div class="flex flex-wrap gap-4 text-sm text-base-content/60">
+              <span><i class="fas fa-eye mr-2"></i>{{ job.views }} views</span>
+              <span><i class="fas fa-users mr-2"></i>{{ job.applicationsCount }} applicants</span>
+              <span><i class="fas fa-clock mr-2"></i>Posted {{ job.createdAt | date('MMM d, YYYY') }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Job Details & Apply -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content -->
+      <div class="lg:col-span-2">
+        <div class="card bg-base-100 border border-base-200 shadow-lg">
+          <div class="card-body p-8">
+            <!-- Description -->
+            <div class="mb-8">
+              <h2 class="text-xl font-bold mb-4"><i class="fas fa-align-left text-primary mr-2"></i>Job Description</h2>
+              <p class="text-base-content/80 whitespace-pre-line leading-relaxed">{{ job.description }}</p>
+            </div>
+            
+            {% if job.requirements and job.requirements.length > 0 %}
+            <div class="mb-8">
+              <h2 class="text-xl font-bold mb-4"><i class="fas fa-list-check text-primary mr-2"></i>Requirements</h2>
+              <ul class="space-y-3">
+                {% for req in job.requirements %}
+                <li class="flex items-start gap-3">
+                  <i class="fas fa-check-circle text-success mt-1"></i>
+                  <span>{{ req }}</span>
+                </li>
+                {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+            
+            {% if job.skills and job.skills.length > 0 %}
+            <div class="mb-8">
+              <h2 class="text-xl font-bold mb-4"><i class="fas fa-code text-primary mr-2"></i>Skills</h2>
+              <div class="flex flex-wrap gap-2">
+                {% for skill in job.skills %}
+                <span class="badge badge-lg badge-outline">{{ skill }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            
+            {% if job.salaryMin or job.salaryMax %}
+            <div>
+              <h2 class="text-xl font-bold mb-4"><i class="fas fa-money-bill text-primary mr-2"></i>Salary Range</h2>
+              <p class="text-lg font-semibold text-primary">
+                {% if job.salaryMin and job.salaryMax %}
+                  ${{ job.salaryMin | number }} - ${{ job.salaryMax | number }}
+                {% elif job.salaryMin %}
+                  From ${{ job.salaryMin | number }}
+                {% elif job.salaryMax %}
+                  Up to ${{ job.salaryMax | number }}
+                {% endif %}
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      
+      <!-- Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="card bg-base-100 border border-base-200 shadow-lg sticky top-24">
+          <div class="card-body p-6">
+            {% if hasApplied %}
+            <div class="alert alert-success mb-4">
+              <i class="fas fa-check-circle text-xl"></i>
+              <div>
+                <h3 class="font-bold">Application Submitted</h3>
+                <p class="text-sm">Your application is being reviewed</p>
+              </div>
+            </div>
+            {% elif user %}
+            <button class="btn btn-primary btn-block btn-lg rounded-full" onclick="document.getElementById('applyModal').showModal()">
+              <i class="fas fa-paper-plane mr-2"></i>Apply Now
+            </button>
+            <p class="text-center text-xs text-base-content/50 mt-2">Easy apply - takes less than 1 minute</p>
+            {% else %}
+            <div class="text-center mb-4">
+              <p class="text-base-content/70 mb-4">Sign in to apply for this position</p>
+              <a href="/sign-in?redirect=/jobs/{{ job._id }}" class="btn btn-primary btn-block btn-lg rounded-full">
+                Sign In to Apply
+              </a>
+            </div>
+            {% endif %}
+            
+            <div class="divider my-4">OR</div>
+            
+            <div class="text-center">
+              <p class="text-sm text-base-content/60 mb-2">Share this job</p>
+              <div class="flex justify-center gap-2">
+                <button class="btn btn-circle btn-sm btn-ghost" onclick="navigator.clipboard.writeText(window.location.href)">
+                  <i class="fas fa-link"></i>
+                </button>
+                <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ job.title }}" target="_blank" class="btn btn-circle btn-sm btn-ghost">
+                  <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ request.url }}" target="_blank" class="btn btn-circle btn-sm btn-ghost">
+                  <i class="fab fa-linkedin"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Apply Modal -->
+{% if hasApplied == false and user %}
+<dialog id="applyModal" class="modal">
+  <div class="modal-box max-w-lg">
+    <h3 class="font-bold text-xl mb-2">Apply for {{ job.title }}</h3>
+    <p class="text-base-content/60 mb-6">{{ job.company.name }}</p>
+    
+    <form action="/applications" method="POST" class="space-y-4">
+      <input type="hidden" name="jobId" value="{{ job._id }}" />
+      
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text font-medium">Cover Letter</span>
+          <span class="label-text-alt text-xs text-base-content/50">Optional</span>
+        </label>
+        <textarea name="coverLetter" class="textarea textarea-bordered h-32" placeholder="Tell the employer why you're a great fit for this role..."></textarea>
+      </div>
+      
+      <div class="modal-action">
+        <button type="submit" class="btn btn-primary rounded-full">Submit Application</button>
+        <button type="button" class="btn" onclick="document.getElementById('applyModal').close()">Cancel</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
+{% endif %}
+{% endblock %}

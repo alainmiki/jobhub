@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 bg-base-200/30">
+  <div class="w-full max-w-md">
+    <!-- Logo/Brand -->
+    <div class="text-center mb-8">
+      <a href="/" class="inline-flex items-center gap-2 text-2xl font-bold text-primary">
+        <i class="fa-solid fa-briefcase"></i>
+        <span>JobHub</span>
+      </a>
+    </div>
+    
+    <div class="card bg-base-100 border border-base-200 shadow-xl">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-center mb-2">Welcome Back</h2>
+        <p class="text-center text-base-content/60 mb-6">Sign in to continue to your account</p>
+        
+        {% if error %}
+        <div class="alert alert-error mb-4">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span>{{ error }}</span>
+        </div>
+        {% endif %}
+
+        <form id="signinForm" data-auth-type="signin" action="/api/auth/sign-in/email" method="POST" class="space-y-5">
+          <input type="hidden" name="_gotcha" style="display:none">
+          <input type="hidden" name="redirect" value="{{ redirect or '/' }}">
+          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Email Address</span>
+            </label>
+            <div class="relative">
+              <input type="email" name="email" required class="input input-bordered w-full pl-10" placeholder="you@example.com" />
+              <i class="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+            </div>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Password</span>
+            </label>
+            <div class="relative">
+              <input type="password" name="password" required class="input input-bordered w-full pl-10" placeholder="••••••••" />
+              <i class="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+            </div>
+            <label class="label">
+              <a href="/forgot-password" class="label-text-alt link link-hover text-sm">Forgot password?</a>
+            </label>
+          </div>
+          
+          <div class="error-message text-error text-sm"></div>
+
+          <div class="form-control mt-2">
+            <button type="submit" class="btn btn-primary btn-block rounded-full">
+              Sign In
+              <i class="fa-solid fa-arrow-right ml-2"></i>
+            </button>
+          </div>
+        </form>
+        
+        <div class="divider my-6">OR</div>
+        
+        <div class="text-center">
+          <p class="text-base-content/70">Don't have an account? 
+            <a href="/sign-up?{{ redirectQuery }}" class="link link-primary font-medium">Create one</a>
+          </p>
+        </div>
+      </div>
+    </div>
+    
+    <p class="text-center text-sm text-base-content/50 mt-6">
+      By signing in, you agree to our <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+    </p>
+  </div>
+</div>
+<script src="/js/auth.js"></script>
+{% endblock %}

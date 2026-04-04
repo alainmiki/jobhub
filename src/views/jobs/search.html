@@ -1,0 +1,85 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-6">Search Jobs</h1>
+    
+    <form action="/jobs/search" method="GET" class="mb-8">
+      <div class="flex gap-4">
+        <input type="text" name="q" value="{{ searchQuery or '' }}" placeholder="Search jobs..." class="input input-bordered flex-1" />
+        <button type="submit" class="btn btn-primary">Search</button>
+      </div>
+      
+      <div class="flex gap-4 mt-4">
+        <select name="type" class="select select-bordered">
+          <option value="">All Types</option>
+          <option value="Full-time" {% if filters.type == 'Full-time' %}selected{% endif %}>Full-time</option>
+          <option value="Part-time" {% if filters.type == 'Part-time' %}selected{% endif %}>Part-time</option>
+          <option value="Internship" {% if filters.type == 'Internship' %}selected{% endif %}>Internship</option>
+          <option value="Contract" {% if filters.type == 'Contract' %}selected{% endif %}>Contract</option>
+        </select>
+        
+        <select name="location" class="select select-bordered">
+          <option value="">All Locations</option>
+          <option value="Remote" {% if filters.location == 'Remote' %}selected{% endif %}>Remote</option>
+          <option value="On-site" {% if filters.location == 'On-site' %}selected{% endif %}>On-site</option>
+          <option value="Hybrid" {% if filters.location == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+        </select>
+        
+        <select name="category" class="select select-bordered">
+          <option value="">All Categories</option>
+          <option value="Engineering" {% if filters.category == 'Engineering' %}selected{% endif %}>Engineering</option>
+          <option value="Design" {% if filters.category == 'Design' %}selected{% endif %}>Design</option>
+          <option value="Marketing" {% if filters.category == 'Marketing' %}selected{% endif %}>Marketing</option>
+          <option value="Sales" {% if filters.category == 'Sales' %}selected{% endif %}>Sales</option>
+        </select>
+      </div>
+    </form>
+    
+    {% if jobs.length %}
+    <div class="space-y-4">
+      {% for job in jobs %}
+      <div class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+        <div class="card-body">
+          <div class="flex justify-between items-start">
+            <div>
+              <h2 class="card-title">
+                <a href="/jobs/{{ job._id }}" class="hover:text-primary">{{ job.title }}</a>
+              </h2>
+              <p class="text-base-content/70">{{ job.company.name }}</p>
+            </div>
+            <span class="badge badge-ghost">{{ job.type }}</span>
+          </div>
+          
+          <div class="flex gap-4 text-sm mt-2">
+            <span>{{ job.location }}</span>
+            {% if job.salary %}
+            <span>{{ job.salary.currency }} {{ job.salary.min }} - {{ job.salary.max }}</span>
+            {% endif %}
+          </div>
+          
+          <p class="text-base-content/60 text-sm mt-2 line-clamp-2">{{ job.description }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    {% if pagination %}
+    <div class="flex justify-center gap-4 mt-8">
+      {% if pagination.page > 1 %}
+      <a href="?page={{ pagination.page - 1 }}" class="btn btn-ghost">Previous</a>
+      {% endif %}
+      <span class="px-4 py-2">Page {{ pagination.page }} of {{ pagination.totalPages }}</span>
+      {% if pagination.page < pagination.totalPages %}
+      <a href="?page={{ pagination.page + 1 }}" class="btn btn-ghost">Next</a>
+      {% endif %}
+    </div>
+    {% endif %}
+    
+    {% else %}
+    <p class="text-center text-base-content/60 py-8">No jobs found. Try adjusting your search.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

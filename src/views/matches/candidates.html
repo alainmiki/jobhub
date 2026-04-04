@@ -1,0 +1,69 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold">Candidate Matches</h1>
+      <p class="text-base-content/70">Candidates matching {{ job.title }}</p>
+    </div>
+    
+    {% if matches.length %}
+    <div class="space-y-4">
+      {% for match in matches %}
+      <div class="card bg-base-100 shadow">
+        <div class="card-body">
+          <div class="flex justify-between items-start">
+            <div class="flex gap-4">
+              <div class="avatar placeholder">
+                {% if match.candidate.userId.image %}
+                <div class="w-12 rounded-full">
+                  <img src="{{ match.candidate.userId.image }}" alt="{{ match.candidate.userId.name }}" />
+                </div>
+                {% else %}
+                <div class="bg-neutral text-neutral-content rounded-full w-12">
+                  <span>{{ match.candidate.userId.name[0] }}</span>
+                </div>
+                {% endif %}
+              </div>
+              <div>
+                <h2 class="card-title">{{ match.candidate.userId.name }}</h2>
+                <p class="text-base-content/70">{{ match.candidate.userId.email }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <div class="text-2xl font-bold text-primary">{{ match.score }}%</div>
+              <span class="text-sm text-base-content/50">match</span>
+            </div>
+          </div>
+          
+          {% if match.candidate.skills and match.candidate.skills.length %}
+          <div class="flex flex-wrap gap-2 mt-3">
+            {% for skill in match.candidate.skills %}
+            <span class="badge badge-outline">{{ skill }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+          
+          {% if match.candidate.bio %}
+          <p class="text-base-content/70 mt-3 line-clamp-2">{{ match.candidate.bio }}</p>
+          {% endif %}
+          
+          <div class="card-actions justify-end mt-4">
+            {% if match.hasApplied %}
+            <span class="badge badge-success">Applied</span>
+            {% else %}
+            <span class="badge badge-ghost">Not Applied</span>
+            {% endif %}
+            <a href="/profile/view/{{ match.candidate._id }}" class="btn btn-ghost btn-sm">View Profile</a>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-base-content/60 py-8">No matching candidates found.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

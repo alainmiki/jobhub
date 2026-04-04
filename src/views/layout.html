@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <script>
+    // Initialize theme immediately to prevent flashing
+    (function() {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title or 'JobHub - Find Your Dream Job' }}</title>
+  <meta name="description" content="Find your dream job or perfect candidate on JobHub - the leading job portal connecting talent with opportunity.">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link rel="stylesheet" href="/css/output.css" type="text/css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
+</head>
+<body class="min-h-screen flex flex-col bg-base-100 text-base-content">
+  {% include "partials/header.html" %}
+  <main class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+  {% include "partials/footer.html" %}
+
+  <!-- Floating Theme Selector -->
+  <div class="fixed bottom-6 right-6 z-50 dropdown dropdown-top dropdown-end">
+    <div tabindex="0" role="button" class="btn btn-primary btn-circle shadow-lg hover:scale-110 transition-transform">
+      <i class="fa-solid fa-palette text-xl"></i>
+    </div>
+    <ul tabindex="0" class="dropdown-content menu p-2 shadow-2xl bg-base-200 rounded-box w-52 mb-4 border border-base-content/10">
+      <li class="menu-title text-sm opacity-60">Select Theme</li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Light" value="light"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Dark" value="dark"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Nord" value="nord"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Business" value="business"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Silk" value="silk"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Dracula" value="dracula"/></li>
+    </ul>
+  </div>
+
+  <script>
+    // Handle theme selection and persistence
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeControllers = document.querySelectorAll('.theme-controller');
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+
+      themeControllers.forEach(controller => {
+        // Set the initial state of the inputs
+        if (controller.value === currentTheme) {
+          controller.checked = true;
+        }
+
+        controller.addEventListener('change', (e) => {
+          const theme = e.target.value;
+          document.documentElement.setAttribute('data-theme', theme);
+          localStorage.setItem('theme', theme);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

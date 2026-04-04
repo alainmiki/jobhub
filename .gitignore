@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Uploads (Keep the directory but ignore files)
+src/public/uploads/*
+!src/public/uploads/.gitkeep
+
+# Logs (Keep the directory but ignore files)
+logs/*
+!logs/.gitkeep
+
+# IDEs
+.vscode/
+.idea/
+dist/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build outputs
+*.min.js
+*.min.css
+!src/public/css/output.css

@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="card bg-base-100 shadow-xl">
+      <div class="card-body">
+        <h1 class="card-title text-3xl">{{ company.name }}</h1>
+        
+        {% if company.industry %}
+        <p class="text-base-content/70">{{ company.industry }}{% if company.size %} • {{ company.size }} employees{% endif %}</p>
+        {% endif %}
+        
+        {% if company.description %}
+        <div class="mt-4">
+          <h2 class="font-semibold">About</h2>
+          <p class="mt-2">{{ company.description }}</p>
+        </div>
+        {% endif %}
+        
+        <div class="grid grid-cols-2 gap-4 mt-4">
+          {% if company.headquarters %}
+          <div>
+            <span class="font-semibold">Headquarters:</span>
+            <p>{{ company.headquarters }}</p>
+          </div>
+          {% endif %}
+          
+          {% if company.website %}
+          <div>
+            <span class="font-semibold">Website:</span>
+            <a href="{{ company.website }}" target="_blank" class="link link-primary">{{ company.website }}</a>
+          </div>
+          {% endif %}
+        </div>
+        
+        {% if company.status %}
+        <div class="mt-4">
+          <span class="badge {% if company.status === 'approved' %}badge-success{% elif company.status === 'pending' %}badge-warning{% else %}badge-error{% endif %}">
+            {{ company.status }}
+          </span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

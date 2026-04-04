@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8 px-4">
+  <h1 class="text-3xl font-bold mb-8">Admin Dashboard</h1>
+  
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-title">Total Jobs</div>
+      <div class="stat-value text-primary">{{ stats.totalJobs }}</div>
+    </div>
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-title">Pending Approval</div>
+      <div class="stat-value text-warning">{{ stats.pendingJobs }}</div>
+    </div>
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-title">Approved Jobs</div>
+      <div class="stat-value text-success">{{ stats.approvedJobs }}</div>
+    </div>
+    <div class="stat bg-base-200 rounded-lg">
+      <div class="stat-title">Total Applications</div>
+      <div class="stat-value text-info">{{ stats.totalApplications }}</div>
+    </div>
+  </div>
+  
+  {% if stats.pendingJobs > 0 %}
+  <div class="mb-8">
+    <h2 class="text-xl font-bold mb-4">Jobs Pending Approval</h2>
+    <div class="space-y-4">
+      {% for job in recentJobs %}
+      {% if job.status === 'pending' %}
+      <div class="card bg-base-100 shadow-sm">
+        <div class="card-body flex-row items-center justify-between">
+          <div>
+            <h3 class="font-bold">{{ job.title }}</h3>
+            <p class="text-sm text-base-content/70">{{ job.company.name }}</p>
+          </div>
+          <div class="flex gap-2">
+            <form action="/dashboard/jobs/{{ job._id }}/approve" method="POST">
+              <button type="submit" class="btn btn-success btn-sm">Approve</button>
+            </form>
+            <form action="/dashboard/jobs/{{ job._id }}/reject" method="POST">
+              <button type="submit" class="btn btn-error btn-sm">Reject</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  
+  <div>
+    <h2 class="text-xl font-bold mb-4">Recent Jobs</h2>
+    <div class="overflow-x-auto">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for job in recentJobs %}
+          <tr>
+            <td><a href="/jobs/{{ job._id }}" class="link link-primary">{{ job.title }}</a></td>
+            <td>{{ job.company.name }}</td>
+            <td><span class="badge badge-{{ 'pending' if job.status === 'pending' else 'success' if job.status === 'approved' else 'error' }}">{{ job.status }}</span></td>
+            <td>{{ job.createdAt | date('MMM d, YYYY') }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
