@@ -1,6 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import UserProfile from '../models/UserProfile.js';
 import validator from 'validator';
+import Notification from '../models/Notification.js'; // Import Notification model
 
 export const createAuthMiddleware = (auth) => {
   return async (req, res, next) => {
@@ -26,8 +27,15 @@ export const createAuthMiddleware = (auth) => {
               req.user.role = userProfile.role;
             }
           }
+
+          // Fetch unread notification count
+          const unreadNotificationsCount = await Notification.countDocuments({
+            recipient: req.userId, // Use req.userId for recipient
+            isRead: false // Standardize to isRead
+          });
+          req.user.unreadNotificationsCount = unreadNotificationsCount;
         } catch (profileError) {
-          console.warn('[Auth] Could not fetch user profile:', profileError.message);
+          console.warn('[Auth] Could not fetch user profile or notifications:', profileError.message);
         }
       } else {
         req.session = null;

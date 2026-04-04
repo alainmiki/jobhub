@@ -16,17 +16,18 @@
         <h2 class="text-2xl font-bold text-center mb-2">Create Account</h2>
         <p class="text-center text-base-content/60 mb-6">Join thousands of professionals on JobHub</p>
 
-        <form id="signupForm" data-auth-type="signup" action="/api/auth/sign-up/email" method="POST" class="space-y-5">
-          <input type="hidden" name="_gotcha" style="display:none">
+        <!-- Error/Success Messages -->
+        <div id="messageContainer" class="hidden mb-4"></div>
+
+        <form id="signupForm" class="space-y-5">
           <input type="hidden" name="redirect" value="{{ redirect or '/' }}">
-          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
           
           <div class="form-control">
             <label class="label">
               <span class="label-text font-medium">Full Name</span>
             </label>
             <div class="relative">
-              <input type="text" name="name" required class="input input-bordered w-full pl-10" placeholder="John Doe" />
+              <input type="text" id="name" name="name" required class="input input-bordered w-full pl-10" placeholder="John Doe" />
               <i class="fa-solid fa-user absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
             </div>
           </div>
@@ -36,7 +37,7 @@
               <span class="label-text font-medium">Email Address</span>
             </label>
             <div class="relative">
-              <input type="email" name="email" required class="input input-bordered w-full pl-10" placeholder="you@example.com" />
+              <input type="email" id="email" name="email" required class="input input-bordered w-full pl-10" placeholder="you@example.com" />
               <i class="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
             </div>
           </div>
@@ -46,9 +47,12 @@
               <span class="label-text font-medium">Password</span>
             </label>
             <div class="relative">
-              <input type="password" name="password" required class="input input-bordered w-full pl-10" placeholder="••••••••" />
+              <input type="password" id="password" name="password" required minlength="8" class="input input-bordered w-full pl-10" placeholder="••••••••" />
               <i class="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
             </div>
+            <label class="label">
+              <span class="label-text-alt text-xs">Minimum 8 characters</span>
+            </label>
           </div>
 
           <div class="form-control">
@@ -73,11 +77,11 @@
             </div>
           </div>
           
-          <div class="error-message text-error text-sm"></div>
+          <div id="errorMessage" class="text-error text-sm hidden"></div>
 
           <div class="form-control mt-2">
-            <button type="submit" class="btn btn-primary btn-block rounded-full">
-              Create Account
+            <button type="submit" id="submitBtn" class="btn btn-primary btn-block rounded-full">
+              <span>Create Account</span>
               <i class="fa-solid fa-arrow-right ml-2"></i>
             </button>
           </div>
@@ -98,5 +102,55 @@
     </p>
   </div>
 </div>
-<script src="/js/auth.js"></script>
+
+<script type="module">
+import { authClient, signUp } from '/js/auth-client.js';
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const name = document.getElementById('name').value;
+  const email = document.getElementById('email').value;
+  const password = document.getElementById('password').value;
+  const role = document.querySelector('input[name="role"]:checked').value;
+  const redirect = document.querySelector('input[name="redirect"]').value || '/dashboard';
+  const submitBtn = document.getElementById('submitBtn');
+  const errorMessage = document.getElementById('errorMessage');
+  
+  // Client-side validation
+  if (password.length < 8) {
+    errorMessage.textContent = 'Password must be at least 8 characters';
+    errorMessage.classList.remove('hidden');
+    return;
+  }
+  
+  // Clear previous errors
+  errorMessage.classList.add('hidden');
+  errorMessage.textContent = '';
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<span class="loading loading-spinner"></span> Creating account...';
+  
+  try {
+    const result = await signUp(name, email, password);
+    
+    if (!result.success) {
+      errorMessage.textContent = result.error.message || 'Sign up failed. Please try again.';
+      errorMessage.classList.remove('hidden');
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Create Account</span><i class="fa-solid fa-arrow-right ml-2"></i>';
+      return;
+    }
+    
+    // Success - redirect to dashboard
+    window.location.href = redirect;
+    
+  } catch (error) {
+    console.error('Sign up error:', error);
+    errorMessage.textContent = 'An unexpected error occurred. Please try again.';
+    errorMessage.classList.remove('hidden');
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<span>Create Account</span><i class="fa-solid fa-arrow-right ml-2"></i>';
+  }
+});
+</script>
 {% endblock %}

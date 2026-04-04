@@ -1,5 +1,5 @@
 <header class="navbar bg-base-100 shadow-sm sticky top-0 z-40 border-b border-base-200">
-  <div class="container mx-auto">
+  <div class="container mx-auto flex items-center justify-between px-4">
     <div class="flex-1">
       <a href="/" class="flex items-center gap-2 text-xl font-bold text-primary hover:opacity-80 transition-opacity">
         <i class="fa-solid fa-briefcase"></i>
@@ -7,7 +7,7 @@
       </a>
     </div>
     
-    <!-- Desktop Navigation -->
+    <!-- Desktop Navigation and User Menu -->
     <nav class="hidden md:flex items-center gap-1">
       <a href="/jobs" class="btn btn-ghost btn-sm rounded-md hover:bg-base-200">
         <i class="fa-solid fa-search mr-2"></i>Browse Jobs
@@ -17,8 +17,11 @@
       </a>
       
       {% if user %}
-      <div class="dropdown dropdown-end ml-2">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:ring ring-primary ring-offset-base-100 ring-offset-2">
+      <div class="dropdown dropdown-end ml-2"> {# Desktop User Dropdown #}
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:ring ring-primary ring-offset-base-100 ring-offset-2 {% if user.unreadNotificationsCount > 0 %}indicator{% endif %}">
+          {% if user.unreadNotificationsCount > 0 %}
+          <span class="indicator-item badge badge-secondary badge-sm">{{ user.unreadNotificationsCount }}</span>
+          {% endif %}
           {% if user.image %}
           <div class="w-10 rounded-full">
             <img src="{{ user.image }}" alt="{{ user.name }}" />
@@ -30,9 +33,27 @@
           {% endif %}
         </div>
         <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-xl bg-base-100 rounded-box w-56 mt-3 border border-base-200">
-          <li class="menu-title px-2 py-1 border-b border-base-200">
-            <span class="font-semibold">{{ user.name }}</span>
-            <span class="text-xs opacity-60 lowercase">{{ user.email }}</span>
+          <li class="px-4 py-3 border-b border-base-200 mb-1">
+            <div class="flex items-center gap-3 p-0 hover:bg-transparent">
+              <div class="avatar">
+                <div class="w-10 rounded-full ring ring-primary/20">
+                  {% if user.image %}
+                    <img src="{{ user.image }}" alt="{{ user.name }}" />
+                  {% else %}
+                    <div class="bg-primary text-primary-content flex items-center justify-center w-full h-full text-xs font-bold">
+                      {{ user.name[0] | upper }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-bold text-sm truncate leading-none mb-1">{{ user.name }}</span>
+                <span class="text-[10px] opacity-60 truncate lowercase mb-2">{{ user.email }}</span>
+                <span class="badge badge-sm {% if user.role == 'employer' %}badge-primary{% else %}badge-secondary{% endif %} badge-outline text-[10px] h-4 uppercase tracking-wider font-bold">
+                  {{ user.role }}
+                </span>
+              </div>
+            </div>
           </li>
           <li><a href="/dashboard/{{ user.role }}" class="rounded-md"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
           <li><a href="/profile" class="rounded-md"><i class="fa-solid fa-user mr-2"></i>My Profile</a></li>
@@ -53,14 +74,42 @@
     
     <!-- Mobile Menu Button -->
     <div class="flex-none md:hidden">
-      <div class="dropdown dropdown-end">
+      <div class="dropdown dropdown-end"> {# Mobile Menu Dropdown #}
         <button class="btn btn-ghost btn-circle">
           <i class="fa-solid fa-bars text-xl"></i>
         </button>
         <ul class="dropdown-content z-50 menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-2 border border-base-200">
+          {% if user %}
+          <li class="px-4 py-3 border-b border-base-200 mb-1">
+            <div class="flex items-center gap-3 p-0 hover:bg-transparent">
+              <div class="avatar">
+                <div class="w-10 rounded-full">
+                  {% if user.image %}
+                    <img src="{{ user.image }}" alt="{{ user.name }}" />
+                  {% else %}
+                    <div class="bg-primary text-primary-content flex items-center justify-center w-full h-full text-xs font-bold">
+                      {{ user.name[0] | upper }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="font-bold text-sm truncate leading-none mb-1">{{ user.name }}</span>
+                <span class="badge badge-xs {% if user.role == 'employer' %}badge-primary{% else %}badge-secondary{% endif %} uppercase text-[8px] font-bold">
+                  {{ user.role }}
+                </span>
+              </div>
+            </div>
+          </li>
+          {% endif %}
+
           <li><a href="/jobs" class="rounded-md"><i class="fa-solid fa-search mr-2"></i>Browse Jobs</a></li>
           <li><a href="/matches" class="rounded-md"><i class="fa-solid fa-users mr-2"></i>Matches</a></li>
           {% if user %}
+          <li><a href="/notifications" class="rounded-md">
+            <i class="fa-solid fa-bell mr-2"></i>Notifications
+            {% if user.unreadNotificationsCount > 0 %}<span class="mobile-notification-badge badge badge-secondary badge-sm ml-auto">{{ user.unreadNotificationsCount }}</span>{% endif %}
+          </a></li>
           <li class="border-t border-base-200 mt-2 pt-2">
             <a href="/dashboard/{{ user.role }}" class="rounded-md"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a>
           </li>

@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
+import { twoFactor } from "better-auth/plugins";
 import { createAuthMiddleware } from "../middleware/auth.js";
 import UserProfile from "../models/UserProfile.js";
 import { sendVerificationEmail, sendPasswordResetEmail, initEmailService } from "./email.js";
@@ -20,6 +21,7 @@ export const initAuth = async (db) => {
         verification: "verification"
       }
     }),
+    appName: "JobHub",
     emailAndPassword: {
       enabled: true,
       disableSignUp: disableSignUp,
@@ -49,8 +51,43 @@ export const initAuth = async (db) => {
     },
     rateLimit: {
       enabled: true,
-      window: 10,
-      max: 100
+      window: 60,
+      max: 100,
+      storage: "database",
+      customRules: {
+        "/sign-in/email": {
+          window: 60,
+          max: 5
+        },
+        "/sign-up/email": {
+          window: 300,
+          max: 3
+        },
+        "/forgot-password": {
+          window: 300,
+          max: 3
+        },
+        "/reset-password": {
+          window: 300,
+          max: 5
+        },
+        "/two-factor/enable": {
+          window: 60,
+          max: 3
+        },
+        "/two-factor/verify-totp": {
+          window: 60,
+          max: 5
+        },
+        "/two-factor/verify-otp": {
+          window: 60,
+          max: 5
+        },
+        "/two-factor/verify-backup-code": {
+          window: 60,
+          max: 10
+        }
+      }
     },
     user: {
       modelName: "user",
@@ -59,7 +96,7 @@ export const initAuth = async (db) => {
           type: "string",
           required: false,
           defaultValue: "candidate",
-          inputable: true
+          inputable: false
         },
         image: {
           type: "string",
@@ -72,9 +109,25 @@ export const initAuth = async (db) => {
           required: false,
           defaultValue: null,
           inputable: true
+        },
+        twoFactorEnabled: {
+          type: "boolean",
+          required: false,
+          defaultValue: false,
+          inputable: false
         }
       }
     },
+    plugins: [
+      twoFactor({
+        issuer: "JobHub",
+        allowPasswordless: false,
+        backupCodes: {
+          length: 10,
+          amount: 10
+        }
+      })
+    ],
     databaseHooks: {
       user: {
         create: {
@@ -100,7 +153,10 @@ export const initAuth = async (db) => {
     },
     advanced: {
       disableOriginCheck: false,
-      useSecureCookies: process.env.NODE_ENV === "production"
+      useSecureCookies: process.env.NODE_ENV === "production",
+      ipAddress: {
+        ipAddressHeaders: ["x-forwarded-for", "cf-connecting-ip", "x-real-ip"]
+      }
     },
     trustedOrigins: [
       process.env.BETTER_AUTH_URL || "http://localhost:3000",
