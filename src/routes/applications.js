@@ -1,11 +1,12 @@
 import express from 'express';
 import { body, param } from 'express-validator';
+import mongoose from 'mongoose';
 import Application from '../models/Application.js';
 import Job from '../models/Job.js';
 import UserProfile from '../models/UserProfile.js';
 import Notification from '../models/Notification.js';
 import Company from '../models/Company.js';
-import { createAuthMiddleware, isAuthenticated } from '../middleware/auth.js';
+import { createAuthMiddleware, isAuthenticated, isRole } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate } from '../middleware/validation.js';
 import logger from '../config/logger.js';
@@ -24,52 +25,67 @@ export const initApplicationsRouter = (auth) => {
     ],
     validate,
     asyncHandler(async (req, res) => {
-      const job = await Job.findById(req.body.jobId);
+      const session = await mongoose.startSession();
+      session.startTransaction();
       
-      if (!job || job.status !== 'approved') {
-        return res.status(400).json({ error: 'Job not available for application' });
+      try {
+        const job = await Job.findById(req.body.jobId).session(session);
+        
+        if (!job || job.status !== 'approved') {
+          await session.abortTransaction();
+          return res.status(400).json({ error: 'Job not available for application' });
+        }
+        
+        const existingApplication = await Application.findOne({
+          job: req.body.jobId,
+          applicantUserId: req.userId
+        }).session(session);
+
+        if (existingApplication) {
+          await session.abortTransaction();
+          return res.status(400).json({ error: 'You have already applied to this job' });
+        }
+
+        const userProfile = await UserProfile.findOne({ userId: req.userId }).session(session);
+        
+        if (!userProfile) {
+          await session.abortTransaction();
+          return res.status(400).json({ error: 'Please complete your profile first' });
+        }
+        
+        const application = new Application({
+          job: req.body.jobId,
+          candidate: userProfile._id,
+          applicantUserId: req.userId,
+          coverLetter: req.body.coverLetter,
+          resume: userProfile.resume
+        });
+        
+        await application.save({ session });
+        
+        await Job.findByIdAndUpdate(req.body.jobId, {
+          $inc: { applicationsCount: 1 }
+        }, { session });
+        
+        await session.commitTransaction();
+        
+        const notification = new Notification({
+          recipient: job.postedBy,
+          type: 'application_received',
+          title: 'New Application',
+          message: `You received a new application for ${job.title}`,
+          link: `/applications/${application._id}`
+        });
+        await notification.save();
+        
+        logger.info(`Application submitted: ${application._id} for job: ${job._id}`);
+        res.redirect(`/jobs/${req.body.jobId}?applied=true`);
+      } catch (error) {
+        await session.abortTransaction();
+        throw error;
+      } finally {
+        session.endSession();
       }
-      
-      const existingApplication = await Application.findOne({
-        job: req.body.jobId,
-        applicantUserId: req.userId
-      });
-      
-      if (existingApplication) {
-        return res.status(400).json({ error: 'You have already applied to this job' });
-      }
-      
-      const userProfile = await UserProfile.findOne({ userId: req.userId });
-      
-      if (!userProfile) {
-        return res.status(400).json({ error: 'Please complete your profile first' });
-      }
-      
-      const application = new Application({
-        job: req.body.jobId,
-        candidate: userProfile._id,
-        applicantUserId: req.userId,
-        coverLetter: req.body.coverLetter,
-        resume: userProfile.resume
-      });
-      
-      await application.save();
-      
-      await Job.findByIdAndUpdate(req.body.jobId, {
-        $inc: { applicationsCount: 1 }
-      });
-      
-      const notification = new Notification({
-        recipient: job.postedBy,
-        type: 'application_received',
-        title: 'New Application',
-        message: `You received a new application for ${job.title}`,
-        link: `/applications/${application._id}`
-      });
-      await notification.save();
-      
-      logger.info(`Application submitted: ${application._id} for job: ${job._id}`);
-      res.redirect(`/jobs/${req.body.jobId}?applied=true`);
     })
   );
 
@@ -124,12 +140,14 @@ export const initApplicationsRouter = (auth) => {
       
       const isOwner = application.applicantUserId.toString() === req.userId ||
         application.job.postedBy.toString() === req.userId;
+      const isAdmin = req.user?.role === 'admin';
       
-      if (!isOwner) {
+      if (!isOwner && !isAdmin) {
         return res.status(403).render('error', { message: 'Access denied' });
       }
-      
-      res.render('applications/show', { application });
+
+      const isEmployer = application.job.postedBy.toString() === req.userId;
+      res.render('applications/show', { application, isEmployer, isAdmin });
     } catch (error) {
       console.error('Error fetching application:', error);
       res.status(500).render('error', { message: 'Failed to load application' });

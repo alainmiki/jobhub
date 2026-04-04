@@ -9,7 +9,6 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { toNodeHandler } from 'better-auth/node';
-import rateLimit from 'express-rate-limit';
 
 import { connectDB } from './config/db.js';
 import { initAuth } from './config/auth.js';
@@ -17,7 +16,6 @@ import { validateEnv } from './config/validateEnv.js';
 import logger from './config/logger.js';
 import { createAuthMiddleware, validateInput } from './middleware/auth.js';
 import { errorHandler } from './middleware/errorHandler.js';
-import { RATE_LIMIT } from './config/constants.js';
 
 import { initJobsRouter } from './routes/jobs.js';
 import { initApplicationsRouter } from './routes/applications.js';
@@ -26,9 +24,9 @@ import { initProfileRouter } from './routes/profile.js';
 import { initDashboardRouter } from './routes/dashboard.js';
 import { initNotificationsRouter } from './routes/notifications.js';
 import { initMatchesRouter } from './routes/matches.js';
+import { initAdminRouter } from './routes/admin.js';
 
 import Job from './models/Job.js';
-import { log } from 'console';
 
 dotenv.config();
 validateEnv();
@@ -141,23 +139,136 @@ app.use(validateInput);
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
 
+// 2FA Routes
+app.post('/api/auth/two-factor/verify-totp', async (req, res) => {
+  try {
+    const { code, trustDevice, challenge } = req.body;
+    const result = await auth.api.verifyTOTP({
+      body: { code, trustDevice: trustDevice === 'on' },
+      headers: { cookie: req.headers.cookie }
+    });
+    
+    if (result.response?.twoFactorRedirect) {
+      return res.json({ error: '2FA verification failed' });
+    }
+    
+    res.redirect('/dashboard');
+  } catch (error) {
+    res.redirect('/2fa?error=Invalid+code');
+  }
+});
+
+app.post('/api/auth/two-factor/send-otp', async (req, res) => {
+  try {
+    await auth.api.sendTwoFactorOTP({
+      body: { trustDevice: false },
+      headers: { cookie: req.headers.cookie }
+    });
+    res.redirect('/2fa?method=otp');
+  } catch (error) {
+    res.redirect('/2fa?error=Failed+to+send+code');
+  }
+});
+
+app.post('/api/auth/two-factor/verify-otp', async (req, res) => {
+  try {
+    const { code, trustDevice, challenge } = req.body;
+    const result = await auth.api.verifyTwoFactorOTP({
+      body: { code, trustDevice: trustDevice === 'on' },
+      headers: { cookie: req.headers.cookie }
+    });
+    
+    if (result.response?.twoFactorRedirect) {
+      return res.json({ error: '2FA verification failed' });
+    }
+    
+    res.redirect('/dashboard');
+  } catch (error) {
+    res.redirect('/2fa?error=Invalid+code');
+  }
+});
+
+app.post('/api/auth/two-factor/verify-backup-code', async (req, res) => {
+  try {
+    const { code, challenge } = req.body;
+    const result = await auth.api.verifyBackupCode({
+      body: { code, disableSession: false, trustDevice: false },
+      headers: { cookie: req.headers.cookie }
+    });
+    
+    if (result.response?.twoFactorRedirect) {
+      return res.json({ error: 'Invalid backup code' });
+    }
+    
+    res.redirect('/dashboard');
+  } catch (error) {
+    res.redirect('/2fa?method=backup&error=Invalid+backup+code');
+  }
+});
+
+app.post('/enable-2fa', 
+  (req, res, next) => express.json()(req, res, next),
+  async (req, res) => {
+    try {
+      const { step, password, code, totpUri } = req.body;
+      const userId = req.user?.id;
+      
+      if (!userId) {
+        return res.redirect('/sign-in');
+      }
+      
+      if (step === 'verify') {
+        const result = await auth.api.signInEmail({
+          body: { email: req.user.email, password },
+          headers: { cookie: req.headers.cookie }
+        });
+        
+        if (result.response?.twoFactorRedirect !== true) {
+          const totpResult = await auth.api.enableTwoFactor({
+            body: { password, issuer: 'JobHub' },
+            headers: { cookie: req.headers.cookie }
+          });
+          
+          res.render('enable-2fa', { 
+            step: 'setup', 
+            user: req.user,
+            secret: totpResult.response?.secret,
+            totpUri: totpResult.response?.totpURI
+          });
+          return;
+        }
+      }
+      
+      if (step === 'verify-code') {
+        const verifyResult = await auth.api.verifyTOTP({
+          body: { code },
+          headers: { cookie: req.headers.cookie }
+        });
+        
+        if (!verifyResult.response?.twoFactorRedirect) {
+          const backupResult = await auth.api.generateBackupCodes({
+            body: { password },
+            headers: { cookie: req.headers.cookie }
+          });
+          
+          res.render('enable-2fa', { 
+            step: 'backup-codes', 
+            user: req.user,
+            backupCodes: backupResult.response?.backupCodes
+          });
+          return;
+        }
+      }
+      
+      res.redirect('/enable-2fa?error=Verification+failed');
+    } catch (error) {
+      logger.error('Enable 2FA error:', error);
+      res.redirect('/enable-2fa?error=' + encodeURIComponent(error.message));
+    }
+  }
+);
+
 const PORT = process.env.PORT || 3000;
-
-const searchLimiter = rateLimit({
-  windowMs: RATE_LIMIT.SEARCH_WINDOW,
-  max: RATE_LIMIT.SEARCH_MAX,
-  message: 'Too many searches, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false
-});
-
-const apiLimiter = rateLimit({
-  windowMs: RATE_LIMIT.API_WINDOW,
-  max: RATE_LIMIT.API_MAX,
-  message: 'Too many API requests, please try again later',
-  standardHeaders: true,
-  legacyHeaders: false
-});
 
 app.use('/jobs', initJobsRouter(auth));
 app.use('/applications', initApplicationsRouter(auth));
@@ -166,6 +277,7 @@ app.use('/profile', initProfileRouter(auth));
 app.use('/dashboard', initDashboardRouter(auth));
 app.use('/notifications', initNotificationsRouter(auth));
 app.use('/matches', initMatchesRouter(auth));
+app.use('/admin', initAdminRouter(auth));
 
 app.get('/', async (req, res) => {
   const featuredJobs = await Job.find({ status: 'approved', isActive: true })
@@ -201,6 +313,20 @@ app.get('/reset-password', (req, res) => {
 app.get('/verify-email', (req, res) => {
   const { success } = req.query;
   res.render('verify-email', { success: success === 'true' });
+});
+
+app.get('/2fa', (req, res) => {
+  if (!req.user) {
+    return res.redirect('/sign-in');
+  }
+  res.render('2fa', { user: req.user });
+});
+
+app.get('/enable-2fa', (req, res) => {
+  if (!req.user) {
+    return res.redirect('/sign-in');
+  }
+  res.render('enable-2fa', { user: req.user });
 });
 
 app.use((err, req, res, next) => {

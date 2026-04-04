@@ -1,0 +1,80 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-8">
+    <h1 class="text-3xl font-bold">Pending Company Verifications</h1>
+    <a href="/dashboard/admin" class="btn btn-ghost">
+      <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+    </a>
+  </div>
+
+  {% if companies.length === 0 %}
+  <div class="card bg-base-100 shadow-xl">
+    <div class="card-body text-center">
+      <i class="fa-solid fa-check-circle text-6xl text-success mb-4"></i>
+      <h2 class="text-xl font-bold">No Pending Companies</h2>
+      <p class="text-base-content/60">All companies have been verified.</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="overflow-x-auto">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Logo</th>
+          <th>Company Name</th>
+          <th>Industry</th>
+          <th>Size</th>
+          <th>Owner</th>
+          <th>Submitted</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for company in companies %}
+        <tr>
+          <td>
+            {% if company.logo %}
+            <div class="avatar">
+              <div class="w-12 rounded">
+                <img src="{{ company.logo }}" alt="{{ company.name }}">
+              </div>
+            </div>
+            {% else %}
+            <div class="avatar placeholder">
+              <div class="bg-neutral text-neutral-content rounded-full w-12">
+                <span class="text-xl">{{ company.name[0] }}</span>
+              </div>
+            </div>
+            {% endif %}
+          </td>
+          <td class="font-semibold">{{ company.name }}</td>
+          <td>{{ company.industry }}</td>
+          <td>{{ company.size }}</td>
+          <td>
+            <a href="mailto:{{ company.userId.email }}" class="link link-primary">
+              {{ company.userId.name }}
+            </a>
+          </td>
+          <td>{{ company.createdAt.toLocaleDateString() }}</td>
+          <td>
+            <div class="flex gap-2">
+              <a href="/company/{{ company._id }}" class="btn btn-ghost btn-sm">
+                <i class="fa-solid fa-eye"></i>
+              </a>
+              <form method="POST" action="/dashboard/companies/{{ company._id }}/verify">
+                <button type="submit" class="btn btn-success btn-sm">
+                  <i class="fa-solid fa-check"></i>
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -8,7 +8,12 @@ import { asyncHandler } from '../middleware/errorHandler.js';
 import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validation.js';
 import logger from '../config/logger.js';
-import { PAGINATION, JOB_TYPE, JOB_LOCATION, JOB_CATEGORY } from '../config/constants.js';
+import { PAGINATION, JOB_TYPE, JOB_LOCATION, JOB_CATEGORY, EXPERIENCE_LEVEL } from '../config/constants.js';
+
+const sanitizeRegex = (input) => {
+  if (typeof input !== 'string') return '';
+  return input.replace(/[$^|(){}*+\\]/g, '\\$&');
+};
 
 const router = express.Router();
 
@@ -22,10 +27,11 @@ export const initJobsRouter = (auth) => {
       const filter = { status: 'approved', isActive: true };
       
       if (q) {
+        const safeSearch = sanitizeRegex(q);
         filter.$or = [
-          { title: { $regex: q, $options: 'i' } },
-          { description: { $regex: q, $options: 'i' } },
-          { skills: { $regex: q, $options: 'i' } }
+          { title: { $regex: safeSearch, $options: 'i' } },
+          { description: { $regex: safeSearch, $options: 'i' } },
+          { skills: { $regex: safeSearch, $options: 'i' } }
         ];
       }
       if (type) filter.type = type;
@@ -60,10 +66,11 @@ export const initJobsRouter = (auth) => {
       const filter = { status: 'approved', isActive: true };
       
       if (q) {
+        const safeSearch = sanitizeRegex(q);
         filter.$or = [
-          { title: { $regex: q, $options: 'i' } },
-          { description: { $regex: q, $options: 'i' } },
-          { skills: { $regex: q, $options: 'i' } }
+          { title: { $regex: safeSearch, $options: 'i' } },
+          { description: { $regex: safeSearch, $options: 'i' } },
+          { skills: { $regex: safeSearch, $options: 'i' } }
         ];
       }
       if (type) filter.type = type;
@@ -181,19 +188,46 @@ export const initJobsRouter = (auth) => {
     [
       param('id').isMongoId().withMessage('Invalid job ID'),
       body('title').optional().trim().isLength({ min: 3, max: 200 }),
-      body('description').optional().trim().isLength({ min: 50, max: 5000 })
+      body('description').optional().trim().isLength({ min: 50, max: 5000 }),
+      body('location').optional().isIn(JOB_LOCATION),
+      body('type').optional().isIn(JOB_TYPE),
+      body('category').optional().isIn(JOB_CATEGORY),
+      body('experienceLevel').optional().isIn(EXPERIENCE_LEVEL),
+      body('skills').optional().isArray({ max: 20 }),
+      body('salary.min').optional().isInt({ min: 0 }),
+      body('salary.max').optional().isInt({ min: 0 }),
+      body('city').optional().trim().isLength({ max: 100 }),
+      body('country').optional().trim().isLength({ max: 100 }),
+      body('applicationDeadline').optional().isISO8601(),
+      body('isRemote').optional().isBoolean()
     ],
     validate,
     asyncHandler(async (req, res) => {
-      const job = await Job.findOneAndUpdate(
-        { _id: req.params.id, postedBy: req.userId },
-        { ...req.body, updatedAt: new Date() },
-        { new: true }
-      );
+      const job = await Job.findOne({
+        _id: req.params.id,
+        postedBy: req.userId
+      });
       
       if (!job) {
         return res.status(404).render('error', { message: 'Job not found' });
       }
+      
+      const allowedUpdates = [
+        'title', 'description', 'location', 'type', 'category',
+        'experienceLevel', 'skills', 'requirements', 'salary',
+        'city', 'country', 'applicationDeadline', 'isRemote'
+      ];
+      
+      const updates = {};
+      for (const key of allowedUpdates) {
+        if (req.body[key] !== undefined) {
+          updates[key] = req.body[key];
+        }
+      }
+      updates.updatedAt = new Date();
+      
+      Object.assign(job, updates);
+      await job.save();
       
       logger.info(`Job updated: ${job._id} by user: ${req.userId}`);
       res.redirect(`/jobs/${job._id}`);

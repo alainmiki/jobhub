@@ -830,6 +830,178 @@ app.get('/api/auth/ok', (req, res) => {
 | POST | `/api/auth/send-verification-email` | Send verification email |
 | POST | `/api/auth/link-social` | Link OAuth account |
 | POST | `/api/auth/unlink-account` | Unlink account |
+| POST | `/api/auth/two-factor/enable` | Enable 2FA |
+| POST | `/api/auth/two-factor/disable` | Disable 2FA |
+| POST | `/api/auth/two-factor/verify-totp` | Verify TOTP code |
+| POST | `/api/auth/two-factor/verify-otp` | Verify OTP code |
+| POST | `/api/auth/two-factor/verify-backup-code` | Verify backup code |
+| POST | `/api/auth/two-factor/send-otp` | Send OTP to email |
+| POST | `/api/auth/two-factor/get-totp-uri` | Get TOTP URI for QR code |
+| POST | `/api/auth/two-factor/generate-backup-codes` | Generate backup codes |
+| POST | `/api/auth/two-factor/view-backup-codes` | View backup codes |
+
+---
+
+## Two-Factor Authentication (2FA)
+
+### Server Configuration
+
+```typescript
+import { betterAuth } from "better-auth";
+import { twoFactor } from "better-auth/plugins";
+
+export const auth = betterAuth({
+  appName: "JobHub",
+  plugins: [
+    twoFactor({
+      issuer: "JobHub",
+      allowPasswordless: false,
+      backupCodes: {
+        length: 10,
+        amount: 10
+      }
+    })
+  ],
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    storage: "database",
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 300, max: 3 },
+      "/two-factor/enable": { window: 60, max: 3 },
+      "/two-factor/verify-totp": { window: 60, max: 5 },
+      "/two-factor/verify-otp": { window: 60, max: 5 },
+      "/two-factor/verify-backup-code": { window: 60, max: 10 }
+    }
+  }
+});
+```
+
+### Client Configuration
+
+```typescript
+import { createAuthClient } from "better-auth/client";
+import { twoFactorClient } from "better-auth/client/plugins";
+
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return process.env.BETTER_AUTH_URL || "http://localhost:3000";
+};
+
+export const authClient = createAuthClient({
+  baseURL: getBaseUrl(),
+  plugins: [
+    twoFactorClient({
+      onTwoFactorRedirect() {
+        window.location.href = "/2fa";
+      }
+    })
+  ],
+  fetchOptions: {
+    onError: async (context) => {
+      const { response } = context;
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("X-Retry-After");
+        throw new Error(`Too many requests. Please wait ${retryAfter} seconds.`);
+      }
+    }
+  }
+});
+```
+
+### 2FA Enable Flow
+
+1. User visits `/enable-2fa` page
+2. User enters password for verification
+3. Server generates TOTP secret and returns QR code
+4. User scans QR code with authenticator app
+5. User enters verification code
+6. Server generates 10 backup codes
+7. User confirms backup codes saved
+8. 2FA enabled successfully
+
+### 2FA Verification Flow
+
+1. User signs in with email/password
+2. If 2FA enabled, response includes `twoFactorRedirect: true`
+3. User redirected to `/2fa` page
+4. User chooses verification method (TOTP, OTP, or backup code)
+5. User enters code
+6. Server verifies code and creates session
+
+---
+
+## Rate Limiting (Better-Auth Native)
+
+All rate limiting is now handled exclusively by Better-Auth. Custom express-rate-limit has been removed.
+
+### Configuration
+
+```typescript
+rateLimit: {
+  enabled: true,
+  window: 60,           // 60 seconds
+  max: 100,             // 100 requests per window
+  storage: "database",  // Database-backed storage
+  customRules: {
+    "/sign-in/email": { window: 60, max: 5 },
+    "/sign-up/email": { window: 300, max: 3 },
+    "/forgot-password": { window: 300, max: 3 },
+    "/reset-password": { window: 300, max: 5 },
+    "/two-factor/enable": { window: 60, max: 3 },
+    "/two-factor/verify-totp": { window: 60, max: 5 },
+    "/two-factor/verify-otp": { window: 60, max: 5 },
+    "/two-factor/verify-backup-code": { window: 60, max: 10 }
+  }
+}
+```
+
+### IP Address Detection
+
+```typescript
+advanced: {
+  ipAddress: {
+    ipAddressHeaders: ["x-forwarded-for", "cf-connecting-ip", "x-real-ip"]
+  }
+}
+```
+
+### Handling Rate Limit Errors
+
+When a request exceeds the rate limit, Better-Auth returns:
+- HTTP Status: 429
+- Header: `X-Retry-After` (seconds until retry)
+
+---
+
+## Security Fixes Applied
+
+### 1. Role Assignment (Critical)
+```typescript
+role: {
+  type: "string",
+  required: false,
+  defaultValue: "candidate",
+  inputable: false  // FIXED: Was true
+}
+```
+
+### 2. NoSQL Injection Prevention
+```javascript
+const sanitizeRegex = (input) => {
+  if (typeof input !== 'string') return '';
+  return input.replace(/[$^|(){}*+\\]/g, '\\$&');
+};
+```
+
+### 3. Removed Custom Rate Limiting
+- Removed express-rate-limit dependency
+- All rate limiting handled by Better-Auth
+- Database-backed rate limit storage
 
 ---
 

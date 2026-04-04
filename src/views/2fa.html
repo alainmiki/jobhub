@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Two-Factor Authentication - JobHub</title>
+  <link rel="stylesheet" href="/css/output.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body class="min-h-screen bg-base-200">
+  {% include 'partials/header.html' %}
+
+  <main class="container mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto">
+      <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+          <h2 class="card-title text-2xl font-bold text-center mb-6">
+            <i class="fa-solid fa-shield-halved mr-2"></i>
+            Two-Factor Authentication
+          </h2>
+
+          {% if error %}
+          <div class="alert alert-error mb-4">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>{{ error }}</span>
+          </div>
+          {% endif %}
+
+          {% if success %}
+          <div class="alert alert-success mb-4">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>{{ success }}</span>
+          </div>
+          {% endif %}
+
+          {% if method === 'totp' %}
+          <form action="/api/auth/two-factor/verify-totp" method="POST" class="space-y-4">
+            <input type="hidden" name="challenge" value="{{ challenge }}">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Enter 6-digit code from your authenticator app</span>
+              </label>
+              <input type="text" name="code" class="input input-bordered input-lg text-center tracking-widest font-mono" 
+                     maxlength="6" pattern="[0-9]*" inputmode="numeric" required autocomplete="one-time-code">
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-2">
+                <input type="checkbox" name="trustDevice" class="checkbox checkbox-primary">
+                <span class="label-text">Trust this device for 30 days</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Verify</button>
+          </form>
+
+          {% elseif method === 'otp' %}
+          <form action="/api/auth/two-factor/verify-otp" method="POST" class="space-y-4">
+            <input type="hidden" name="challenge" value="{{ challenge }}">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Enter the code sent to your email</span>
+              </label>
+              <input type="text" name="code" class="input input-bordered input-lg text-center tracking-widest font-mono" 
+                     maxlength="6" pattern="[0-9]*" inputmode="numeric" required>
+            </div>
+            <div class="form-control">
+              <label class="label cursor-pointer justify-start gap-2">
+                <input type="checkbox" name="trustDevice" class="checkbox checkbox-primary">
+                <span class="label-text">Trust this device for 30 days</span>
+              </label>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Verify</button>
+          </form>
+
+          {% elseif method === 'backup' %}
+          <form action="/api/auth/two-factor/verify-backup-code" method="POST" class="space-y-4">
+            <input type="hidden" name="challenge" value="{{ challenge }}">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Enter a backup code</span>
+              </label>
+              <input type="text" name="code" class="input input-bordered input-lg text-center font-mono" 
+                     required placeholder="XXXXXXXXXX">
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Verify</button>
+          </form>
+
+          {% else %}
+          <div class="text-center py-8">
+            <p class="text-lg mb-4">Select verification method:</p>
+            <div class="space-y-3">
+              {% if user.twoFactorEnabled %}
+              <form action="/api/auth/two-factor/verify-totp" method="POST">
+                <input type="hidden" name="challenge" value="{{ challenge }}">
+                <button type="submit" class="btn btn-outline btn-block">
+                  <i class="fa-solid fa-mobile-screen mr-2"></i> Use Authenticator App
+                </button>
+              </form>
+              {% endif %}
+              <form action="/api/auth/two-factor/send-otp" method="POST">
+                <input type="hidden" name="challenge" value="{{ challenge }}">
+                <button type="submit" class="btn btn-outline btn-block">
+                  <i class="fa-solid fa-envelope mr-2"></i> Send Code to Email
+                </button>
+              </form>
+            </div>
+          </div>
+          {% endif %}
+
+          <div class="divider">OR</div>
+
+          <form action="/api/auth/sign-out" method="POST">
+            <button type="submit" class="btn btn-ghost btn-block">
+              <i class="fa-solid fa-right-from-bracket mr-2"></i> Sign Out
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  {% include 'partials/footer.html' %}
+  <script src="/js/auth-client.js" type="module"></script>
+</body>
+</html>

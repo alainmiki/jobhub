@@ -1,7 +1,32 @@
 import { createAuthClient } from "better-auth/client";
+import { twoFactorClient } from "better-auth/client/plugins";
+
+const getBaseUrl = () => {
+  if (typeof window !== 'undefined') {
+    return window.location.origin;
+  }
+  return process.env.BETTER_AUTH_URL || "http://localhost:3000";
+};
 
 export const authClient = createAuthClient({
-  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000"
+  baseURL: getBaseUrl(),
+  plugins: [
+    twoFactorClient({
+      onTwoFactorRedirect() {
+        window.location.href = "/2fa";
+      }
+    })
+  ],
+  fetchOptions: {
+    onError: async (context) => {
+      const { response } = context;
+      if (response.status === 429) {
+        const retryAfter = response.headers.get("X-Retry-After");
+        console.error(`Rate limit exceeded. Retry after ${retryAfter} seconds`);
+        throw new Error(`Too many requests. Please wait ${retryAfter} seconds.`);
+      }
+    }
+  }
 });
 
 // Helper functions for authentication
