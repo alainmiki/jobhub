@@ -1,0 +1,187 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <a href="/dashboard/employer" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+    
+    <h1 class="text-3xl font-bold mb-6">Post a New Job</h1>
+    
+    {% if not company %}
+    <div class="alert alert-warning mb-6 rounded-xl">
+      <i class="fas fa-exclamation-triangle"></i>
+      <div>
+        <h3 class="font-bold">Company Not Found</h3>
+        <p>You need to create a company profile before posting jobs.</p>
+      </div>
+      <a href="/company/create" class="btn btn-warning btn-sm">Create Company</a>
+    </div>
+    {% else %}
+    <form method="POST" action="/jobs" class="space-y-6">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-6">
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Job Title <span class="text-error">*</span></span>
+            </label>
+            <input type="text" name="title" required class="input input-bordered rounded-xl" placeholder="e.g., Senior Full Stack Developer" />
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Description <span class="text-error">*</span></span>
+              <span class="label-text-alt text-xs text-base-content/50">Min 50 characters</span>
+            </label>
+            <textarea name="description" required class="textarea textarea-bordered h-40 rounded-xl" placeholder="Describe the role, responsibilities, and what makes this opportunity exciting..."></textarea>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Location <span class="text-error">*</span></span>
+              </label>
+              <select name="location" class="select select-bordered rounded-xl" required>
+                <option value="">Select Location</option>
+                <option value="Remote">Remote</option>
+                <option value="On-site">On-site</option>
+                <option value="Hybrid">Hybrid</option>
+                <option value="Flexible">Flexible</option>
+              </select>
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Job Type <span class="text-error">*</span></span>
+              </label>
+              <select name="type" class="select select-bordered rounded-xl" required>
+                <option value="">Select Type</option>
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Internship">Internship</option>
+                <option value="Contract">Contract</option>
+                <option value="Freelance">Freelance</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Category</span>
+              </label>
+              <select name="category" class="select select-bordered rounded-xl">
+                <option value="Other">Select Category</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Design">Design</option>
+                <option value="Marketing">Marketing</option>
+                <option value="Sales">Sales</option>
+                <option value="Finance">Finance</option>
+                <option value="HR">HR</option>
+                <option value="Operations">Operations</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Experience Level</span>
+              </label>
+              <select name="experienceLevel" class="select select-bordered rounded-xl">
+                <option value="Entry">Entry Level</option>
+                <option value="Mid">Mid Level</option>
+                <option value="Senior">Senior Level</option>
+                <option value="Lead">Lead</option>
+                <option value="Executive">Executive</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Salary Min (USD)</span>
+              </label>
+              <input type="number" name="salary[min]" class="input input-bordered rounded-xl" placeholder="50000" />
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Salary Max (USD)</span>
+              </label>
+              <input type="number" name="salary[max]" class="input input-bordered rounded-xl" placeholder="100000" />
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">City</span>
+              </label>
+              <input type="text" name="city" class="input input-bordered rounded-xl" placeholder="San Francisco" />
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Country</span>
+              </label>
+              <input type="text" name="country" class="input input-bordered rounded-xl" placeholder="USA" />
+            </div>
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Application Deadline</span>
+            </label>
+            <input type="date" name="applicationDeadline" class="input input-bordered rounded-xl" />
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label cursor-pointer justify-start gap-3">
+              <input type="checkbox" name="isRemote" value="true" class="checkbox checkbox-primary" />
+              <span class="label-text">This is a remote position</span>
+            </label>
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Requirements</span>
+              <span class="label-text-alt text-xs text-base-content/50">One requirement per line</span>
+            </label>
+            <textarea name="requirements" class="textarea textarea-bordered h-24 rounded-xl" placeholder="5+ years of experience&#10;Bachelor's degree in Computer Science&#10;Strong communication skills"></textarea>
+          </div>
+          
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text font-medium">Skills</span>
+              <span class="label-text-alt text-xs text-base-content/50">Comma separated</span>
+            </label>
+            <input type="text" name="skills" class="input input-bordered rounded-xl" placeholder="React, Node.js, TypeScript, AWS, PostgreSQL" />
+          </div>
+        </div>
+      </div>
+      
+      {% if company and not company.verified %}
+      <div class="alert alert-info rounded-xl bg-info/10 border border-info/20">
+        <i class="fas fa-info-circle"></i>
+        <div>
+          <h3 class="font-bold">Pending Approval</h3>
+          <p class="text-sm">Your company is not verified. This job will be pending review until your company is approved.</p>
+        </div>
+      </div>
+      {% endif %}
+      
+      <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary-gradient rounded-xl">
+          <i class="fas fa-paper-plane mr-2"></i>Post Job
+        </button>
+        <a href="/dashboard/employer" class="btn btn-ghost rounded-xl">Cancel</a>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

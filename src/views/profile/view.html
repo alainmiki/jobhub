@@ -1,47 +1,345 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4">
-  <div class="max-w-4xl mx-auto">
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h1 class="card-title text-3xl">{{ profile.userId.name }}</h1>
-        
-        <p class="text-base-content/70">{{ profile.userId.email }}</p>
-        
-        {% if profile.role %}
-        <div class="mt-2">
-          <span class="badge badge-primary">{{ profile.role }}</span>
+<div class="min-h-screen bg-base-200/30">
+  <div class="bg-base-100 border-b border-base-200/50">
+    <div class="max-w-7xl mx-auto py-8 px-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">My Profile</h1>
+          <p class="text-base-content/60">Manage your professional profile and showcase your skills</p>
         </div>
-        {% endif %}
-        
-        {% if profile.bio %}
-        <div class="mt-4">
-          <h2 class="font-semibold">Bio</h2>
-          <p class="mt-2">{{ profile.bio }}</p>
+        <div class="flex gap-3">
+          <a href="/profile/edit" class="btn btn-primary rounded-xl">
+            <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
+          </a>
+          <a href="/profile/applications" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-briefcase mr-2"></i>My Applications
+          </a>
         </div>
-        {% endif %}
-        
-        {% if profile.skills and profile.skills.length %}
-        <div class="mt-4">
-          <h2 class="font-semibold">Skills</h2>
-          <div class="flex flex-wrap gap-2 mt-2">
-            {% for skill in profile.skills %}
-            <span class="badge badge-outline">{{ skill }}</span>
-            {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto py-8 px-4">
+    {% if profile.profileCompletionScore < 70 %}
+    <div class="alert alert-warning mb-8 rounded-2xl shadow-sm">
+      <i class="fa-solid fa-circle-exclamation text-warning"></i>
+      <div>
+        <span class="font-semibold">Profile is {{ profile.profileCompletionScore }}% complete</span>
+        <p class="text-sm">Complete your profile to increase your chances of getting hired. Add your resume, skills, and work experience.</p>
+      </div>
+      <a href="/profile/edit" class="btn btn-warning btn-sm rounded-xl">Complete Now</a>
+    </div>
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div class="lg:col-span-1">
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl sticky top-4">
+          <div class="card-body p-6">
+            <div class="text-center mb-6">
+              <div class="avatar w-24 h-24 mx-auto mb-4">
+                {% if profile.userId.image %}
+                <img src="{{ profile.userId.image }}" alt="{{ profile.userId.name }}" class="rounded-full object-cover" />
+                {% else %}
+                <div class="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center">
+                  <i class="fa-solid fa-user text-4xl text-primary"></i>
+                </div>
+                {% endif %}
+              </div>
+              <h2 class="font-bold text-xl">{{ profile.userId.name }}</h2>
+              <p class="text-base-content/60 text-sm">{{ profile.userId.email }}</p>
+              {% if profile.headline %}
+              <p class="text-base-content/70 mt-2">{{ profile.headline }}</p>
+              {% endif %}
+            </div>
+
+            <div class="stats stats-vertical bg-base-200/50 rounded-xl mb-4">
+              <div class="stat px-4 py-3">
+                <div class="stat-title text-xs">Profile Completion</div>
+                <div class="stat-value text-primary">{{ profile.profileCompletionScore }}%</div>
+                <div class="stat-desc">Target: 100%</div>
+              </div>
+            </div>
+
+            <div class="space-y-3">
+              <div class="flex items-center gap-3 text-sm">
+                <i class="fa-solid fa-envelope text-base-content/50 w-5"></i>
+                <span class="text-base-content/70 truncate">{{ profile.userId.email }}</span>
+              </div>
+              {% if profile.phone %}
+              <div class="flex items-center gap-3 text-sm">
+                <i class="fa-solid fa-phone text-base-content/50 w-5"></i>
+                <span class="text-base-content/70">{{ profile.phone }}</span>
+              </div>
+              {% endif %}
+              {% if profile.location %}
+              <div class="flex items-center gap-3 text-sm">
+                <i class="fa-solid fa-location-dot text-base-content/50 w-5"></i>
+                <span class="text-base-content/70">{{ profile.location }}{% if profile.country %}, {{ profile.country }}{% endif %}</span>
+              </div>
+              {% endif %}
+              {% if profile.website %}
+              <div class="flex items-center gap-3 text-sm">
+                <i class="fa-solid fa-globe text-base-content/50 w-5"></i>
+                <a href="{{ profile.website }}" target="_blank" class="text-primary hover:underline truncate">{{ profile.website }}</a>
+              </div>
+              {% endif %}
+              {% if profile.linkedin %}
+              <div class="flex items-center gap-3 text-sm">
+                <i class="fa-brands fa-linkedin text-base-content/50 w-5"></i>
+                <a href="{{ profile.linkedin }}" target="_blank" class="text-primary hover:underline">LinkedIn</a>
+              </div>
+              {% endif %}
+              {% if profile.github %}
+              <div class="flex items-center gap-3 text-sm">
+                <i class="fa-brands fa-github text-base-content/50 w-5"></i>
+                <a href="{{ profile.github }}" target="_blank" class="text-primary hover:underline">GitHub</a>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if profile.availability %}
+            <div class="divider">Availability</div>
+            <div class="badge badge-lg {% if profile.availability.available %}badge-success{% else %}badge-error{% endif %}">
+              {% if profile.availability.available %}<i class="fa-solid fa-check-circle mr-1"></i>Available{% else %}<i class="fa-solid fa-xmark-circle mr-1"></i>Not Available{% endif %}
+            </div>
+            {% if profile.availability.noticePeriod %}
+            <p class="text-xs text-base-content/60 mt-2">Notice period: {{ profile.availability.noticePeriod }}</p>
+            {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="lg:col-span-3 space-y-6">
+        {% if stats %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+            <div class="card-body p-4 text-center">
+              <div class="text-2xl font-bold text-primary">{{ stats.totalApplications }}</div>
+              <div class="text-xs text-base-content/50">Total Applications</div>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+            <div class="card-body p-4 text-center">
+              <div class="text-2xl font-bold text-warning">{{ stats.pendingApplications }}</div>
+              <div class="text-xs text-base-content/50">Pending</div>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+            <div class="card-body p-4 text-center">
+              <div class="text-2xl font-bold text-info">{{ stats.shortlisted }}</div>
+              <div class="text-xs text-base-content/50">Shortlisted</div>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+            <div class="card-body p-4 text-center">
+              <div class="text-2xl font-bold text-error">{{ stats.rejected }}</div>
+              <div class="text-xs text-base-content/50">Rejected</div>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+            <div class="card-body p-4 text-center">
+              <div class="text-2xl font-bold text-success">{{ stats.accepted }}</div>
+              <div class="text-xs text-base-content/50">Accepted</div>
+            </div>
+          </div>
+          <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+            <div class="card-body p-4 text-center">
+              <div class="text-2xl font-bold text-secondary">{{ stats.upcomingInterviews }}</div>
+              <div class="text-xs text-base-content/50">Interviews</div>
+            </div>
           </div>
         </div>
         {% endif %}
-        
-        {% if profile.location %}
-        <div class="mt-4">
-          <span class="font-semibold">Location:</span> {{ profile.location }}
+
+        {% if profile.bio %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-user text-primary"></i>About
+            </h3>
+            <p class="text-base-content/70 whitespace-pre-line mt-2">{{ profile.bio }}</p>
+          </div>
         </div>
         {% endif %}
-        
+
+        {% if profile.skills and profile.skills.length > 0 %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-code text-primary"></i>Skills
+            </h3>
+            <div class="flex flex-wrap gap-2 mt-3">
+              {% for skill in profile.skills %}
+              <span class="badge badge-lg badge-primary/10 text-primary border border-primary/20">{{ skill }}</span>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if profile.experience and profile.experience.length > 0 %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-briefcase text-primary"></i>Experience
+            </h3>
+            <div class="space-y-4 mt-3">
+              {% for exp in profile.experience %}
+              <div class="flex gap-4 p-4 bg-base-200/30 rounded-xl">
+                <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {% if exp.companyLogo %}
+                  <img src="{{ exp.companyLogo }}" alt="{{ exp.company }}" class="w-8 h-8 object-contain" />
+                  {% else %}
+                  <i class="fa-solid fa-building text-lg text-base-content/40"></i>
+                  {% endif %}
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-bold">{{ exp.title }}</h4>
+                  <p class="text-base-content/70">{{ exp.company }}{% if exp.location %} · {{ exp.location }}{% endif %}</p>
+                  <p class="text-sm text-base-content/50 mt-1">
+                    {% if exp.startDate %}{{ exp.startDate | date('MMM YYYY') }}{% endif %} - {% if exp.current %}<span class="text-success">Present</span>{% else %}{{ exp.endDate | date('MMM YYYY') }}{% endif %}
+                  </p>
+                  {% if exp.description %}
+                  <p class="text-sm text-base-content/70 mt-2 whitespace-pre-line">{{ exp.description }}</p>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if profile.education and profile.education.length > 0 %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-graduation-cap text-primary"></i>Education
+            </h3>
+            <div class="space-y-4 mt-3">
+              {% for edu in profile.education %}
+              <div class="flex gap-4 p-4 bg-base-200/30 rounded-xl">
+                <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i class="fa-solid fa-university text-lg text-base-content/40"></i>
+                </div>
+                <div class="flex-1">
+                  <h4 class="font-bold">{{ edu.degree }}</h4>
+                  <p class="text-base-content/70">{{ edu.institution }}{% if edu.field %} · {{ edu.field }}{% endif %}</p>
+                  <p class="text-sm text-base-content/50 mt-1">
+                    {% if edu.startDate %}{{ edu.startDate | date('YYYY') }}{% endif %} - {% if edu.current %}<span class="text-success">Present</span>{% else %}{{ edu.endDate | date('YYYY') }}{% endif %}
+                    {% if edu.grade %} · Grade: {{ edu.grade }}{% endif %}
+                  </p>
+                  {% if edu.description %}
+                  <p class="text-sm text-base-content/70 mt-2">{{ edu.description }}</p>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
         {% if profile.resume %}
-        <div class="mt-4">
-          <a href="{{ profile.resume.url }}" class="btn btn-outline btn-sm" target="_blank">View Resume</a>
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-file-pdf text-primary"></i>Resume
+            </h3>
+            <div class="flex items-center justify-between mt-3 p-4 bg-base-200/30 rounded-xl">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 bg-error/10 rounded-xl flex items-center justify-center">
+                  <i class="fa-solid fa-file-pdf text-2xl text-error"></i>
+                </div>
+                <div>
+                  <p class="font-medium">{{ profile.resume.fileName }}</p>
+                  <p class="text-sm text-base-content/50">Uploaded {{ profile.resume.uploadedAt | date('MMM D, YYYY') }}</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <a href="{{ profile.resume.url }}" class="btn btn-outline btn-sm rounded-xl" download>
+                  <i class="fa-solid fa-download mr-2"></i>Download
+                </a>
+                <a href="{{ profile.resume.url }}" target="_blank" class="btn btn-primary btn-sm rounded-xl">
+                  <i class="fa-solid fa-eye mr-2"></i>View
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if profile.preferredJobTypes and profile.preferredJobTypes.length > 0 %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-briefcase text-primary"></i>Job Preferences
+            </h3>
+            <div class="flex flex-wrap gap-2 mt-3">
+              {% for jobType in profile.preferredJobTypes %}
+              <span class="badge badge-lg badge-outline">{{ jobType }}</span>
+              {% endfor %}
+            </div>
+            {% if profile.preferredLocations and profile.preferredLocations.length > 0 %}
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-base-content/60">Preferred Locations:</p>
+              <div class="flex flex-wrap gap-2 mt-1">
+                {% for loc in profile.preferredLocations %}
+                <span class="badge badge-sm badge-ghost">{{ loc }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+            {% if profile.expectedSalary %}
+            <div class="mt-4">
+              <p class="text-sm font-semibold text-base-content/60">Expected Salary:</p>
+              <p class="text-lg font-bold text-primary mt-1">
+                {{ profile.expectedSalary.currency }} {{ profile.expectedSalary.min | number }} - {{ profile.expectedSalary.max | number }}
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if recentApplications and recentApplications.length > 0 %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <div class="flex items-center justify-between">
+              <h3 class="font-bold text-lg flex items-center gap-2">
+                <i class="fa-solid fa-clock text-primary"></i>Recent Applications
+              </h3>
+              <a href="/profile/applications" class="btn btn-ghost btn-sm rounded-xl">View All</a>
+            </div>
+            <div class="space-y-3 mt-3">
+              {% for app in recentApplications %}
+              <a href="/applications/{{ app._id }}" class="flex items-center gap-4 p-4 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors group">
+                <div class="w-10 h-10 bg-base-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {% if app.job and app.job.company and app.job.company.logo %}
+                  <img src="{{ app.job.company.logo }}" alt="{{ app.job.company.name }}" class="w-6 h-6 object-contain" />
+                  {% else %}
+                  <i class="fa-solid fa-building text-sm text-base-content/40"></i>
+                  {% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium group-hover:text-primary transition-colors truncate">{{ app.job.title if app.job else 'Job' }}</p>
+                  <p class="text-sm text-base-content/50 truncate">{{ app.job.company.name if app.job and app.job.company else 'Company' }}</p>
+                </div>
+                <span class="badge badge-sm 
+                  {% if app.status == 'accepted' %}badge-success
+                  {% elif app.status == 'rejected' %}badge-error
+                  {% elif app.status == 'shortlisted' %}badge-info
+                  {% elif app.status == 'interview_scheduled' %}badge-warning
+                  {% else %}badge-ghost{% endif %}">
+                  {{ app.status | title }}
+                </span>
+              </a>
+              {% endfor %}
+            </div>
+          </div>
         </div>
         {% endif %}
       </div>

@@ -106,7 +106,28 @@ export const getUserProfile = async (userId) => {
 };
 
 export const validateInput = (req, res, next) => {
-  const excludedFields = ['password', 'confirmPassword', 'newPassword', 'currentPassword', '_csrf'];
+  const excludedFields = [
+    'password', 
+    'confirmPassword', 
+    'newPassword', 
+    'currentPassword', 
+    '_csrf',
+    'website',
+    'linkedin',
+    'github',
+    'twitter',
+    'image',
+    'coverImage',
+    'resume',
+    'bio',
+    'headline',
+    'coverLetter',
+    'description',
+    'notes',
+    'skills',
+    'education',
+    'experience'
+  ];
 
   const sanitize = (value) => {
     if (typeof value === 'string') {

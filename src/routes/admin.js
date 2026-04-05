@@ -80,7 +80,7 @@ export const initAdminRouter = (auth) => {
       return res.status(400).json({ success: false, error: 'Invalid role' });
     }
 
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, { returnDocument: 'after' });
     if (!user) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }

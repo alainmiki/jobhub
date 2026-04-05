@@ -28,22 +28,101 @@ const companySchema = new mongoose.Schema({
   socialLinks: {
     linkedin: String,
     twitter: String,
-    facebook: String
+    facebook: String,
+    instagram: String
   },
   verified: { type: Boolean, default: false },
   verifiedAt: Date,
+  verifiedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
   status: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending'
   },
+  rejectionReason: String,
+  analytics: {
+    totalViews: { type: Number, default: 0 },
+    totalApplications: { type: Number, default: 0 },
+    profileViews: { type: Number, default: 0 },
+    lastViewedAt: Date
+  },
+  settings: {
+    emailNotifications: { type: Boolean, default: true },
+    newApplicationAlert: { type: Boolean, default: true },
+    weeklyDigest: { type: Boolean, default: true },
+    applicationAutoArchive: { type: Boolean, default: false },
+    autoRejectAfterDays: { type: Number }
+  },
+  teamMembers: [{
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user' },
+    role: { type: String, enum: ['owner', 'admin', 'recruiter', 'viewer'], default: 'viewer' },
+    invitedAt: { type: Date, default: Date.now },
+    status: { type: String, enum: ['pending', 'accepted', 'declined'], default: 'pending' }
+  }],
+  branding: {
+    primaryColor: { type: String, default: '#4F46E5' },
+    accentColor: { type: String, default: '#10B981' }
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
+});
+
+companySchema.index({ status: 1 });
+companySchema.index({ verified: 1 });
+companySchema.index({ 'analytics.totalViews': -1 });
+companySchema.index({ 'analytics.totalApplications': -1 });
+
+companySchema.virtual('jobs', {
+  ref: 'Job',
+  localField: '_id',
+  foreignField: 'company'
+});
+
+companySchema.virtual('activeJobs', {
+  ref: 'Job',
+  localField: '_id',
+  foreignField: 'company',
+  match: { status: 'approved', isActive: true }
 });
 
 companySchema.pre('save', function(next) {
   this.updatedAt = new Date();
   next();
 });
+
+companySchema.methods.incrementViews = function() {
+  this.analytics.totalViews += 1;
+  this.analytics.lastViewedAt = new Date();
+  return this.save();
+};
+
+companySchema.methods.incrementProfileViews = function() {
+  this.analytics.profileViews += 1;
+  return this.save();
+};
+
+companySchema.methods.incrementApplications = function() {
+  this.analytics.totalApplications += 1;
+  return this.save();
+};
+
+companySchema.methods.toPublicJSON = function() {
+  return {
+    id: this._id,
+    name: this.name,
+    description: this.description,
+    industry: this.industry,
+    size: this.size,
+    headquarters: this.headquarters,
+    website: this.website,
+    logo: this.logo,
+    coverImage: this.coverImage,
+    foundedYear: this.foundedYear,
+    specializations: this.specializations,
+    socialLinks: this.socialLinks,
+    verified: this.verified,
+    createdAt: this.createdAt
+  };
+};
 
 export default mongoose.model('Company', companySchema);

@@ -7,7 +7,8 @@ export const validate = (req, res, next) => {
     if (req.headers.accept?.includes('json') || req.xhr) {
       return res.status(400).json({ error: errorMessage });
     }
-    return res.status(400).render('error', { message: errorMessage });
+    req.flash('error', errorMessage);
+    return res.redirect(req.get('Referrer') || '/'); 
   }
   next();
 };
@@ -53,14 +54,22 @@ export const companyValidators = {
     body('description').optional().isLength({ max: 5000 }),
     body('industry').optional().isLength({ max: 100 }),
     body('size').optional().isIn(['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+']),
-    body('website').optional().isURL().withMessage('Invalid website URL'),
+    body('website').optional({ checkFalsy: true }).trim().isURL({ 
+      require_protocol: false, 
+      require_tld: false, 
+      allow_underscores: true 
+    }).withMessage('Invalid website URL'),
     body('headquarters').optional().trim().isLength({ max: 100 })
   ],
   update: [
     param('id').isMongoId().withMessage('Invalid company ID'),
     body('name').optional().trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),
     body('description').optional().isLength({ max: 5000 }),
-    body('website').optional().isURL().withMessage('Invalid website URL')
+    body('website').optional({ checkFalsy: true }).trim().isURL({ 
+      require_protocol: false, 
+      require_tld: false, 
+      allow_underscores: true 
+    }).withMessage('Invalid website URL')
   ]
 };
 
@@ -70,8 +79,16 @@ export const profileValidators = {
     body('skills').optional().isArray({ max: 50 }).withMessage('Maximum 50 skills allowed'),
     body('location').optional().trim().isLength({ max: 200 }),
     body('phone').optional().trim().isLength({ max: 20 }),
-    body('website').optional().isURL().withMessage('Invalid website URL'),
-    body('linkedin').optional().trim().isLength({ max: 200 }),
+    body('website').optional({ checkFalsy: true }).trim().isURL({ 
+      require_protocol: false, 
+      require_tld: false, 
+      allow_underscores: true 
+    }).withMessage('Invalid website URL'),
+    body('linkedin').optional({ checkFalsy: true }).trim().isURL({ 
+      require_protocol: false, 
+      require_tld: false, 
+      allow_underscores: true 
+    }).withMessage('Invalid LinkedIn URL'),
     body('education').optional().isArray({ max: 10 }),
     body('experience').optional().isArray({ max: 10 })
   ]

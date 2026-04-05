@@ -47,15 +47,15 @@
               <h2 class="card-title">
                 <a href="/jobs/{{ job._id }}" class="hover:text-primary">{{ job.title }}</a>
               </h2>
-              <p class="text-base-content/70">{{ job.company.name }}</p>
+              <p class="text-base-content/70">{% if job.company %}{{ job.company.name }}{% else %}Company{% endif %}</p>
             </div>
             <span class="badge badge-ghost">{{ job.type }}</span>
           </div>
           
           <div class="flex gap-4 text-sm mt-2">
             <span>{{ job.location }}</span>
-            {% if job.salary %}
-            <span>{{ job.salary.currency }} {{ job.salary.min }} - {{ job.salary.max }}</span>
+            {% if job.salary and job.salary.min and job.salary.max %}
+            <span>{{ job.salary.currency or 'USD' }} {{ job.salary.min }} - {{ job.salary.max }}</span>
             {% endif %}
           </div>
           

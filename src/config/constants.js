@@ -54,9 +54,15 @@ export const EXPERIENCE_LEVEL = [
 
 export const APPLICATION_STATUS = [
   'pending',
+  'viewed',
   'shortlisted',
   'rejected',
-  'accepted'
+  'accepted',
+  'interview_scheduled',
+  'interview_completed',
+  'offer_extended',
+  'offer_declined',
+  'withdrawn'
 ];
 
 export const COMPANY_SIZE = [

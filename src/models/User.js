@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 
-
-
+// This schema allows Mongoose to "populate" user data from the collection managed by Better-Auth
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
@@ -17,7 +16,8 @@ const userSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 }, { 
   collection: 'user',
-  strict: false
+  strict: false,
+  timestamps: true
 });
 
 userSchema.pre('save', function(next) {
@@ -25,5 +25,5 @@ userSchema.pre('save', function(next) {
   next();
 });
 
-const User = mongoose.models.User || mongoose.model('User', userSchema);
+const User = mongoose.models.user || mongoose.model('user', userSchema);
 export default User;

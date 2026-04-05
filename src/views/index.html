@@ -27,9 +27,15 @@
       <a href="/jobs" class="btn btn-primary-gradient btn-lg px-8 rounded-xl shadow-primary/30 hover:shadow-lg btn-hover-lift">
         <i class="fa-solid fa-search mr-2"></i><span>Browse Jobs</span>
       </a>
+      {% if not user %}
       <a href="/sign-up" class="btn btn-outline btn-lg px-8 rounded-xl btn-hover-lift">
-        <i class="fa-solid fa-user-plus mr-2"></i><span>Post a Job</span>
+        <i class="fa-solid fa-user-plus mr-2"></i><span>Create Free Account</span>
       </a>
+      {% else %}
+      <a href="/profile" class="btn btn-outline btn-lg px-8 rounded-xl btn-hover-lift">
+        <i class="fa-solid fa-user mr-2"></i><span>My Profile</span>
+      </a>
+      {% endif %}
     </div>
     
     <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 gsap-reveal stagger-4">

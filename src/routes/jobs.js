@@ -94,7 +94,7 @@ export const initJobsRouter = (auth) => {
       const job = await Job.findByIdAndUpdate(
         req.params.id,
         { $inc: { views: 1 } },
-        { new: true }
+        { returnDocument: 'after' }
       ).populate('company', 'name logo description industry size headquarters website');
       
       if (!job) {
@@ -110,12 +110,26 @@ export const initJobsRouter = (auth) => {
         hasApplied = !!application;
       }
       
-      res.render('jobs/show', { job, hasApplied });
+      res.render('jobs/show', { job, hasApplied, userProfile: req.userProfile });
     } catch (error) {
       console.error('Error fetching job:', error);
       res.status(500).render('error', { message: 'Failed to load job' });
     }
   });
+
+  router.get('/new',
+    isAuthenticated(auth),
+    isEmployer(auth),
+    async (req, res) => {
+      try {
+        const company = await Company.findOne({ userId: req.userId });
+        res.render('jobs/create', { company });
+      } catch (error) {
+        console.error('Error loading create job form:', error);
+        res.status(500).render('error', { message: 'Failed to load form' });
+      }
+    }
+  );
 
   router.post('/',
     isAuthenticated(auth),
@@ -137,6 +151,14 @@ export const initJobsRouter = (auth) => {
         return res.redirect('/company/create');
       }
       
+      // Parse skills and requirements if they come as comma-separated strings
+      const skills = typeof req.body.skills === 'string' 
+        ? req.body.skills.split(',').map(s => s.trim()).filter(s => s) 
+        : req.body.skills;
+      const requirements = typeof req.body.requirements === 'string'
+        ? req.body.requirements.split('\n').map(r => r.trim()).filter(r => r)
+        : req.body.requirements;
+
       const jobData = {
         title: req.body.title,
         description: req.body.description,
@@ -144,8 +166,8 @@ export const initJobsRouter = (auth) => {
         type: req.body.type,
         category: req.body.category || 'Other',
         experienceLevel: req.body.experienceLevel || 'Entry',
-        skills: req.body.skills || [],
-        requirements: req.body.requirements || [],
+        skills: skills || [],
+        requirements: requirements || [],
         salary: req.body.salary || {},
         city: req.body.city,
         country: req.body.country,
@@ -159,6 +181,7 @@ export const initJobsRouter = (auth) => {
       const job = new Job(jobData);
       await job.save();
       logger.info(`Job created: ${job._id} by user: ${req.userId}`);
+      req.flash('success', 'Job posted successfully! It is now under review.');
       
       res.redirect(`/jobs/${job._id}`);
     })
@@ -212,24 +235,43 @@ export const initJobsRouter = (auth) => {
         return res.status(404).render('error', { message: 'Job not found' });
       }
       
+      // Parse skills and requirements if they come as strings
+      let skills, requirements;
+      if (typeof req.body.skills === 'string') {
+        skills = req.body.skills.split(',').map(s => s.trim()).filter(s => s);
+      }
+      if (typeof req.body.requirements === 'string') {
+        requirements = req.body.requirements.split('\n').map(r => r.trim()).filter(r => r);
+      }
+      
       const allowedUpdates = [
         'title', 'description', 'location', 'type', 'category',
-        'experienceLevel', 'skills', 'requirements', 'salary',
-        'city', 'country', 'applicationDeadline', 'isRemote'
+        'experienceLevel', 'salary', 'city', 'country', 'applicationDeadline', 'isRemote'
       ];
       
       const updates = {};
       for (const key of allowedUpdates) {
         if (req.body[key] !== undefined) {
-          updates[key] = req.body[key];
+          if (key === 'salary' && req.body.salary) {
+            updates[key] = {
+              min: req.body.salary.min ? parseInt(req.body.salary.min) : undefined,
+              max: req.body.salary.max ? parseInt(req.body.salary.max) : undefined,
+              currency: 'USD'
+            };
+          } else {
+            updates[key] = req.body[key];
+          }
         }
       }
+      if (skills) updates.skills = skills;
+      if (requirements) updates.requirements = requirements;
       updates.updatedAt = new Date();
       
       Object.assign(job, updates);
       await job.save();
       
       logger.info(`Job updated: ${job._id} by user: ${req.userId}`);
+      req.flash('success', 'Job listing updated.');
       res.redirect(`/jobs/${job._id}`);
     })
   );
@@ -250,7 +292,8 @@ export const initJobsRouter = (auth) => {
       }
       
       logger.info(`Job deleted: ${req.params.id} by user: ${req.userId}`);
-      res.redirect('/employer/jobs');
+      req.flash('success', 'Job deleted successfully.');
+      res.redirect('/dashboard/employer');
     })
   );
 

@@ -132,21 +132,28 @@ export const initAuth = async (db) => {
       user: {
         create: {
           after: async (user) => {
-            logger.info(`User created: ${user.email} ID: ${user.id}`);
+            // Ensure we capture the correct ID field from the database record
+            const userId = user.id || user._id;
+            logger.info(`[Auth Hook] Creating profile for user: ${user.email} (${userId})`);
             
-            const role = user.role || 'candidate';
-            
-            const profile = new UserProfile({
-              userId: user.id,
-              role: role,
-              skills: [],
-              education: [],
-              experience: [],
-              isProfileComplete: role === 'candidate' || role === 'employer' ? false : true
-            });
-            
-            await profile.save();
-            logger.info(`UserProfile created for: ${user.email} with role: ${role}`);
+            try {
+              const role = user.role || 'candidate';
+              
+              // Use upsert to handle potential race conditions during registration
+              await UserProfile.findOneAndUpdate(
+                { userId: userId },
+                { 
+                  userId: userId,
+                  role: role,
+                  isProfileComplete: (role === 'candidate' || role === 'employer') ? false : true
+                },
+                { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true }
+              );
+              
+              logger.info(`[Auth Hook] UserProfile successfully populated for: ${user.email}`);
+            } catch (error) {
+              logger.error(`[Auth Hook] Failed to populate UserProfile for ${user.email}: ${error.message}`);
+            }
           }
         }
       }

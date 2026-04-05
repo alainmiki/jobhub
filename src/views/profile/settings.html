@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-2xl mx-auto">
+    <div class="mb-8">
+      <a href="/profile" class="btn btn-ghost btn-sm rounded-xl mb-4">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Profile
+      </a>
+      <h1 class="text-3xl font-bold mb-2">Profile Settings</h1>
+      <p class="text-base-content/60">Manage your notification and privacy settings</p>
+    </div>
+
+    <form method="POST" action="/profile/settings?_method=PUT" class="space-y-6">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-bell text-primary"></i>Email Notifications
+          </h2>
+          
+          <div class="space-y-4 mt-4">
+            <label class="flex items-center justify-between p-3 bg-base-200/30 rounded-xl cursor-pointer">
+              <div>
+                <p class="font-semibold">Application Updates</p>
+                <p class="text-sm text-base-content/60">Get notified when employers view or update your applications</p>
+              </div>
+              <input type="checkbox" name="emailNotifications" class="toggle toggle-primary" checked />
+            </label>
+            
+            <label class="flex items-center justify-between p-3 bg-base-200/30 rounded-xl cursor-pointer">
+              <div>
+                <p class="font-semibold">Job Alerts</p>
+                <p class="text-sm text-base-content/60">Receive emails about new jobs matching your preferences</p>
+              </div>
+              <input type="checkbox" name="jobAlerts" class="toggle toggle-primary" checked />
+            </label>
+            
+            <label class="flex items-center justify-between p-3 bg-base-200/30 rounded-xl cursor-pointer">
+              <div>
+                <p class="font-semibold">Weekly Digest</p>
+                <p class="text-sm text-base-content/60">Get a weekly summary of your application activity</p>
+              </div>
+              <input type="checkbox" name="weeklyDigest" class="toggle toggle-primary" checked />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-eye text-primary"></i>Profile Privacy
+          </h2>
+          
+          <div class="form-control mt-4">
+            <label class="label"><span class="label-text font-semibold">Who can view your profile?</span></label>
+            <select name="visibility" class="select select-bordered rounded-xl">
+              <option value="public">Public - Anyone can view</option>
+              <option value=" employers-only">Employers Only - Only logged in employers</option>
+              <option value="connections">Connections Only</option>
+              <option value="private">Private - Only you</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-download text-primary"></i>Export Data
+          </h2>
+          <p class="text-sm text-base-content/60 mb-4">Download a copy of your profile data</p>
+          
+          <a href="/profile/export" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-download mr-2"></i>Download Profile (JSON)
+          </a>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3">
+        <a href="/profile" class="btn btn-ghost rounded-xl">Cancel</a>
+        <button type="submit" class="btn btn-primary rounded-xl">
+          <i class="fa-solid fa-save mr-2"></i>Save Settings
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

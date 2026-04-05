@@ -29,8 +29,13 @@
         <ul class="space-y-2">
           <li><a href="/jobs" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Browse Jobs</a></li>
           <li><a href="/matches" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Job Matches</a></li>
-          <li><a href="/profile" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Create Profile</a></li>
+          {% if user and user.role == 'candidate' %}
+          <li><a href="/profile" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">My Profile</a></li>
           <li><a href="/applications/my-applications" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">My Applications</a></li>
+          <li><a href="/profile/interviews" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">My Interviews</a></li>
+          {% elseif not user %}
+          <li><a href="/sign-up" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Create Profile</a></li>
+          {% endif %}
         </ul>
       </div>
       
@@ -40,21 +45,28 @@
         </h3>
         <ul class="space-y-2">
           <li><a href="/company/create" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Post a Job</a></li>
+          {% if user and user.role == 'employer' %}
           <li><a href="/dashboard/employer" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Employer Dashboard</a></li>
+          <li><a href="/jobs" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Manage Jobs</a></li>
+          <li><a href="/applications/employer" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Applications</a></li>
           <li><a href="/matches/candidates" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Search Candidates</a></li>
           <li><a href="/company" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Manage Company</a></li>
+          {% elseif not user %}
+          <li><a href="/sign-up?role=employer" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Create Company</a></li>
+          {% endif %}
         </ul>
       </div>
       
       <div>
         <h3 class="font-bold mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-circle-info text-primary"></i>Company
+          <i class="fa-solid fa-circle-info text-primary"></i>Help & Support
         </h3>
         <ul class="space-y-2">
-          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">About Us</a></li>
-          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Contact</a></li>
-          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Privacy Policy</a></li>
-          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Terms of Service</a></li>
+          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Help Center</a></li>
+          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">How It Works</a></li>
+          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Resume Tips</a></li>
+          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Interview Preparation</a></li>
+          <li><a href="#" class="text-base-content/60 hover:text-primary transition-colors hover:translate-x-1 inline-block">Salary Guide</a></li>
         </ul>
       </div>
     </div>

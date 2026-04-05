@@ -1,41 +1,197 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4">
-  <div class="max-w-4xl mx-auto">
-    <h1 class="text-3xl font-bold mb-6">Received Applications</h1>
-    
-    {% if applications.length %}
-    <div class="space-y-4">
-      {% for app in applications %}
-      <div class="card bg-base-100 shadow">
-        <div class="card-body">
-          <div class="flex justify-between items-start">
-            <div>
-              <h2 class="card-title">{{ app.job.title }}</h2>
-              <p class="text-base-content/70">Applicant ID: {{ app.candidate.userId }}</p>
-            </div>
-            <span class="badge {% if app.status == 'accepted' %}badge-success{% elif app.status == 'rejected' %}badge-error{% elif app.status == 'shortlisted' %}badge-info{% else %}badge-warning{% endif %}">
-              {{ app.status }}
-            </span>
-          </div>
-          
-          {% if app.coverLetter %}
-          <p class="text-sm mt-2 line-clamp-2">{{ app.coverLetter }}</p>
-          {% endif %}
-          
-          <div class="card-actions justify-end mt-4">
-            <a href="/applications/{{ app._id }}" class="btn btn-ghost btn-sm">View</a>
-            <button onclick="updateStatus('{{ app._id }}', 'shortlisted')" class="btn btn-info btn-sm">Shortlist</button>
-            <button onclick="updateStatus('{{ app._id }}', 'accepted')" class="btn btn-success btn-sm">Accept</button>
-            <button onclick="updateStatus('{{ app._id }}', 'rejected')" class="btn btn-error btn-sm">Reject</button>
-          </div>
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-6xl mx-auto">
+    <div class="mb-8">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl font-bold">Applications Received</h1>
+          <p class="text-base-content/60">Review and manage all applications for your job postings</p>
+        </div>
+        <div class="flex gap-3">
+          <a href="/dashboard/employer" class="btn btn-ghost btn-sm rounded-xl">
+            <i class="fa-solid fa-arrow-left mr-2"></i>Dashboard
+          </a>
         </div>
       </div>
-      {% endfor %}
+    </div>
+
+    {% if not company %}
+    <div class="alert alert-warning rounded-xl mb-8">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>You need to create a company profile before you can view applications.</span>
+      <a href="/company/create" class="btn btn-warning btn-sm">Create Company</a>
     </div>
     {% else %}
-    <p class="text-center text-base-content/60 py-8">No applications received yet.</p>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      <a href="/applications/employer?status=all" class="card bg-base-100 shadow-sm border {% if not filters.status or filters.status == 'all' %}border-primary{% else %}border-base-200/50{% endif %} rounded-xl hover:border-primary/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold">{{ stats.total }}</div>
+          <div class="text-xs text-base-content/50">All</div>
+        </div>
+      </a>
+      <a href="/applications/employer?status=pending" class="card bg-base-100 shadow-sm border {% if filters.status == 'pending' %}border-warning{% else %}border-base-200/50{% endif %} rounded-xl hover:border-warning/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-warning">{{ stats.pending }}</div>
+          <div class="text-xs text-base-content/50">Pending</div>
+        </div>
+      </a>
+      <a href="/applications/employer?status=viewed" class="card bg-base-100 shadow-sm border {% if filters.status == 'viewed' %}border-secondary{% else %}border-base-200/50{% endif %} rounded-xl hover:border-secondary/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-secondary">{{ stats.pending }}</div>
+          <div class="text-xs text-base-content/50">Viewed</div>
+        </div>
+      </a>
+      <a href="/applications/employer?status=shortlisted" class="card bg-base-100 shadow-sm border {% if filters.status == 'shortlisted' %}border-info{% else %}border-base-200/50{% endif %} rounded-xl hover:border-info/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-info">{{ stats.shortlisted }}</div>
+          <div class="text-xs text-base-content/50">Shortlisted</div>
+        </div>
+      </a>
+      <a href="/applications/employer?status=interview_scheduled" class="card bg-base-100 shadow-sm border {% if filters.status == 'interview_scheduled' %}border-warning{% else %}border-base-200/50{% endif %} rounded-xl hover:border-warning/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-warning">{{ stats.interview }}</div>
+          <div class="text-xs text-base-content/50">Interviews</div>
+        </div>
+      </a>
+      <a href="/applications/employer?status=accepted" class="card bg-base-100 shadow-sm border {% if filters.status == 'accepted' %}border-success{% else %}border-base-200/50{% endif %} rounded-xl hover:border-success/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-success">{{ stats.accepted }}</div>
+          <div class="text-xs text-base-content/50">Hired</div>
+        </div>
+      </a>
+    </div>
+
+    {% if applications and applications.length > 0 %}
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl mb-6">
+      <div class="card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="table">
+            <thead>
+              <tr class="border-base-200/50 bg-base-200/20">
+                <th class="text-xs uppercase tracking-wider text-base-content/50">
+                  <input type="checkbox" class="checkbox checkbox-sm" />
+                </th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Candidate</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Job</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Applied</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Status</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Rating</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for app in applications %}
+              <tr class="border-base-200/30 hover:bg-base-200/30 transition-colors">
+                <td>
+                  <input type="checkbox" class="checkbox checkbox-sm" />
+                </td>
+                <td>
+                  <div class="flex items-center gap-3">
+                    <div class="avatar">
+                      {% if app.candidate and app.candidate.userId and app.candidate.userId.image %}
+                      <img src="{{ app.candidate.userId.image }}" class="w-10 rounded-xl" />
+                      {% else %}
+                      <div class="w-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span class="text-sm font-medium text-primary">{{ app.candidate.userId.name[0] if app.candidate and app.candidate.userId else '?' }}</span>
+                      </div>
+                      {% endif %}
+                    </div>
+                    <div>
+                      <p class="font-medium">{{ app.candidate.userId.name if app.candidate and app.candidate.userId else 'Unknown' }}</p>
+                      <p class="text-xs text-base-content/50">{{ app.candidate.userId.email if app.candidate and app.candidate.userId and app.candidate.userId.email else '' }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <div>
+                    <p class="text-sm font-medium">{{ app.job.title if app.job else 'Unknown Job' }}</p>
+                  </div>
+                </td>
+                <td class="text-sm text-base-content/60">
+                  <p>{{ app.createdAt | date('MMM D, YYYY') }}</p>
+                  <p class="text-xs">{{ app.createdAt | date('h:mm A') }}</p>
+                </td>
+                <td>
+                  <span class="badge badge-sm badge-outline 
+                    {% if app.status == 'accepted' %}badge-success
+                    {% elseif app.status == 'rejected' %}badge-error
+                    {% elseif app.status == 'shortlisted' %}badge-info
+                    {% elseif app.status == 'interview_scheduled' %}badge-warning
+                    {% elseif app.status == 'viewed' %}badge-secondary
+                    {% else %}badge-ghost{% endif %}">
+                    {{ app.status | replace('_', ' ') | title }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex">
+                    {% for i in range(1, 6) %}
+                    <i class="fa-solid fa-star text-sm {% if app.internalRating and i <= app.internalRating %}text-warning{% else %}text-base-content/20{% endif %}"></i>
+                    {% endfor %}
+                  </div>
+                </td>
+                <td>
+                  <div class="dropdown dropdown-end">
+                    <button tabindex="0" class="btn btn-ghost btn-xs rounded-lg">
+                      <i class="fa-solid fa-ellipsis"></i>
+                    </button>
+                    <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-xl bg-base-100 rounded-xl w-48 border border-base-200/50">
+                      <li><a href="/applications/{{ app._id }}" class="rounded-lg"><i class="fa-solid fa-eye mr-2"></i>View Details</a></li>
+                      {% if app.candidate and app.candidate.resume and app.candidate.resume.url %}
+                      <li><a href="{{ app.candidate.resume.url }}" target="_blank" class="rounded-lg"><i class="fa-solid fa-file-pdf mr-2"></i>View Resume</a></li>
+                      {% endif %}
+                      <li class="border-t border-base-200/50 mt-2 pt-2">
+                        <button onclick="updateStatus('{{ app._id }}', 'shortlisted')" class="rounded-lg"><i class="fa-solid fa-star mr-2"></i>Shortlist</button>
+                      </li>
+                      <li>
+                        <button onclick="updateStatus('{{ app._id }}', 'interview_scheduled')" class="rounded-lg"><i class="fa-solid fa-video mr-2"></i>Schedule Interview</button>
+                      </li>
+                      <li>
+                        <button onclick="updateStatus('{{ app._id }}', 'accepted')" class="rounded-lg"><i class="fa-solid fa-check mr-2"></i>Accept</button>
+                      </li>
+                      <li>
+                        <button onclick="updateStatus('{{ app._id }}', 'rejected')" class="rounded-lg text-error"><i class="fa-solid fa-xmark mr-2"></i>Reject</button>
+                      </li>
+                    </ul>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {% if pagination.pages > 1 %}
+    <div class="flex justify-center gap-2">
+      {% for p in range(1, pagination.pages + 1) %}
+      <a href="/applications/employer?page={{ p }}{% if filters.status %}&status={{ filters.status }}{% endif %}" class="btn btn-sm rounded-xl {% if p == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}">
+        {{ p }}
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% else %}
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+      <div class="card-body text-center py-16">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-base-200 flex items-center justify-center">
+          <i class="fa-solid fa-inbox text-4xl text-base-content/30"></i>
+        </div>
+        <h3 class="font-bold text-xl mb-2">No Applications Yet</h3>
+        <p class="text-base-content/60 mb-6">When candidates apply to your jobs, they'll appear here</p>
+        <div class="flex justify-center gap-3">
+          <a href="/jobs" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-briefcase mr-2"></i>View My Jobs
+          </a>
+          <a href="/matches/candidates" class="btn btn-primary-gradient rounded-xl">
+            <i class="fa-solid fa-users mr-2"></i>Find Candidates
+          </a>
+        </div>
+      </div>
+    </div>
     {% endif %}
   </div>
 </div>
@@ -44,17 +200,33 @@
 <script>
 async function updateStatus(id, status) {
   try {
+    const csrfToken = document.getElementById('globalCsrfToken')?.value || '';
     const res = await fetch(`/applications/${id}/status`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify({ status, notes: '' })
     });
     if (res.ok) {
       location.reload();
+    } else {
+      const data = await res.json();
+      alert(data.error || 'Failed to update status');
     }
   } catch (err) {
-    console.error(err);
+    console.error('Error updating status:', err);
+    alert('An error occurred while updating');
   }
 }
+
+document.querySelectorAll('select').forEach(select => {
+  select.addEventListener('change', () => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('status', select.value);
+    window.location.href = url.toString();
+  });
+});
 </script>
 {% endblock %}

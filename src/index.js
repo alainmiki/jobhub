@@ -27,6 +27,7 @@ import { initNotificationsRouter } from './routes/notifications.js';
 import { initMatchesRouter } from './routes/matches.js';
 import { initAuthRouter } from './routes/auth.js';
 
+import './models/User.js'; // Register user model for population
 import Job from './models/Job.js';
 
 dotenv.config();
@@ -100,8 +101,8 @@ app.set('view engine', 'html');
 // Session configuration (for app-specific sessions, not Better-Auth)
 app.use(session({
   secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: false,
+  resave: true, // Forces session to be saved even if unmodified
+  saveUninitialized: true, // Forces a session to be created for every visitor
   cookie: { 
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -126,7 +127,7 @@ app.use((req, res, next) => {
 // CSRF protection for custom forms
 app.use(csrf());
 app.use((req, res, next) => {
-  res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
+  res.locals.csrfToken = req.csrfToken();
   next();
 });
 
@@ -169,7 +170,8 @@ app.get('/', async (req, res) => {
 
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).render('error', { message: 'Form tampered with (Invalid CSRF Token)' });
+    req.flash('error', 'Session expired or form tampered with. Please try again.');
+    return res.redirect(req.get('Referrer') || '/');
   }
   logger.error(err.stack);
   res.status(500).render('error', { message: 'Something broke!' });

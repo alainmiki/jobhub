@@ -1,48 +1,227 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4">
-  <div class="max-w-4xl mx-auto">
-    <div class="card bg-base-100 shadow-xl">
-      <div class="card-body">
-        <h1 class="card-title text-3xl">{{ company.name }}</h1>
-        
-        {% if company.industry %}
-        <p class="text-base-content/70">{{ company.industry }}{% if company.size %} • {{ company.size }} employees{% endif %}</p>
-        {% endif %}
-        
-        {% if company.description %}
-        <div class="mt-4">
-          <h2 class="font-semibold">About</h2>
-          <p class="mt-2">{{ company.description }}</p>
-        </div>
-        {% endif %}
-        
-        <div class="grid grid-cols-2 gap-4 mt-4">
-          {% if company.headquarters %}
-          <div>
-            <span class="font-semibold">Headquarters:</span>
-            <p>{{ company.headquarters }}</p>
+<div class="min-h-screen bg-base-200/30">
+  {% if company.coverImage %}
+  <div class="h-48 md:h-64 bg-base-200 relative overflow-hidden">
+    <img src="{{ company.coverImage }}" alt="{{ company.name }}" class="w-full h-full object-cover" />
+    <div class="absolute inset-0 bg-gradient-to-t from-base-100 to-transparent"></div>
+  </div>
+  {% endif %}
+
+  <div class="max-w-5xl mx-auto px-4 -mt-16 relative z-10">
+    <div class="flex flex-col md:flex-row gap-6 mb-8">
+      <div class="flex-1">
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body p-6">
+            <div class="flex items-start gap-4">
+              <div class="w-20 h-20 bg-base-200 rounded-2xl flex items-center justify-center overflow-hidden flex-shrink-0">
+                {% if company.logo %}
+                <img src="{{ company.logo }}" alt="{{ company.name }}" class="w-16 h-16 object-contain" />
+                {% else %}
+                <i class="fa-solid fa-building text-3xl text-base-content/40"></i>
+                {% endif %}
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-1">
+                  <h1 class="text-2xl md:text-3xl font-bold">{{ company.name }}</h1>
+                  {% if company.verified %}
+                  <span class="badge badge-success badge-sm">
+                    <i class="fa-solid fa-check-circle mr-1"></i>Verified
+                  </span>
+                  {% endif %}
+                </div>
+                <p class="text-base-content/70">{{ company.industry }} • {{ company.size }} employees</p>
+                <div class="flex flex-wrap gap-2 mt-3">
+                  {% if company.website %}
+                  <a href="{{ company.website }}" target="_blank" class="btn btn-sm btn-ghost rounded-lg">
+                    <i class="fa-solid fa-globe mr-1"></i>Website
+                  </a>
+                  {% endif %}
+                  {% if company.socialLinks and company.socialLinks.linkedin %}
+                  <a href="{{ company.socialLinks.linkedin }}" target="_blank" class="btn btn-sm btn-ghost rounded-lg">
+                    <i class="fa-brands fa-linkedin mr-1"></i>LinkedIn
+                  </a>
+                  {% endif %}
+                  {% if company.socialLinks and company.socialLinks.twitter %}
+                  <a href="{{ company.socialLinks.twitter }}" target="_blank" class="btn btn-sm btn-ghost rounded-lg">
+                    <i class="fa-brands fa-twitter mr-1"></i>Twitter
+                  </a>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+            
+            {% if isOwner %}
+            <div class="divider"></div>
+            <div class="flex gap-2">
+              <a href="/company/{{ company._id }}/edit" class="btn btn-outline btn-sm rounded-xl">
+                <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
+              </a>
+              <a href="/dashboard/employer" class="btn btn-primary btn-sm rounded-xl">
+                <i class="fa-solid fa-gauge-high mr-2"></i>Dashboard
+              </a>
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
-          
-          {% if company.website %}
-          <div>
-            <span class="font-semibold">Website:</span>
-            <a href="{{ company.website }}" target="_blank" class="link link-primary">{{ company.website }}</a>
-          </div>
-          {% endif %}
         </div>
-        
-        {% if company.status %}
-        <div class="mt-4">
-          <span class="badge {% if company.status === 'approved' %}badge-success{% elif company.status === 'pending' %}badge-warning{% else %}badge-error{% endif %}">
-            {{ company.status }}
-          </span>
+      </div>
+      
+      <div class="w-full md:w-72">
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body p-5">
+            <h3 class="font-bold text-lg mb-4">Company Stats</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-base-content/60">Total Jobs</span>
+                <span class="font-bold">{{ stats.total }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-base-content/60">Applications</span>
+                <span class="font-bold">{{ stats.total }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-base-content/60">Active</span>
+                <span class="font-bold text-success">{{ stats.accepted }}</span>
+              </div>
+            </div>
+            
+            {% if company.headquarters or company.foundedYear %}
+            <div class="divider"></div>
+            <div class="space-y-2 text-sm">
+              {% if company.headquarters %}
+              <div class="flex items-center gap-2 text-base-content/70">
+                <i class="fa-solid fa-location-dot text-base-content/50"></i>
+                {{ company.headquarters }}
+              </div>
+              {% endif %}
+              {% if company.foundedYear %}
+              <div class="flex items-center gap-2 text-base-content/70">
+                <i class="fa-solid fa-calendar text-base-content/50"></i>
+                Founded {{ company.foundedYear }}
+              </div>
+              {% endif %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h2 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-align-left text-primary"></i>About Us
+            </h2>
+            <p class="text-base-content/70 whitespace-pre-line mt-4">{{ company.description }}</p>
+          </div>
+        </div>
+
+        {% if company.specializations and company.specializations.length > 0 %}
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h2 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-tags text-primary"></i>Specializations
+            </h2>
+            <div class="flex flex-wrap gap-2 mt-4">
+              {% for spec in company.specializations %}
+              <span class="badge badge-lg badge-primary/10 text-primary border border-primary/20">{{ spec }}</span>
+              {% endfor %}
+            </div>
+          </div>
         </div>
         {% endif %}
+
+        {% if jobs and jobs.length > 0 %}
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h2 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-briefcase text-primary"></i>Open Positions ({{ jobs.length }})
+            </h2>
+            <div class="space-y-3 mt-4">
+              {% for job in jobs %}
+              <a href="/jobs/{{ job._id }}" class="flex items-center gap-4 p-4 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors group">
+                <div class="w-10 h-10 bg-base-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+                  {% if company.logo %}
+                  <img src="{{ company.logo }}" alt="{{ company.name }}" class="w-6 h-6 object-contain" />
+                  {% else %}
+                  <i class="fa-solid fa-building text-base-content/40"></i>
+                  {% endif %}
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-medium group-hover:text-primary transition-colors">{{ job.title }}</h3>
+                  <p class="text-sm text-base-content/60">{{ job.location }} • {{ job.type }}</p>
+                </div>
+                {% if job.status == 'approved' and job.isActive %}
+                <span class="badge badge-sm badge-success">Active</span>
+                {% else %}
+                <span class="badge badge-sm badge-ghost">{{ job.status }}</span>
+                {% endif %}
+              </a>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="space-y-6">
+        {% if not isOwner %}
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body text-center">
+            <h3 class="font-bold mb-2">Interested in working here?</h3>
+            <p class="text-sm text-base-content/60 mb-4">Browse our open positions and apply today</p>
+            <a href="/jobs?company={{ company._id }}" class="btn btn-primary btn-block rounded-xl">
+              <i class="fa-solid fa-search mr-2"></i>View Open Jobs
+            </a>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg mb-4">Contact</h3>
+            {% if company.website %}
+            <a href="{{ company.website }}" target="_blank" class="btn btn-outline btn-block rounded-xl mb-2">
+              <i class="fa-solid fa-globe mr-2"></i>Visit Website
+            </a>
+            {% endif %}
+            <button class="btn btn-outline btn-block rounded-xl" onclick="document.getElementById('contactModal').showModal()">
+              <i class="fa-solid fa-envelope mr-2"></i>Send Message
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<dialog id="contactModal" class="modal">
+  <div class="modal-box max-w-lg">
+    <h3 class="font-bold text-xl mb-4">Contact {{ company.name }}</h3>
+    <form class="space-y-4">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Your Email</span></label>
+        <input type="email" class="input input-bordered rounded-xl" required />
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Subject</span></label>
+        <input type="text" class="input input-bordered rounded-xl" required />
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text font-medium">Message</span></label>
+        <textarea class="textarea textarea-bordered rounded-xl" rows="4" required></textarea>
+      </div>
+      <div class="modal-action">
+        <button type="submit" class="btn btn-primary rounded-xl">Send Message</button>
+        <button type="button" class="btn" onclick="document.getElementById('contactModal').close()">Cancel</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
+</dialog>
 {% endblock %}

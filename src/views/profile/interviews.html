@@ -1,0 +1,161 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+      <a href="/profile" class="btn btn-ghost btn-sm rounded-xl mb-4">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Profile
+      </a>
+      <h1 class="text-3xl font-bold mb-2">My Interviews</h1>
+      <p class="text-base-content/60">View and manage your scheduled interviews</p>
+    </div>
+
+    {% if upcomingInterviews and upcomingInterviews.length > 0 %}
+    <div class="mb-8">
+      <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-calendar-check text-warning"></i>Upcoming Interviews
+      </h2>
+      <div class="space-y-4">
+        {% for interview in upcomingInterviews %}
+        <div class="card bg-base-100 shadow-lg border border-warning/30 rounded-2xl">
+          <div class="card-body">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex items-start gap-4">
+                <div class="w-14 h-14 bg-warning/10 rounded-xl flex items-center justify-center">
+                  <i class="fa-solid fa-video text-2xl text-warning"></i>
+                </div>
+                <div>
+                  <h3 class="font-bold text-lg">
+                    {% if interview.application and interview.application.job %}
+                      {{ interview.application.job.title }}
+                    {% else %}
+                      Interview
+                    {% endif %}
+                  </h3>
+                  <p class="text-base-content/70">
+                    {% if interview.application and interview.application.job and interview.application.job.company %}
+                      {{ interview.application.job.company.name }}
+                    {% else %}
+                      Company
+                    {% endif %}
+                  </p>
+                  <div class="flex flex-wrap gap-4 mt-2 text-sm">
+                    {% if interview.scheduledAt %}
+                    <span class="text-warning font-semibold">
+                      <i class="fa-regular fa-calendar mr-1"></i>
+                      {{ interview.scheduledAt | date('EEEE, MMM D, YYYY') }}
+                    </span>
+                    <span class="text-warning font-semibold">
+                      <i class="fa-regular fa-clock mr-1"></i>
+                      {{ interview.scheduledAt | date('h:mm A') }} ({{ interview.duration or 60 }} min)
+                    </span>
+                    {% endif %}
+                    <span class="badge badge-sm badge-warning capitalize">{{ interview.type or 'video' }}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="flex flex-col gap-2">
+                {% if interview.status == 'scheduled' %}
+                <form method="POST" action="/profile/interviews/{{ interview._id }}/confirm?_csrf={{ csrfToken }}">
+                  <button type="submit" class="btn btn-success btn-sm rounded-xl w-full">
+                    <i class="fa-solid fa-check mr-2"></i>Confirm
+                  </button>
+                </form>
+                {% endif %}
+                {% if interview.application %}
+                <a href="/applications/{{ interview.application._id }}" class="btn btn-outline btn-sm rounded-xl">
+                  <i class="fa-solid fa-eye mr-2"></i>View Application
+                </a>
+                {% endif %}
+                {% if interview.meetingLink %}
+                <a href="{{ interview.meetingLink }}" target="_blank" class="btn btn-primary btn-sm rounded-xl">
+                  <i class="fa-solid fa-video mr-2"></i>Join Meeting
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if pastInterviews and pastInterviews.length > 0 %}
+    <div>
+      <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
+        <i class="fa-solid fa-clock text-base-content/50"></i>Past Interviews
+      </h2>
+      <div class="space-y-4">
+        {% for interview in pastInterviews %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 bg-base-200 rounded-xl flex items-center justify-center">
+                  {% if interview.status == 'completed' %}
+                  <i class="fa-solid fa-check text-lg text-success"></i>
+                  {% elif interview.status == 'cancelled' %}
+                  <i class="fa-solid fa-xmark text-lg text-error"></i>
+                  {% else %}
+                  <i class="fa-solid fa-clock text-lg text-base-content/40"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <h3 class="font-bold">
+                    {% if interview.application and interview.application.job %}
+                      {{ interview.application.job.title }}
+                    {% else %}
+                      Interview
+                    {% endif %}
+                  </h3>
+                  <p class="text-base-content/70 text-sm">
+                    {% if interview.application and interview.application.job and interview.application.job.company %}
+                      {{ interview.application.job.company.name }}
+                    {% else %}
+                      Company
+                    {% endif %}
+                  </p>
+                  <div class="flex items-center gap-4 mt-1 text-sm text-base-content/50">
+                    {% if interview.scheduledAt %}
+                    <span>{{ interview.scheduledAt | date('MMM D, YYYY h:mm A') }}</span>
+                    {% endif %}
+                    <span class="capitalize">{{ interview.type or 'video' }}</span>
+                    <span class="badge badge-sm 
+                      {% if interview.status == 'completed' %}badge-success
+                      {% elseif interview.status == 'cancelled' or interview.status == 'no_show' %}badge-error
+                      {% else %}badge-ghost{% endif %}">
+                      {{ interview.status | title }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              {% if interview.application %}
+              <a href="/applications/{{ interview.application._id }}" class="btn btn-ghost btn-sm rounded-xl">View</a>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if (not upcomingInterviews or upcomingInterviews.length == 0) and (not pastInterviews or pastInterviews.length == 0) %}
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+      <div class="card-body text-center py-16">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-base-200 flex items-center justify-center">
+          <i class="fa-solid fa-calendar-xmark text-4xl text-base-content/30"></i>
+        </div>
+        <h3 class="font-bold text-xl mb-2">No Interviews</h3>
+        <p class="text-base-content/60 mb-6">When employers schedule interviews with you, they'll appear here</p>
+        <a href="/applications/my-applications" class="btn btn-primary-gradient rounded-xl">
+          <i class="fa-solid fa-briefcase mr-2"></i>View My Applications
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -4,72 +4,152 @@
 <div class="min-h-screen bg-base-200/30">
   <div class="bg-base-100 border-b border-base-200/50">
     <div class="max-w-7xl mx-auto py-8 px-4">
-      <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2 gsap-reveal">Welcome back, {{ user.name }}!</h1>
-      <p class="text-base-content/60 gsap-reveal stagger-1">Track your applications and discover new opportunities</p>
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">Welcome back, {{ user.name }}!</h1>
+          <p class="text-base-content/60">Track your applications and discover new opportunities</p>
+        </div>
+        <div class="flex gap-3">
+          <a href="/jobs" class="btn btn-primary rounded-xl">
+            <i class="fa-solid fa-magnifying-glass mr-2"></i>Find Jobs
+          </a>
+          <a href="/profile/edit" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
+          </a>
+        </div>
+      </div>
     </div>
   </div>
 
   <div class="max-w-7xl mx-auto py-8 px-4">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-1">
-        <div class="card-body p-5">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <i class="fa-solid fa-file-lines text-xl text-primary"></i>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+              <i class="fa-solid fa-file-lines text-lg text-primary"></i>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.applied }}</p>
-              <p class="text-xs text-base-content/50">Total Applications</p>
+              <p class="text-xl font-bold">{{ stats.total }}</p>
+              <p class="text-xs text-base-content/50">Total</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-2">
-        <div class="card-body p-5">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-              <i class="fa-solid fa-clock text-xl text-warning"></i>
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center">
+              <i class="fa-solid fa-clock text-lg text-warning"></i>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.pending }}</p>
+              <p class="text-xl font-bold">{{ stats.pending }}</p>
               <p class="text-xs text-base-content/50">Pending</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-3">
-        <div class="card-body p-5">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-              <i class="fa-solid fa-check-circle text-xl text-success"></i>
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-info/10 flex items-center justify-center">
+              <i class="fa-solid fa-eye text-lg text-info"></i>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.shortlisted }}</p>
+              <p class="text-xl font-bold">{{ stats.viewed }}</p>
+              <p class="text-xs text-base-content/50">Viewed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+              <i class="fa-solid fa-star text-lg text-secondary"></i>
+            </div>
+            <div>
+              <p class="text-xl font-bold">{{ stats.shortlisted }}</p>
               <p class="text-xs text-base-content/50">Shortlisted</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-4">
-        <div class="card-body p-5">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 rounded-xl bg-error/10 flex items-center justify-center">
-              <i class="fa-solid fa-times-circle text-xl text-error"></i>
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center">
+              <i class="fa-solid fa-check-circle text-lg text-success"></i>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.rejected }}</p>
-              <p class="text-xs text-base-content/50">Rejected</p>
+              <p class="text-xl font-bold">{{ stats.accepted }}</p>
+              <p class="text-xs text-base-content/50">Accepted</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+        <div class="card-body p-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+              <i class="fa-solid fa-video text-lg text-accent"></i>
+            </div>
+            <div>
+              <p class="text-xl font-bold">{{ stats.interviewScheduled }}</p>
+              <p class="text-xs text-base-content/50">Interviews</p>
             </div>
           </div>
         </div>
       </div>
     </div>
 
+    {% if upcomingInterviews and upcomingInterviews.length > 0 %}
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl mb-8">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-calendar-check text-warning"></i>Upcoming Interviews
+          </h2>
+          <a href="/profile/interviews" class="btn btn-ghost btn-sm rounded-xl">View All</a>
+        </div>
+        
+        <div class="space-y-3">
+          {% for interview in upcomingInterviews %}
+          <div class="flex items-center gap-4 p-4 bg-warning/5 border border-warning/20 rounded-xl">
+            <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center flex-shrink-0">
+              <i class="fa-solid fa-video text-xl text-warning"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold">{{ interview.application.job.title }}</h3>
+              <p class="text-sm text-base-content/70">{{ interview.application.job.company.name }}</p>
+              <p class="text-sm text-warning mt-1">
+                <i class="fa-regular fa-calendar mr-1"></i>
+                {{ interview.scheduledAt | date('MMM D, YYYY h:mm A') }}
+                {% if interview.type %} · <span class="capitalize">{{ interview.type }}</span>{% endif %}
+              </p>
+            </div>
+            <div class="flex gap-2">
+              {% if interview.status == 'scheduled' %}
+              <form method="POST" action="/profile/interviews/{{ interview._id }}/confirm?_csrf={{ csrfToken }}">
+                <button type="submit" class="btn btn-success btn-sm rounded-xl">Confirm</button>
+              </form>
+              {% endif %}
+              <a href="/applications/{{ interview.application._id }}" class="btn btn-outline btn-sm rounded-xl">View</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-      <a href="/jobs" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-primary/50 hover:shadow-lg transition-all group card-hover-lift">
+      <a href="/jobs" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-primary/50 hover:shadow-lg transition-all group">
         <div class="card-body p-5 flex-row items-center gap-4">
           <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <i class="fa-solid fa-magnifying-glass text-2xl text-primary"></i>
@@ -82,7 +162,7 @@
         </div>
       </a>
       
-      <a href="/applications/my-applications" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-secondary/50 hover:shadow-lg transition-all group card-hover-lift">
+      <a href="/applications/my-applications" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-secondary/50 hover:shadow-lg transition-all group">
         <div class="card-body p-5 flex-row items-center gap-4">
           <div class="w-14 h-14 rounded-xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
             <i class="fa-solid fa-list text-2xl text-secondary"></i>
@@ -95,13 +175,13 @@
         </div>
       </a>
       
-      <a href="/profile" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-accent/50 hover:shadow-lg transition-all group card-hover-lift">
+      <a href="/profile" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-accent/50 hover:shadow-lg transition-all group">
         <div class="card-body p-5 flex-row items-center gap-4">
           <div class="w-14 h-14 rounded-xl bg-accent/10 flex items-center justify-center group-hover:bg-accent/20 transition-colors">
             <i class="fa-solid fa-user text-2xl text-accent"></i>
           </div>
           <div class="flex-1">
-            <h3 class="font-bold">Edit Profile</h3>
+            <h3 class="font-bold">My Profile</h3>
             <p class="text-sm text-base-content/60">Update your information</p>
           </div>
           <i class="fa-solid fa-arrow-right text-base-content/30 group-hover:text-accent transition-colors"></i>
@@ -109,9 +189,61 @@
       </a>
     </div>
 
+    {% if recentApplications and recentApplications.length > 0 %}
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl mb-8">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="font-bold text-lg flex items-center gap-2">
+            <i class="fa-solid fa-clock text-primary"></i>Recent Applications
+          </h2>
+          <a href="/applications/my-applications" class="btn btn-ghost btn-sm rounded-xl">View All</a>
+        </div>
+        
+        <div class="space-y-3">
+          {% for app in recentApplications %}
+          <a href="/applications/{{ app._id }}" class="flex items-center gap-4 p-4 bg-base-200/30 hover:bg-base-200/60 rounded-xl transition-colors group">
+            <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {% if app.job and app.job.company and app.job.company.logo %}
+              <img src="{{ app.job.company.logo }}" alt="{{ app.job.company.name }}" class="w-8 h-8 object-contain" />
+              {% else %}
+              <i class="fa-solid fa-building text-lg text-base-content/40"></i>
+              {% endif %}
+            </div>
+            <div class="flex-1 min-w-0">
+              <h3 class="font-bold group-hover:text-primary transition-colors truncate">{{ app.job.title if app.job else 'Job' }}</h3>
+              <p class="text-sm text-base-content/60 truncate">{{ app.job.company.name if app.job and app.job.company else 'Company' }} · {{ app.job.location if app.job else '' }}</p>
+              <p class="text-xs text-base-content/50 mt-1">
+                Applied {{ app.createdAt | date('MMM D, YYYY') }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="badge badge-sm 
+                {% if app.status == 'accepted' %}badge-success
+                {% elif app.status == 'rejected' %}badge-error
+                {% elif app.status == 'shortlisted' %}badge-info
+                {% elif app.status == 'interview_scheduled' %}badge-warning
+                {% elif app.status == 'viewed' %}badge-secondary
+                {% else %}badge-ghost{% endif %}">
+                {% if app.status == 'accepted' %}<i class="fa-solid fa-check-circle mr-1"></i>
+                {% elif app.status == 'rejected' %}<i class="fa-solid fa-times-circle mr-1"></i>
+                {% elif app.status == 'shortlisted' %}<i class="fa-solid fa-star mr-1"></i>
+                {% elif app.status == 'interview_scheduled' %}<i class="fa-solid fa-video mr-1"></i>
+                {% elif app.status == 'viewed' %}<i class="fa-solid fa-eye mr-1"></i>
+                {% endif %}
+                {{ app.status | title }}
+              </span>
+              <i class="fa-solid fa-chevron-right text-base-content/30 group-hover:text-primary transition-colors"></i>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
-      <div class="card-body p-6">
-        <div class="flex items-center justify-between mb-6">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-4">
           <h2 class="font-bold text-lg flex items-center gap-2">
             <i class="fa-solid fa-lightbulb text-warning"></i>Recommended Jobs
           </h2>
@@ -132,6 +264,9 @@
             <div class="flex-1 min-w-0">
               <h3 class="font-bold group-hover:text-primary transition-colors truncate">{{ job.title }}</h3>
               <p class="text-sm text-base-content/60 truncate">{{ job.company.name }} · {{ job.location }}</p>
+              {% if job.salary %}
+              <p class="text-sm text-success mt-1">{{ job.salary }}</p>
+              {% endif %}
             </div>
             <span class="btn btn-primary-gradient btn-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
               Apply
@@ -153,6 +288,23 @@
         {% endif %}
       </div>
     </div>
+
+    {% if profile and profile.profileCompletionScore < 70 %}
+    <div class="card bg-base-100 shadow-sm border border-warning/30 rounded-2xl mt-8">
+      <div class="card-body">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center">
+            <i class="fa-solid fa-exclamation-triangle text-xl text-warning"></i>
+          </div>
+          <div class="flex-1">
+            <h3 class="font-bold">Complete Your Profile</h3>
+            <p class="text-sm text-base-content/60">Your profile is only {{ profile.profileCompletionScore }}% complete. Adding more information increases your chances of getting hired.</p>
+          </div>
+          <a href="/profile/edit" class="btn btn-warning rounded-xl">Complete Now</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

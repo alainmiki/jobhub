@@ -28,7 +28,7 @@ export const initAuthRouter = (auth) => {
       }
 
       response.headers.forEach((v, k) => res.append(k, v));
-      return res.redirect('/');
+      return res.redirect(redirect || '/');
     } catch (error) {
       return res.render('sign-in', { 
         error: error.message, 
@@ -55,11 +55,12 @@ export const initAuthRouter = (auth) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        const message = errorData.message || errorData.error?.message || 'Registration failed';
+        throw new Error(message);
       }
 
       response.headers.forEach((v, k) => res.append(k, v));
-      return res.redirect('/sign-in');
+      return res.redirect('/dashboard'); // Redirect to dashboard as user is auto-signed in
     } catch (error) {
       return res.render('sign-up', { 
         error: error.message, 

@@ -56,31 +56,41 @@ export const initDashboardRouter = (auth) => {
     asyncHandler(async (req, res) => {
       const company = await Company.findOne({ userId: req.userId });
 
-      if (!company) {
-        return res.redirect('/company/create');
-      }
-
-      const jobs = await Job.find({ company: company._id });
-
-      const totalViews = jobs.reduce((sum, job) => sum + (job.views || 0), 0);
-      const totalApplications = jobs.reduce((sum, job) => sum + (job.applicationsCount || 0), 0);
-
-      const stats = {
-        totalJobs: jobs.length,
-        totalViews,
-        totalApplications,
-        pending: jobs.filter(j => j.status === 'pending').length,
-        approved: jobs.filter(j => j.status === 'approved').length,
-        rejected: jobs.filter(j => j.status === 'rejected').length,
-        closed: jobs.filter(j => j.status === 'closed').length
+      let stats = {
+        totalJobs: 0,
+        totalViews: 0,
+        totalApplications: 0,
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        closed: 0
       };
 
-      const recentApplications = await Application.find({
-        job: { $in: jobs.map(j => j._id) }
-      })
-        .populate('job', 'title')
+      let recentApplications = [];
+      let jobs = [];
+
+      if (company) {
+        jobs = await Job.find({ company: company._id });
+
+        stats.totalJobs = jobs.length;
+        stats.totalViews = jobs.reduce((sum, job) => sum + (job.views || 0), 0);
+        stats.totalApplications = jobs.reduce((sum, job) => sum + (job.applicationsCount || 0), 0);
+        stats.pending = jobs.filter(j => j.status === 'pending').length;
+        stats.approved = jobs.filter(j => j.status === 'approved').length;
+        stats.rejected = jobs.filter(j => j.status === 'rejected').length;
+        stats.closed = jobs.filter(j => j.status === 'closed').length;
+
+        recentApplications = await Application.find({
+          job: { $in: jobs.map(j => j._id) }
+        })
+        .populate({
+          path: 'job',
+          populate: { path: 'company', select: 'name' }
+        })
+        .populate('applicantUserId', 'name image')
         .sort({ createdAt: -1 })
         .limit(10);
+      }
 
       logger.info(`Employer dashboard loaded for user: ${req.userId}`);
       res.render('dashboard/employer', { stats, company, recentApplications });

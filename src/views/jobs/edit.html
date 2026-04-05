@@ -1,88 +1,156 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4">
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
   <div class="max-w-4xl mx-auto">
-    <a href="/jobs" class="btn btn-ghost btn-sm mb-4">
-      <i class="fas fa-arrow-left"></i> Back to Jobs
+    <a href="/dashboard/employer" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
+      <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>
     
     <h1 class="text-3xl font-bold mb-6">Edit Job</h1>
     
     <form method="POST" action="/jobs/{{ job._id }}?_method=PUT" class="space-y-6">
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-      <div class="card bg-base-100 shadow">
-        <div class="card-body">
-          <div class="form-control">
+      
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-6">
+          <div class="form-control mb-4">
             <label class="label">
-              <span class="label-text">Job Title</span>
+              <span class="label-text font-medium">Job Title</span>
             </label>
-            <input type="text" name="title" value="{{ job.title }}" required class="input input-bordered" />
+            <input type="text" name="title" value="{{ job.title }}" required class="input input-bordered rounded-xl" />
           </div>
           
-          <div class="form-control">
+          <div class="form-control mb-4">
             <label class="label">
-              <span class="label-text">Description</span>
+              <span class="label-text font-medium">Description</span>
             </label>
-            <textarea name="description" required class="textarea textarea-bordered h-32">{{ job.description }}</textarea>
+            <textarea name="description" required class="textarea textarea-bordered h-40 rounded-xl">{{ job.description }}</textarea>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div class="form-control">
               <label class="label">
-                <span class="label-text">Location</span>
+                <span class="label-text font-medium">Location</span>
               </label>
-              <input type="text" name="location" value="{{ job.location }}" required class="input input-bordered" />
+              <select name="location" class="select select-bordered rounded-xl" required>
+                <option value="Remote" {% if job.location == 'Remote' %}selected{% endif %}>Remote</option>
+                <option value="On-site" {% if job.location == 'On-site' %}selected{% endif %}>On-site</option>
+                <option value="Hybrid" {% if job.location == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                <option value="Flexible" {% if job.location == 'Flexible' %}selected{% endif %}>Flexible</option>
+              </select>
             </div>
             
             <div class="form-control">
               <label class="label">
-                <span class="label-text">Job Type</span>
+                <span class="label-text font-medium">Job Type</span>
               </label>
-              <select name="jobType" class="select select-bordered" required>
-                <option value="full-time" {% if job.jobType == 'full-time' %}selected{% endif %}>Full Time</option>
-                <option value="part-time" {% if job.jobType == 'part-time' %}selected{% endif %}>Part Time</option>
-                <option value="internship" {% if job.jobType == 'internship' %}selected{% endif %}>Internship</option>
-                <option value="contract" {% if job.jobType == 'contract' %}selected{% endif %}>Contract</option>
+              <select name="type" class="select select-bordered rounded-xl" required>
+                <option value="Full-time" {% if job.type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                <option value="Part-time" {% if job.type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                <option value="Internship" {% if job.type == 'Internship' %}selected{% endif %}>Internship</option>
+                <option value="Contract" {% if job.type == 'Contract' %}selected{% endif %}>Contract</option>
+                <option value="Freelance" {% if job.type == 'Freelance' %}selected{% endif %}>Freelance</option>
               </select>
             </div>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div class="form-control">
               <label class="label">
-                <span class="label-text">Salary Min</span>
+                <span class="label-text font-medium">Category</span>
               </label>
-              <input type="number" name="salaryMin" value="{{ job.salaryMin }}" class="input input-bordered" />
+              <select name="category" class="select select-bordered rounded-xl">
+                <option value="Engineering" {% if job.category == 'Engineering' %}selected{% endif %}>Engineering</option>
+                <option value="Design" {% if job.category == 'Design' %}selected{% endif %}>Design</option>
+                <option value="Marketing" {% if job.category == 'Marketing' %}selected{% endif %}>Marketing</option>
+                <option value="Sales" {% if job.category == 'Sales' %}selected{% endif %}>Sales</option>
+                <option value="Finance" {% if job.category == 'Finance' %}selected{% endif %}>Finance</option>
+                <option value="HR" {% if job.category == 'HR' %}selected{% endif %}>HR</option>
+                <option value="Operations" {% if job.category == 'Operations' %}selected{% endif %}>Operations</option>
+                <option value="Other" {% if job.category == 'Other' %}selected{% endif %}>Other</option>
+              </select>
             </div>
             
             <div class="form-control">
               <label class="label">
-                <span class="label-text">Salary Max</span>
+                <span class="label-text font-medium">Experience Level</span>
               </label>
-              <input type="number" name="salaryMax" value="{{ job.salaryMax }}" class="input input-bordered" />
+              <select name="experienceLevel" class="select select-bordered rounded-xl">
+                <option value="Entry" {% if job.experienceLevel == 'Entry' %}selected{% endif %}>Entry</option>
+                <option value="Mid" {% if job.experienceLevel == 'Mid' %}selected{% endif %}>Mid</option>
+                <option value="Senior" {% if job.experienceLevel == 'Senior' %}selected{% endif %}>Senior</option>
+                <option value="Lead" {% if job.experienceLevel == 'Lead' %}selected{% endif %}>Lead</option>
+                <option value="Executive" {% if job.experienceLevel == 'Executive' %}selected{% endif %}>Executive</option>
+              </select>
             </div>
           </div>
           
-          <div class="form-control">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Salary Min (USD)</span>
+              </label>
+              <input type="number" name="salary[min]" value="{{ job.salary.min or '' }}" class="input input-bordered rounded-xl" placeholder="50000" />
+            </div>
+            
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text font-medium">Salary Max (USD)</span>
+              </label>
+              <input type="number" name="salary[max]" value="{{ job.salary.max or '' }}" class="input input-bordered rounded-xl" placeholder="100000" />
+            </div>
+          </div>
+          
+          <div class="form-control mb-4">
             <label class="label">
-              <span class="label-text">Requirements (comma separated)</span>
+              <span class="label-text font-medium">City</span>
             </label>
-            <input type="text" name="requirements" value="{{ job.requirements.join(', ') }}" class="input input-bordered" placeholder="React, Node.js, MongoDB" />
+            <input type="text" name="city" value="{{ job.city or '' }}" class="input input-bordered rounded-xl" placeholder="San Francisco" />
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Country</span>
+            </label>
+            <input type="text" name="country" value="{{ job.country or '' }}" class="input input-bordered rounded-xl" placeholder="USA" />
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Application Deadline</span>
+            </label>
+            <input type="date" name="applicationDeadline" value="{{ job.applicationDeadline | date('YYYY-MM-DD') }}" class="input input-bordered rounded-xl" />
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label cursor-pointer justify-start gap-3">
+              <input type="checkbox" name="isRemote" value="true" {% if job.isRemote %}checked{% endif %} class="checkbox checkbox-primary" />
+              <span class="label-text">Remote Position</span>
+            </label>
+          </div>
+          
+          <div class="form-control mb-4">
+            <label class="label">
+              <span class="label-text font-medium">Requirements (one per line)</span>
+            </label>
+            <textarea name="requirements" class="textarea textarea-bordered h-24 rounded-xl" placeholder="5+ years experience&#10;Bachelor's degree&#10;Strong communication skills">{{ job.requirements ? job.requirements.join('\n') : '' }}</textarea>
           </div>
           
           <div class="form-control">
             <label class="label">
-              <span class="label-text">Skills (comma separated)</span>
+              <span class="label-text font-medium">Skills (comma separated)</span>
             </label>
-            <input type="text" name="skills" value="{{ job.skills.join(', ') }}" class="input input-bordered" placeholder="JavaScript, TypeScript, REST APIs" />
+            <input type="text" name="skills" value="{{ job.skills ? job.skills.join(', ') : '' }}" class="input input-bordered rounded-xl" placeholder="React, Node.js, TypeScript, AWS" />
           </div>
         </div>
       </div>
       
-      <div class="flex gap-2">
-        <button type="submit" class="btn btn-primary">Update Job</button>
-        <a href="/jobs/{{ job._id }}" class="btn btn-ghost">Cancel</a>
+      <div class="flex gap-3">
+        <button type="submit" class="btn btn-primary-gradient rounded-xl">
+          <i class="fas fa-save mr-2"></i>Update Job
+        </button>
+        <a href="/jobs/{{ job._id }}" class="btn btn-ghost rounded-xl">Cancel</a>
       </div>
     </form>
   </div>

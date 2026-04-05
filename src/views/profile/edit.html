@@ -1,199 +1,508 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto py-8 px-4">
-  <h1 class="text-3xl font-bold mb-8 gsap-reveal">My Profile</h1>
-  
-  {% if completeProfile %}
-  <div class="alert alert-warning mb-6 rounded-xl bg-warning/10 border border-warning/20 gsap-reveal stagger-1">
-    <i class="fa-solid fa-triangle-exclamation text-warning"></i>
-    <span>Please complete your profile to apply for jobs and get matched.</span>
-  </div>
-  {% endif %}
-  
-  <form action="/profile" method="POST" enctype="multipart/form-data" class="space-y-6">
-    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
-          <i class="fa-solid fa-user text-primary"></i>Basic Information
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Role</span>
-            </label>
-            <select name="role" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
-              <option value="candidate" {% if profile.role === 'candidate' %}selected{% endif %}>Job Seeker</option>
-              <option value="employer" {% if profile.role === 'employer' %}selected{% endif %}>Employer</option>
-            </select>
-          </div>
-          
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Location</span>
-            </label>
-            <input type="text" name="location" value="{{ profile.location }}" 
-              class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
-              placeholder="New York, NY" />
-          </div>
-        </div>
-        
-        <div class="form-control mt-2">
-          <label class="label py-2">
-            <span class="label-text font-medium text-sm">Bio</span>
-          </label>
-          <textarea name="bio" 
-            class="textarea textarea-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
-            rows="4" placeholder="Tell us about yourself...">{{ profile.bio }}</textarea>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-2">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-code text-primary"></i>Skills
-        </h2>
-        <p class="text-sm text-base-content/50 mb-4">Enter your skills separated by commas</p>
-        
-        <div class="form-control">
-          <input type="text" name="skills" value="{{ profile.skills }}" 
-            class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
-            placeholder="JavaScript, React, Node.js, Python..." />
-        </div>
-      </div>
-    </div>
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-3">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-graduation-cap text-primary"></i>Education
-        </h2>
-        
-        <div id="education-container" class="space-y-3">
-          {% if profile.education and profile.education.length > 0 %}
-          {% for edu in profile.education %}
-          <div class="education-item p-4 bg-base-200/50 rounded-xl">
-            <input type="hidden" name="education[][institution]" value="{{ edu.institution }}" />
-            <input type="hidden" name="education[][degree]" value="{{ edu.degree }}" />
-            <input type="hidden" name="education[][field]" value="{{ edu.field }}" />
-            <p class="font-bold">{{ edu.institution }}</p>
-            <p class="text-sm text-base-content/60">{{ edu.degree }} in {{ edu.field }}</p>
-          </div>
-          {% endfor %}
-          {% endif %}
-        </div>
-        
-        <button type="button" onclick="addEducationField()" class="btn btn-ghost btn-sm mt-3 rounded-xl">
-          <i class="fa-solid fa-plus mr-2"></i>Add Education
-        </button>
-      </div>
-    </div>
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-4">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-4 flex items-center gap-2">
-          <i class="fa-solid fa-briefcase text-primary"></i>Experience
-        </h2>
-        
-        <div id="experience-container" class="space-y-3">
-          {% if profile.experience and profile.experience.length > 0 %}
-          {% for exp in profile.experience %}
-          <div class="experience-item p-4 bg-base-200/50 rounded-xl">
-            <p class="font-bold">{{ exp.title }} at {{ exp.company }}</p>
-            <p class="text-sm text-base-content/60">{{ exp.startDate | date('MMM YYYY') }} - {% if exp.current %}Present{% else %}{{ exp.endDate | date('MMM YYYY') }}{% endif %}</p>
-          </div>
-          {% endfor %}
-          {% endif %}
-        </div>
-        
-        <button type="button" onclick="addExperienceField()" class="btn btn-ghost btn-sm mt-3 rounded-xl">
-          <i class="fa-solid fa-plus mr-2"></i>Add Experience
-        </button>
-      </div>
-    </div>
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-5">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-2 flex items-center gap-2">
-          <i class="fa-solid fa-file-arrow-up text-primary"></i>Resume
-        </h2>
-        <p class="text-sm text-base-content/50 mb-4">Upload your resume (PDF, DOC, DOCX - max 5MB)</p>
-        
-        <div class="form-control">
-          <input type="file" name="resume" accept=".pdf,.doc,.docx" 
-            class="file-input file-input-bordered rounded-xl bg-base-200/50 border-base-200/50" />
-        </div>
-        
-        {% if profile.resume %}
-        <div class="mt-4 p-4 bg-base-200/30 rounded-xl">
-          <p class="text-sm text-base-content/70">Current: <span class="font-medium">{{ profile.resume.fileName }}</span></p>
-          <a href="{{ profile.resume.url }}" class="btn btn-outline btn-sm rounded-xl mt-2" download>
-            <i class="fa-solid fa-download mr-2"></i>Download
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+      <div class="flex items-center justify-between mb-2">
+        <h1 class="text-3xl font-bold">Edit Profile</h1>
+        <div class="flex gap-2">
+          <a href="/profile" class="btn btn-ghost btn-sm rounded-xl">
+            <i class="fa-solid fa-arrow-left mr-2"></i>Back to Profile
           </a>
         </div>
-        {% endif %}
       </div>
+      <p class="text-base-content/60">Update your personal and professional information</p>
     </div>
     
-    <div class="form-control gsap-reveal">
-      <button type="submit" class="btn btn-primary-gradient btn-lg rounded-xl h-14 font-semibold shadow-primary/30 hover:shadow-lg">
-        <span>Save Profile</span>
-        <i class="fa-solid fa-check ml-2"></i>
-      </button>
+    {% if not profile.isProfileComplete %}
+    <div class="alert alert-warning mb-8 rounded-2xl shadow-sm">
+      <i class="fa-solid fa-circle-info text-warning"></i>
+      <div>
+        <span class="font-semibold">Profile is {{ profile.profileCompletionScore }}% complete</span>
+        <p class="text-sm">Complete your profile to unlock all features including job matches and interviews.</p>
+      </div>
     </div>
-  </form>
+    {% endif %}
+
+    <form action="/profile?_method=PUT" method="POST" enctype="multipart/form-data" class="space-y-6">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-user-circle text-primary"></i>Basic Information
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Headline</span></label>
+              <input type="text" name="headline" value="{{ profile.headline }}" class="input input-bordered rounded-xl" placeholder="e.g. Senior Software Engineer | Full-Stack Developer" />
+              <label class="label"><span class="label-text-alt text-base-content/50">Brief professional summary shown on your profile</span></label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Your Role</span></label>
+              <select name="role" class="select select-bordered rounded-xl" required>
+                <option value="candidate" {% if profile.role == 'candidate' %}selected{% endif %}>Job Seeker / Candidate</option>
+                <option value="employer" {% if profile.role == 'employer' %}selected{% endif %}>Employer / Recruiter</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Location</span></label>
+              <input type="text" name="location" value="{{ profile.location }}" class="input input-bordered rounded-xl" placeholder="City" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Country</span></label>
+              <input type="text" name="country" value="{{ profile.country }}" class="input input-bordered rounded-xl" placeholder="Country" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Phone Number</span></label>
+              <input type="tel" name="phone" value="{{ profile.phone }}" class="input input-bordered rounded-xl" placeholder="+1 (555) 000-0000" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Years of Experience</span></label>
+              <input type="number" name="yearsOfExperience" value="{{ profile.yearsOfExperience }}" class="input input-bordered rounded-xl" min="0" placeholder="Years of experience" />
+            </div>
+          </div>
+          
+          <div class="form-control mt-4">
+            <label class="label"><span class="label-text font-bold">Bio / Summary</span></label>
+            <textarea name="bio" class="textarea textarea-bordered rounded-xl h-40" placeholder="Tell us about your background, goals, and expertise...">{{ profile.bio }}</textarea>
+            <label class="label"><span class="label-text-alt text-base-content/50">Max 500 characters</span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-link text-primary"></i>Social Links
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold"><i class="fa-solid fa-globe mr-2"></i>Website / Portfolio</span></label>
+              <input type="url" name="website" value="{{ profile.website }}" class="input input-bordered rounded-xl" placeholder="https://example.com" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold"><i class="fa-brands fa-linkedin mr-2"></i>LinkedIn Profile</span></label>
+              <input type="url" name="linkedin" value="{{ profile.linkedin }}" class="input input-bordered rounded-xl" placeholder="https://linkedin.com/in/username" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold"><i class="fa-brands fa-github mr-2"></i>GitHub</span></label>
+              <input type="url" name="github" value="{{ profile.github }}" class="input input-bordered rounded-xl" placeholder="https://github.com/username" />
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold"><i class="fa-brands fa-twitter mr-2"></i>Twitter / X</span></label>
+              <input type="url" name="twitter" value="{{ profile.twitter }}" class="input input-bordered rounded-xl" placeholder="https://twitter.com/username" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-code text-primary"></i>Professional Skills
+          </h2>
+          <p class="text-sm text-base-content/60 mb-4">Enter your core competencies separated by commas</p>
+          
+          <div class="form-control">
+            <input type="text" name="skills" value="{{ profile.skills | join(', ') }}" class="input input-bordered rounded-xl" placeholder="e.g. Project Management, React, Python, Data Analysis, Leadership" />
+          </div>
+          
+          <div class="mt-4">
+            <p class="text-sm font-semibold mb-2">Popular Skills</p>
+            <div class="flex flex-wrap gap-2">
+              {% set popularSkills = ['JavaScript', 'Python', 'Java', 'React', 'Node.js', 'SQL', 'AWS', 'Docker', 'Kubernetes', 'Machine Learning', 'Data Analysis', 'Project Management', 'Agile', 'CI/CD', 'Git'] %}
+              {% for skill in popularSkills %}
+              <button type="button" class="btn btn-xs btn-ghost rounded-lg add-skill-btn" data-skill="{{ skill }}">{{ skill }}</button>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl" id="experience-section">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-briefcase text-primary"></i>Professional Experience
+          </h2>
+          
+          <div id="experience-container" class="space-y-4">
+            {% for exp in profile.experience %}
+            <div class="experience-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group">
+              <button type="button" onclick="this.closest('.experience-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Company</label>
+                  <input type="text" name="experience[{{ loop.index0 }}][company]" value="{{ exp.company }}" class="input input-sm input-bordered rounded-lg" placeholder="Company name" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Job Title</label>
+                  <input type="text" name="experience[{{ loop.index0 }}][title]" value="{{ exp.title }}" class="input input-sm input-bordered rounded-lg" placeholder="Your role" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Location</label>
+                  <input type="text" name="experience[{{ loop.index0 }}][location]" value="{{ exp.location }}" class="input input-sm input-bordered rounded-lg" placeholder="City, Country" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Company Logo URL</label>
+                  <input type="url" name="experience[{{ loop.index0 }}][companyLogo]" value="{{ exp.companyLogo }}" class="input input-sm input-bordered rounded-lg" placeholder="https://..." />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Start Date</label>
+                  <input type="month" name="experience[{{ loop.index0 }}][startDate]" value="{{ exp.startDate | date('YYYY-MM') }}" class="input input-sm input-bordered rounded-lg" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">End Date</label>
+                  <input type="month" name="experience[{{ loop.index0 }}][endDate]" value="{{ exp.endDate | date('YYYY-MM') }}" class="input input-sm input-bordered rounded-lg" />
+                </div>
+                <div class="form-control col-span-full">
+                  <label class="label cursor-pointer justify-start gap-2">
+                    <input type="checkbox" name="experience[{{ loop.index0 }}][current]" class="checkbox checkbox-sm" {% if exp.current %}checked{% endif %} />
+                    <span class="label-text">I currently work here</span>
+                  </label>
+                </div>
+                <div class="form-control col-span-full">
+                  <label class="label-text mb-1 font-semibold">Description</label>
+                  <textarea name="experience[{{ loop.index0 }}][description]" class="textarea textarea-sm textarea-bordered rounded-lg" placeholder="Describe your responsibilities and achievements...">{{ exp.description }}</textarea>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <button type="button" onclick="addExperienceField()" class="btn btn-outline btn-sm mt-4 rounded-xl">
+            <i class="fas fa-plus mr-2"></i>Add Experience
+          </button>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl" id="education-section">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-graduation-cap text-primary"></i>Education
+          </h2>
+          
+          <div id="education-container" class="space-y-4">
+            {% for edu in profile.education %}
+            <div class="education-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group">
+              <button type="button" onclick="this.closest('.education-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Institution</label>
+                  <input type="text" name="education[{{ loop.index0 }}][institution]" value="{{ edu.institution }}" class="input input-sm input-bordered rounded-lg" placeholder="University or School" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Degree</label>
+                  <input type="text" name="education[{{ loop.index0 }}][degree]" value="{{ edu.degree }}" class="input input-sm input-bordered rounded-lg" placeholder="Degree or Certificate" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Field of Study</label>
+                  <input type="text" name="education[{{ loop.index0 }}][field]" value="{{ edu.field }}" class="input input-sm input-bordered rounded-lg" placeholder="Major or Field" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Grade / GPA</label>
+                  <input type="text" name="education[{{ loop.index0 }}][grade]" value="{{ edu.grade }}" class="input input-sm input-bordered rounded-lg" placeholder="e.g. 3.8 GPA" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">Start Date</label>
+                  <input type="month" name="education[{{ loop.index0 }}][startDate]" value="{{ edu.startDate | date('YYYY-MM') }}" class="input input-sm input-bordered rounded-lg" />
+                </div>
+                <div class="form-control">
+                  <label class="label-text mb-1 font-semibold">End Date</label>
+                  <input type="month" name="education[{{ loop.index0 }}][endDate]" value="{{ edu.endDate | date('YYYY-MM') }}" class="input input-sm input-bordered rounded-lg" />
+                </div>
+                <div class="form-control col-span-full">
+                  <label class="label cursor-pointer justify-start gap-2">
+                    <input type="checkbox" name="education[{{ loop.index0 }}][current]" class="checkbox checkbox-sm" {% if edu.current %}checked{% endif %} />
+                    <span class="label-text">Currently studying here</span>
+                  </label>
+                </div>
+                <div class="form-control col-span-full">
+                  <label class="label-text mb-1 font-semibold">Description</label>
+                  <textarea name="education[{{ loop.index0 }}][description]" class="textarea textarea-sm textarea-bordered rounded-lg" placeholder="Additional details about your education...">{{ edu.description }}</textarea>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          
+          <button type="button" onclick="addEducationField()" class="btn btn-outline btn-sm mt-4 rounded-xl">
+            <i class="fas fa-plus mr-2"></i>Add Education
+          </button>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl" id="resume">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-file-pdf text-error"></i>Resume / CV
+          </h2>
+          <p class="text-sm text-base-content/60 mb-4">Upload your latest resume. Supported formats: PDF, DOC, DOCX (Max 5MB). You can upload multiple versions.</p>
+          
+          <div class="form-control">
+            <input type="file" name="resume" accept=".pdf,.doc,.docx" class="file-input file-input-bordered rounded-xl" />
+          </div>
+          
+          {% if profile.resume.url %}
+          <div class="mt-4 p-4 bg-base-200 rounded-xl">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-file-pdf text-2xl text-error"></i>
+                <div>
+                  <p class="font-medium">{{ profile.resume.fileName }}</p>
+                  <p class="text-xs text-base-content/50">Uploaded {{ profile.resume.uploadedAt | date('MMM D, YYYY') }}</p>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <a href="{{ profile.resume.url }}" class="btn btn-ghost btn-sm" download>
+                  <i class="fas fa-download"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          {% if profile.resumeVersions and profile.resumeVersions.length > 1 %}
+          <div class="mt-4">
+            <h4 class="font-semibold text-sm mb-3">Previous Versions</h4>
+            <div class="space-y-2">
+              {% for version in profile.resumeVersions %}
+              {% if not version.isPrimary %}
+              <div class="flex items-center justify-between p-3 bg-base-200/50 rounded-xl">
+                <div class="flex items-center gap-3">
+                  <span class="badge badge-ghost">v{{ version.version }}</span>
+                  <span class="text-sm">{{ version.fileName }}</span>
+                </div>
+                <div class="flex gap-2">
+                  <form method="POST" action="/profile/resume/{{ version._id }}/set-primary?_csrf={{ csrfToken }}" class="inline">
+                    <button type="submit" class="btn btn-xs btn-ghost">Set Primary</button>
+                  </form>
+                  <form method="POST" action="/profile/resume/{{ version._id }}/delete?_csrf={{ csrfToken }}" class="inline">
+                    <button type="submit" class="btn btn-xs btn-ghost text-error"><i class="fa-solid fa-trash"></i></button>
+                  </form>
+                </div>
+              </div>
+              {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-briefcase text-primary"></i>Job Preferences
+          </h2>
+          
+          <div class="form-control">
+            <label class="label-text font-semibold mb-2">Preferred Job Types</label>
+            <div class="flex flex-wrap gap-3">
+              {% set jobTypes = ['full-time', 'part-time', 'contract', 'internship', 'freelance'] %}
+              {% for jt in jobTypes %}
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input type="checkbox" name="preferredJobTypes" value="{{ jt }}" class="checkbox checkbox-sm checkbox-primary" {% if profile.preferredJobTypes and jt in profile.preferredJobTypes %}checked{% endif %} />
+                <span class="text-sm capitalize">{{ jt }}</span>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="form-control mt-4">
+            <label class="label-text font-semibold mb-2">Preferred Locations</label>
+            <input type="text" name="preferredLocations" value="{{ profile.preferredLocations | join(', ') }}" class="input input-bordered rounded-xl" placeholder="e.g. New York, San Francisco, Remote" />
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div class="form-control">
+              <label class="label-text font-semibold mb-2">Expected Salary (Min)</label>
+              <input type="number" name="expectedSalaryMin" value="{{ profile.expectedSalary.min }}" class="input input-bordered rounded-xl" placeholder="50000" />
+            </div>
+            <div class="form-control">
+              <label class="label-text font-semibold mb-2">Expected Salary (Max)</label>
+              <input type="number" name="expectedSalaryMax" value="{{ profile.expectedSalary.max }}" class="input input-bordered rounded-xl" placeholder="100000" />
+            </div>
+            <div class="form-control">
+              <label class="label-text font-semibold mb-2">Currency</label>
+              <select name="expectedSalaryCurrency" class="select select-bordered rounded-xl">
+                <option value="USD" {% if profile.expectedSalary.currency == 'USD' %}selected{% endif %}>USD ($)</option>
+                <option value="EUR" {% if profile.expectedSalary.currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+                <option value="GBP" {% if profile.expectedSalary.currency == 'GBP' %}selected{% endif %}>GBP (£)</option>
+                <option value="INR" {% if profile.expectedSalary.currency == 'INR' %}selected{% endif %}>INR (₹)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-2xl">
+        <div class="card-body">
+          <h2 class="card-title text-lg font-bold flex items-center gap-2">
+            <i class="fa-solid fa-calendar-check text-primary"></i>Availability
+          </h2>
+          
+          <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-3">
+              <input type="checkbox" name="availabilityAvailable" class="checkbox checkbox-primary checkbox-lg" {% if profile.availability and profile.availability.available %}checked{% endif %} />
+              <span class="label-text font-semibold">I am currently available for work</span>
+            </label>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="form-control">
+              <label class="label-text font-semibold mb-2">Notice Period</label>
+              <select name="noticePeriod" class="select select-bordered rounded-xl">
+                <option value="">Select notice period</option>
+                <option value="immediately" {% if profile.availability and profile.availability.noticePeriod == 'immediately' %}selected{% endif %}>Immediately</option>
+                <option value="1-week" {% if profile.availability and profile.availability.noticePeriod == '1-week' %}selected{% endif %}>1 Week</option>
+                <option value="2-weeks" {% if profile.availability and profile.availability.noticePeriod == '2-weeks' %}selected{% endif %}>2 Weeks</option>
+                <option value="1-month" {% if profile.availability and profile.availability.noticePeriod == '1-month' %}selected{% endif %}>1 Month</option>
+                <option value="2-months" {% if profile.availability and profile.availability.noticePeriod == '2-months' %}selected{% endif %}>2 Months</option>
+                <option value="3-months" {% if profile.availability and profile.availability.noticePeriod == '3-months' %}selected{% endif %}>3+ Months</option>
+              </select>
+            </div>
+            <div class="form-control">
+              <label class="label-text font-semibold mb-2">Available From</label>
+              <input type="date" name="availabilityStartDate" value="{{ profile.availability.startDate | date('YYYY-MM-DD') }}" class="input input-bordered rounded-xl" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sticky bottom-4 z-40">
+        <div class="bg-base-100/90 backdrop-blur shadow-xl border border-base-200/50 p-4 rounded-2xl flex justify-between items-center">
+          <p class="text-sm text-base-content/60">Changes will be saved to your profile</p>
+          <div class="flex gap-3">
+            <a href="/profile" class="btn btn-ghost rounded-xl">Cancel</a>
+            <button type="submit" class="btn btn-primary rounded-xl">
+              <i class="fa-solid fa-save mr-2"></i>Save Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  gsap.from('.gsap-reveal', {
-    opacity: 0,
-    y: 20,
-    duration: 0.5,
-    stagger: 0.1,
-    ease: 'power2.out'
-  });
-});
+let expCount = {{ profile.experience | length }};
+let eduCount = {{ profile.education | length }};
 
-let eduCount = 0;
-let expCount = 0;
+function addExperienceField() {
+  const container = document.getElementById('experience-container');
+  const div = document.createElement('div');
+  div.className = 'experience-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group';
+  div.innerHTML = `
+    <button type="button" onclick="this.closest('.experience-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Company</label>
+        <input type="text" name="experience[${expCount}][company]" class="input input-sm input-bordered rounded-lg" placeholder="Company name" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Job Title</label>
+        <input type="text" name="experience[${expCount}][title]" class="input input-sm input-bordered rounded-lg" placeholder="Your role" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Location</label>
+        <input type="text" name="experience[${expCount}][location]" class="input input-sm input-bordered rounded-lg" placeholder="City, Country" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Company Logo URL</label>
+        <input type="url" name="experience[${expCount}][companyLogo]" class="input input-sm input-bordered rounded-lg" placeholder="https://..." />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Start Date</label>
+        <input type="month" name="experience[${expCount}][startDate]" class="input input-sm input-bordered rounded-lg" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">End Date</label>
+        <input type="month" name="experience[${expCount}][endDate]" class="input input-sm input-bordered rounded-lg" />
+      </div>
+      <div class="form-control col-span-full">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" name="experience[${expCount}][current]" class="checkbox checkbox-sm" />
+          <span class="label-text">I currently work here</span>
+        </label>
+      </div>
+      <div class="form-control col-span-full">
+        <label class="label-text mb-1 font-semibold">Description</label>
+        <textarea name="experience[${expCount}][description]" class="textarea textarea-sm textarea-bordered rounded-lg" placeholder="Describe your responsibilities and achievements..."></textarea>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+  expCount++;
+}
 
 function addEducationField() {
   const container = document.getElementById('education-container');
   const div = document.createElement('div');
-  div.className = 'p-4 bg-base-200/50 rounded-xl animate-fade-in-up';
+  div.className = 'education-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group';
   div.innerHTML = `
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <input type="text" name="education[${eduCount}][institution]" placeholder="Institution" class="input input-bordered input-sm rounded-lg" />
-      <input type="text" name="education[${eduCount}][degree]" placeholder="Degree" class="input input-bordered input-sm rounded-lg" />
-      <input type="text" name="education[${eduCount}][field]" placeholder="Field of Study" class="input input-bordered input-sm rounded-lg" />
-      <input type="text" name="education[${eduCount}][year]" placeholder="Graduation Year" class="input input-bordered input-sm rounded-lg" />
+    <button type="button" onclick="this.closest('.education-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Institution</label>
+        <input type="text" name="education[${eduCount}][institution]" class="input input-sm input-bordered rounded-lg" placeholder="University or School" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Degree</label>
+        <input type="text" name="education[${eduCount}][degree]" class="input input-sm input-bordered rounded-lg" placeholder="Degree or Certificate" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Field of Study</label>
+        <input type="text" name="education[${eduCount}][field]" class="input input-sm input-bordered rounded-lg" placeholder="Major or Field" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Grade / GPA</label>
+        <input type="text" name="education[${eduCount}][grade]" class="input input-sm input-bordered rounded-lg" placeholder="e.g. 3.8 GPA" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Start Date</label>
+        <input type="month" name="education[${eduCount}][startDate]" class="input input-sm input-bordered rounded-lg" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">End Date</label>
+        <input type="month" name="education[${eduCount}][endDate]" class="input input-sm input-bordered rounded-lg" />
+      </div>
+      <div class="form-control col-span-full">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" name="education[${eduCount}][current]" class="checkbox checkbox-sm" />
+          <span class="label-text">Currently studying here</span>
+        </label>
+      </div>
+      <div class="form-control col-span-full">
+        <label class="label-text mb-1 font-semibold">Description</label>
+        <textarea name="education[${eduCount}][description]" class="textarea textarea-sm textarea-bordered rounded-lg" placeholder="Additional details about your education..."></textarea>
+      </div>
     </div>
-    <button type="button" onclick="this.parentElement.remove()" class="btn btn-error btn-xs mt-2 rounded-lg">Remove</button>
   `;
   container.appendChild(div);
   eduCount++;
 }
 
-function addExperienceField() {
-  const container = document.getElementById('experience-container');
-  const div = document.createElement('div');
-  div.className = 'p-4 bg-base-200/50 rounded-xl animate-fade-in-up';
-  div.innerHTML = `
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <input type="text" name="experience[${expCount}][company]" placeholder="Company" class="input input-bordered input-sm rounded-lg" />
-      <input type="text" name="experience[${expCount}][title]" placeholder="Job Title" class="input input-bordered input-sm rounded-lg" />
-      <input type="text" name="experience[${expCount}][location]" placeholder="Location" class="input input-bordered input-sm rounded-lg" />
-      <input type="text" name="experience[${expCount}][duration]" placeholder="Duration" class="input input-bordered input-sm rounded-lg" />
-    </div>
-    <button type="button" onclick="this.parentElement.remove()" class="btn btn-error btn-xs mt-2 rounded-lg">Remove</button>
-  `;
-  container.appendChild(div);
-  expCount++;
-}
+document.querySelectorAll('.add-skill-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const skill = btn.dataset.skill;
+    const input = document.querySelector('input[name="skills"]');
+    const currentSkills = input.value ? input.value.split(',').map(s => s.trim()) : [];
+    if (!currentSkills.includes(skill)) {
+      currentSkills.push(skill);
+      input.value = currentSkills.join(', ');
+    }
+  });
+});
 </script>
 {% endblock %}

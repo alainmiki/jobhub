@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-8">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold mb-2">My Applications</h1>
+          <p class="text-base-content/60">Track all your job applications</p>
+        </div>
+        <a href="/profile" class="btn btn-ghost btn-sm rounded-xl">
+          <i class="fa-solid fa-arrow-left mr-2"></i>Back to Profile
+        </a>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <a href="/profile/applications" class="card bg-base-100 shadow-sm border {% if not filters.status or filters.status == 'all' %}border-primary{% else %}border-base-200/50{% endif %} rounded-xl hover:border-primary/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold">{{ stats.total }}</div>
+          <div class="text-xs text-base-content/50">All</div>
+        </div>
+      </a>
+      <a href="/profile/applications?status=pending" class="card bg-base-100 shadow-sm border {% if filters.status == 'pending' %}border-warning{% else %}border-base-200/50{% endif %} rounded-xl hover:border-warning/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-warning">{{ stats.pending }}</div>
+          <div class="text-xs text-base-content/50">Pending</div>
+        </div>
+      </a>
+      <a href="/profile/applications?status=shortlisted" class="card bg-base-100 shadow-sm border {% if filters.status == 'shortlisted' %}border-info{% else %}border-base-200/50{% endif %} rounded-xl hover:border-info/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-info">{{ stats.shortlisted }}</div>
+          <div class="text-xs text-base-content/50">Shortlisted</div>
+        </div>
+      </a>
+      <a href="/profile/applications?status=interview_scheduled" class="card bg-base-100 shadow-sm border {% if filters.status == 'interview_scheduled' %}border-warning{% else %}border-base-200/50{% endif %} rounded-xl hover:border-warning/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-warning">{{ stats.interviewScheduled }}</div>
+          <div class="text-xs text-base-content/50">Interviews</div>
+        </div>
+      </a>
+      <a href="/profile/applications?status=accepted" class="card bg-base-100 shadow-sm border {% if filters.status == 'accepted' %}border-success{% else %}border-base-200/50{% endif %} rounded-xl hover:border-success/50 transition-colors">
+        <div class="card-body p-4 text-center">
+          <div class="text-xl font-bold text-success">{{ stats.accepted }}</div>
+          <div class="text-xs text-base-content/50">Accepted</div>
+        </div>
+      </a>
+    </div>
+
+    {% if applications and applications.length %}
+    <div class="space-y-4">
+      {% for app in applications %}
+      <a href="/applications/{{ app._id }}" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-primary/30 hover:shadow-md transition-all group">
+        <div class="card-body p-5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-base-200 rounded-xl flex items-center justify-center overflow-hidden">
+                {% if app.job and app.job.company and app.job.company.logo %}
+                <img src="{{ app.job.company.logo }}" alt="{{ app.job.company.name }}" class="w-8 h-8 object-contain" />
+                {% else %}
+                <i class="fa-solid fa-building text-lg text-base-content/40"></i>
+                {% endif %}
+              </div>
+              <div>
+                <h3 class="font-bold group-hover:text-primary transition-colors">{{ app.job.title if app.job else 'Job' }}</h3>
+                <p class="text-sm text-base-content/70">{{ app.job.company.name if app.job and app.job.company else 'Company' }}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="badge badge-sm 
+                {% if app.status == 'accepted' %}badge-success
+                {% elif app.status == 'rejected' %}badge-error
+                {% elif app.status == 'shortlisted' %}badge-info
+                {% elif app.status == 'interview_scheduled' %}badge-warning
+                {% else %}badge-ghost{% endif %}">
+                {{ app.status | title }}
+              </span>
+              <i class="fa-solid fa-chevron-right text-base-content/30"></i>
+            </div>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+      <div class="card-body text-center py-16">
+        <div class="w-24 h-24 mx-auto mb-6 rounded-2xl bg-base-200 flex items-center justify-center">
+          <i class="fa-solid fa-briefcase text-4xl text-base-content/30"></i>
+        </div>
+        <h3 class="font-bold text-xl mb-2">No Applications</h3>
+        <p class="text-base-content/60 mb-6">You haven't applied to any jobs yet</p>
+        <a href="/jobs" class="btn btn-primary-gradient rounded-xl">
+          <i class="fa-solid fa-search mr-2"></i>Browse Jobs
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

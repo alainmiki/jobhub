@@ -1,64 +1,427 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4">
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
   <div class="max-w-4xl mx-auto">
-    <a href="/applications" class="btn btn-ghost btn-sm mb-4">
-      <i class="fas fa-arrow-left"></i> Back to Applications
-    </a>
-    
-    <div class="card bg-base-100 shadow">
-      <div class="card-body">
-        <h1 class="card-title text-3xl mb-4">{{ application.job.title }}</h1>
-        
-        <div class="flex items-center gap-4 mb-6">
-          <span class="badge {% if application.status == 'accepted' %}badge-success{% elif application.status == 'rejected' %}badge-error{% elif application.status == 'shortlisted' %}badge-info{% else %}badge-warning{% endif %} text-lg">
-            {{ application.status }}
-          </span>
-          <span class="text-base-content/70">
-            Applied on {{ application.createdAt.toLocaleDateString() }}
-          </span>
+    <div class="mb-6">
+      <a href="/applications/my-applications" class="btn btn-ghost btn-sm rounded-xl">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Applications
+      </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2 space-y-6">
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <div class="flex items-start justify-between">
+              <div class="flex items-start gap-4">
+                <div class="w-16 h-16 bg-base-200 rounded-xl flex items-center justify-center overflow-hidden">
+                  {% if application.job and application.job.company and application.job.company.logo %}
+                  <img src="{{ application.job.company.logo }}" alt="{{ application.job.company.name }}" class="w-12 h-12 object-contain" />
+                  {% else %}
+                  <i class="fa-solid fa-building text-2xl text-base-content/40"></i>
+                  {% endif %}
+                </div>
+                <div>
+                  <h1 class="text-2xl font-bold">{{ application.job.title if application.job else 'Job Title' }}</h1>
+                  <p class="text-base-content/70 text-lg">{{ application.job.company.name if application.job and application.job.company else 'Company' }}</p>
+                  <div class="flex flex-wrap gap-3 mt-2 text-sm text-base-content/60">
+                    {% if application.job.location %}
+                    <span><i class="fa-solid fa-location-dot mr-1"></i>{{ application.job.location }}</span>
+                    {% endif %}
+                    {% if application.job.type %}
+                    <span><i class="fa-solid fa-briefcase mr-1"></i>{{ application.job.type }}</span>
+                    {% endif %}
+                    {% if application.job.salary %}
+                    <span><i class="fa-solid fa-money-bill mr-1"></i>{{ application.job.salary }}</span>
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+              <div class="badge badge-lg 
+                {% if application.status == 'accepted' %}badge-success
+                {% elif application.status == 'rejected' %}badge-error
+                {% elif application.status == 'shortlisted' %}badge-info
+                {% elif application.status == 'interview_scheduled' %}badge-warning
+                {% elif application.status == 'viewed' %}badge-secondary
+                {% elif application.status == 'offer_extended' %}badge-success
+                {% else %}badge-ghost{% endif %}">
+                {% if application.status == 'accepted' %}<i class="fa-solid fa-check-circle mr-2"></i>
+                {% elif application.status == 'rejected' %}<i class="fa-solid fa-times-circle mr-2"></i>
+                {% elif application.status == 'shortlisted' %}<i class="fa-solid fa-star mr-2"></i>
+                {% elif application.status == 'interview_scheduled' %}<i class="fa-solid fa-video mr-2"></i>
+                {% elif application.status == 'viewed' %}<i class="fa-solid fa-eye mr-2"></i>
+                {% elif application.status == 'offer_extended' %}<i class="fa-solid fa-handshake mr-2"></i>
+                {% endif %}
+                {{ application.status | replace('_', ' ') | title }}
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div>
+              <h3 class="font-bold text-lg mb-4">Application Timeline</h3>
+              <div class="relative">
+                <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-base-200"></div>
+                <div class="space-y-6">
+                  {% for event in application.timeline | reverse %}
+                  <div class="relative flex items-start gap-4 pl-10">
+                    <div class="absolute left-2 w-5 h-5 rounded-full bg-base-100 border-2 border-primary flex items-center justify-center z-10">
+                      {% if event.status == 'pending' %}
+                      <div class="w-2 h-2 rounded-full bg-warning"></div>
+                      {% elif event.status == 'viewed' %}
+                      <div class="w-2 h-2 rounded-full bg-secondary"></div>
+                      {% elif event.status == 'shortlisted' %}
+                      <div class="w-2 h-2 rounded-full bg-info"></div>
+                      {% elif event.status == 'rejected' %}
+                      <div class="w-2 h-2 rounded-full bg-error"></div>
+                      {% elif event.status == 'accepted' or event.status == 'offer_extended' %}
+                      <div class="w-2 h-2 rounded-full bg-success"></div>
+                      {% elif event.status == 'interview_scheduled' %}
+                      <div class="w-2 h-2 rounded-full bg-warning"></div>
+                      {% else %}
+                      <div class="w-2 h-2 rounded-full bg-base-content/30"></div>
+                      {% endif %}
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-semibold capitalize">{{ event.status | replace('_', ' ') }}</p>
+                      {% if event.note %}
+                      <p class="text-sm text-base-content/60 mt-1">{{ event.note }}</p>
+                      {% endif %}
+                      <p class="text-xs text-base-content/40 mt-1">{{ event.updatedAt | date('MMM D, YYYY h:mm A') }}</p>
+                    </div>
+                  </div>
+                  {% endfor %}
+                  
+                  <div class="relative flex items-start gap-4 pl-10">
+                    <div class="absolute left-2 w-5 h-5 rounded-full bg-primary flex items-center justify-center z-10">
+                      <div class="w-2 h-2 rounded-full bg-primary-content"></div>
+                    </div>
+                    <div class="flex-1">
+                      <p class="font-semibold">Application Submitted</p>
+                      <p class="text-xs text-base-content/40 mt-1">{{ application.createdAt | date('MMM D, YYYY h:mm A') }}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="grid gap-6">
-          <div>
-            <h3 class="font-semibold text-lg">Cover Letter</h3>
-            <p class="mt-2 whitespace-pre-wrap">{{ application.coverLetter }}</p>
+        {% if application.coverLetter %}
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-envelope text-primary"></i>Cover Letter
+            </h3>
+            <div class="mt-4 p-4 bg-base-200/30 rounded-xl">
+              <p class="whitespace-pre-line">{{ application.coverLetter }}</p>
+            </div>
           </div>
-          
-          {% if application.resume %}
-          <div>
-            <h3 class="font-semibold text-lg">Resume</h3>
-            <a href="{{ application.resume }}" target="_blank" class="btn btn-primary btn-sm mt-2">
-              <i class="fas fa-download"></i> View Resume
-            </a>
+        </div>
+        {% endif %}
+
+        {% if isEmployer and application.resume %}
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-file-pdf text-error"></i>Candidate Resume
+            </h3>
+            <div class="mt-4 flex items-center justify-between p-4 bg-base-200/30 rounded-xl">
+              <div class="flex items-center gap-3">
+                <i class="fa-solid fa-file-pdf text-2xl text-error"></i>
+                <div>
+                  <p class="font-medium">{{ application.resume.fileName }}</p>
+                </div>
+              </div>
+              <a href="{{ application.resume.url }}" target="_blank" class="btn btn-outline btn-sm rounded-xl">
+                <i class="fa-solid fa-eye mr-2"></i>View Resume
+              </a>
+            </div>
           </div>
-          {% endif %}
-          
-          {% if application.notes %}
-          <div>
-            <h3 class="font-semibold text-lg">Notes</h3>
-            <p class="mt-2 text-base-content/70">{{ application.notes }}</p>
+        </div>
+        {% endif %}
+
+        {% if interviews and interviews.length > 0 %}
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-calendar-check text-primary"></i>Interviews
+            </h3>
+            <div class="space-y-4 mt-4">
+              {% for interview in interviews %}
+              <div class="p-4 bg-base-200/30 rounded-xl">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-{% if interview.status == 'completed' %}success{% elif interview.status == 'cancelled' %}error{% else %}warning{% endif %}/10 flex items-center justify-center">
+                      <i class="fa-solid fa-{% if interview.status == 'completed' %}check{% elif interview.status == 'cancelled' %}xmark{% else %}video{% endif %} text-lg text-{% if interview.status == 'completed' %}success{% elif interview.status == 'cancelled' %}error{% else %}warning{% endif %}"></i>
+                    </div>
+                    <div>
+                      <p class="font-semibold capitalize">{{ interview.type }} Interview</p>
+                      <p class="text-sm text-base-content/60">{{ interview.scheduledAt | date('MMM D, YYYY h:mm A') }}</p>
+                    </div>
+                  </div>
+                  <span class="badge badge-sm 
+                    {% if interview.status == 'completed' %}badge-success
+                    {% elif interview.status == 'cancelled' or interview.status == 'no_show' %}badge-error
+                    {% elif interview.status == 'confirmed' %}badge-info
+                    {% else %}badge-warning{% endif %}">
+                    {{ interview.status | title }}
+                  </span>
+                </div>
+                {% if interview.meetingLink %}
+                <div class="mt-3">
+                  <a href="{{ interview.meetingLink }}" target="_blank" class="btn btn-primary btn-sm rounded-xl">
+                    <i class="fa-solid fa-video mr-2"></i>Join Meeting
+                  </a>
+                </div>
+                {% endif %}
+              </div>
+              {% endfor %}
+            </div>
           </div>
-          {% endif %}
+        </div>
+        {% endif %}
+
+        {% if feedback and feedback.length > 0 %}
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg flex items-center gap-2">
+              <i class="fa-solid fa-comment-dots text-primary"></i>Feedback
+            </h3>
+            <div class="space-y-4 mt-4">
+              {% for fb in feedback %}
+              <div class="p-4 bg-base-200/30 rounded-xl">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    {% if fb.isAnonymous %}
+                    <div class="w-8 h-8 rounded-full bg-base-300 flex items-center justify-center">
+                      <i class="fa-solid fa-user-secret"></i>
+                    </div>
+                    <span class="font-medium">Anonymous</span>
+                    {% else %}
+                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <i class="fa-solid fa-user text-primary"></i>
+                    </div>
+                    <span class="font-medium">{{ fb.fromUser.name if fb.fromUser else 'Employer' }}</span>
+                    {% endif %}
+                  </div>
+                  <div class="flex">
+                    {% for i in range(1, 6) %}
+                    <i class="fa-solid fa-star text-sm {% if i <= fb.rating %}text-warning{% else %}text-base-content/20{% endif %}"></i>
+                    {% endfor %}
+                  </div>
+                </div>
+                {% if fb.overallFeedback %}
+                <p class="text-sm text-base-content/70 mt-2">{{ fb.overallFeedback }}</p>
+                {% endif %}
+                <p class="text-xs text-base-content/40 mt-2">{{ fb.createdAt | date('MMM D, YYYY') }}</p>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="space-y-6">
+        {% if not isEmployer %}
+        <div class="card bg-base-100 shadow-lg rounded-2xl sticky top-4">
+          <div class="card-body">
+            <h3 class="font-bold text-lg">Application Status</h3>
+            
+            <div class="mt-4">
+              <div class="flex justify-between text-sm mb-1">
+                <span>Status</span>
+                <span class="font-semibold capitalize">{{ application.status | replace('_', ' ') }}</span>
+              </div>
+              {% if application.viewedAt %}
+              <div class="flex justify-between text-sm mb-1">
+                <span>Viewed</span>
+                <span class="text-base-content/60">{{ application.viewedAt | date('MMM D, YYYY') }}</span>
+              </div>
+              {% endif %}
+              <div class="flex justify-between text-sm">
+                <span>Applied</span>
+                <span class="text-base-content/60">{{ application.createdAt | date('MMM D, YYYY') }}</span>
+              </div>
+            </div>
+
+            {% if application.job %}
+            <div class="divider">Job Details</div>
+            <div class="space-y-2 text-sm">
+              <p class="font-semibold">{{ application.job.company.name if application.job.company else 'Company' }}</p>
+              {% if application.job.company.description %}
+              <p class="text-base-content/60 text-xs line-clamp-3">{{ application.job.company.description }}</p>
+              {% endif %}
+            </div>
+            {% endif %}
+
+            {% if application.status != 'accepted' and application.status != 'rejected' and application.status != 'withdrawn' %}
+            <div class="divider"></div>
+            <form method="POST" action="/applications/{{ application._id }}/withdraw" onsubmit="return confirm('Are you sure you want to withdraw this application?');">
+              <button type="submit" class="btn btn-error btn-outline btn-block rounded-xl">
+                <i class="fa-solid fa-xmark mr-2"></i>Withdraw Application
+              </button>
+            </form>
+            {% endif %}
+
+            {% if application.status == 'accepted' %}
+            <div class="divider"></div>
+            <div class="alert alert-success rounded-xl">
+              <i class="fa-solid fa-check-circle text-success"></i>
+              <span>Congratulations! You have been accepted!</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        {% if isEmployer %}
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg">Manage Application</h3>
+            
+            <div class="form-control mt-4">
+              <label class="label"><span class="label-text font-semibold">Status</span></label>
+              <select id="status-select" class="select select-bordered rounded-xl" onchange="updateStatus()">
+                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="viewed" {% if application.status == 'viewed' %}selected{% endif %}>Viewed</option>
+                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlist</option>
+                <option value="interview_scheduled" {% if application.status == 'interview_scheduled' %}selected{% endif %}>Schedule Interview</option>
+                <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accept</option>
+                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Reject</option>
+              </select>
+            </div>
+
+            <div class="form-control mt-4">
+              <label class="label"><span class="label-text font-semibold">Internal Rating</span></label>
+              <div class="flex gap-1" id="rating-stars">
+                {% for i in range(1, 6) %}
+                <button type="button" class="btn btn-ghost btn-xs" onclick="setRating({{ i }})">
+                  <i class="fa-solid fa-star text-xl {% if application.internalRating and i <= application.internalRating %}text-warning{% else %}text-base-content/20{% endif %}" id="star-{{ i }}"></i>
+                </button>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="form-control mt-4">
+              <label class="label"><span class="label-text font-semibold">Notes</span></label>
+              <textarea id="employer-notes" class="textarea textarea-bordered rounded-xl" rows="3" placeholder="Internal notes about this candidate...">{{ application.employerNotes or '' }}</textarea>
+            </div>
+
+            <button onclick="saveApplication()" class="btn btn-primary btn-block mt-4 rounded-xl">
+              <i class="fa-solid fa-save mr-2"></i>Save Changes
+            </button>
+          </div>
         </div>
 
-        {% if application.job.postedBy.toString() === userId or application.applicantUserId.toString() === userId %}
-        <div class="card-actions justify-end mt-6">
-          <form action="/applications/{{ application._id }}/status" method="POST" class="flex gap-2">
-            <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-            <select name="status" class="select select-bordered">
-              <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
-              <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
-              <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
-              <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
-            </select>
-            <button type="submit" class="btn btn-primary">Update Status</button>
-          </form>
+        <div class="card bg-base-100 shadow-lg rounded-2xl">
+          <div class="card-body">
+            <h3 class="font-bold text-lg">Schedule Interview</h3>
+            
+            <form id="interview-form" class="space-y-4 mt-4">
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Interview Type</span></label>
+                <select name="type" class="select select-bordered rounded-xl" required>
+                  <option value="video">Video Call</option>
+                  <option value="phone">Phone Call</option>
+                  <option value="onsite">On-site</option>
+                  <option value="technical">Technical</option>
+                  <option value="behavioral">Behavioral</option>
+                  <option value="panel">Panel Interview</option>
+                </select>
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Date & Time</span></label>
+                <input type="datetime-local" name="scheduledAt" class="input input-bordered rounded-xl" required />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Duration (minutes)</span></label>
+                <input type="number" name="duration" class="input input-bordered rounded-xl" value="60" min="15" max="480" />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Meeting Link</span></label>
+                <input type="url" name="meetingLink" class="input input-bordered rounded-xl" placeholder="https://zoom.us/..." />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Notes</span></label>
+                <textarea name="notes" class="textarea textarea-bordered rounded-xl" rows="2" placeholder="Additional instructions..."></textarea>
+              </div>
+
+              <button type="submit" class="btn btn-warning btn-block rounded-xl">
+                <i class="fa-solid fa-calendar-plus mr-2"></i>Schedule Interview
+              </button>
+            </form>
+          </div>
         </div>
         {% endif %}
       </div>
     </div>
   </div>
 </div>
+
+<script>
+let currentRating = {{ application.internalRating or 0 }};
+
+function setRating(rating) {
+  currentRating = rating;
+  for (let i = 1; i <= 5; i++) {
+    const star = document.getElementById('star-' + i);
+    if (i <= rating) {
+      star.classList.remove('text-base-content/20');
+      star.classList.add('text-warning');
+    } else {
+      star.classList.remove('text-warning');
+      star.classList.add('text-base-content/20');
+    }
+  }
+}
+
+async function updateStatus() {
+  const status = document.getElementById('status-select').value;
+  const notes = document.getElementById('employer-notes').value;
+  
+  try {
+    const res = await fetch('/applications/{{ application._id }}/status', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, notes })
+    });
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    }
+  } catch (err) {
+    console.error('Error updating status:', err);
+  }
+}
+
+async function saveApplication() {
+  await updateStatus();
+}
+
+document.getElementById('interview-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  
+  try {
+    const res = await fetch('/applications/{{ application._id }}/schedule-interview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(formData))
+    });
+    const data = await res.json();
+    if (data.success) {
+      location.reload();
+    }
+  } catch (err) {
+    console.error('Error scheduling interview:', err);
+  }
+});
+</script>
 {% endblock %}

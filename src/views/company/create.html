@@ -1,114 +1,219 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto py-8 px-4">
-  <div class="text-center mb-8 gsap-reveal">
-    <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30 mb-4">
-      <i class="fa-solid fa-building text-white text-xl"></i>
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-3xl mx-auto">
+    <div class="mb-8">
+      <a href="/dashboard/employer" class="btn btn-ghost btn-sm rounded-xl mb-4">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+      </a>
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30 mb-4">
+          <i class="fa-solid fa-building text-white text-xl"></i>
+        </div>
+        <h1 class="text-3xl font-bold tracking-tight mb-2">Create Company Profile</h1>
+        <p class="text-base-content/60">Set up your company to start posting jobs and receiving applications</p>
+      </div>
     </div>
-    <h1 class="text-3xl font-bold tracking-tight mb-2">Create Company Profile</h1>
-    <p class="text-base-content/60">Set up your company to start posting jobs</p>
+    
+    {% if error %}
+    <div class="alert alert-error mb-6 rounded-xl bg-error/10 border border-error/20">
+      <i class="fa-solid fa-circle-exclamation text-error"></i>
+      <span>{{ error }}</span>
+    </div>
+    {% endif %}
+    
+    <form action="/company" method="POST" enctype="multipart/form-data" class="space-y-6">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      
+      <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+        <div class="card-body p-6">
+          <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-building text-primary"></i>Basic Information
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control md:col-span-2">
+              <label class="label py-2">
+                <span class="label-text font-bold">Company Name</span>
+              </label>
+              <input type="text" name="name" required 
+                class="input input-bordered rounded-xl" placeholder="Acme Corporation" />
+              <label class="label">
+                <span class="label-text-alt text-base-content/50">Official company name</span>
+              </label>
+            </div>
+            
+            <div class="form-control md:col-span-2">
+              <label class="label py-2">
+                <span class="label-text font-bold">Description</span>
+              </label>
+              <textarea name="description" required 
+                class="textarea textarea-bordered rounded-xl" 
+                rows="5" placeholder="Tell candidates about your company, mission, culture, and what makes it a great place to work..."></textarea>
+              <label class="label">
+                <span class="label-text-alt text-base-content/50">20-5000 characters</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+        <div class="card-body p-6">
+          <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-sliders text-primary"></i>Company Details
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold">Industry</span>
+              </label>
+              <select name="industry" required 
+                class="select select-bordered rounded-xl">
+                <option value="">Select Industry</option>
+                <option value="Technology">Technology</option>
+                <option value="Finance">Finance & Banking</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Education">Education</option>
+                <option value="Retail">Retail & E-commerce</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Media">Media & Entertainment</option>
+                <option value="Consulting">Consulting</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold">Company Size</span>
+              </label>
+              <select name="size" required 
+                class="select select-bordered rounded-xl">
+                <option value="">Select Size</option>
+                <option value="1-10">1-10 employees</option>
+                <option value="11-50">11-50 employees</option>
+                <option value="51-200">51-200 employees</option>
+                <option value="201-500">201-500 employees</option>
+                <option value="501-1000">501-1000 employees</option>
+                <option value="1000+">1000+ employees</option>
+              </select>
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold">Headquarters</span>
+              </label>
+              <input type="text" name="headquarters" 
+                class="input input-bordered rounded-xl" placeholder="San Francisco, CA" />
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold">Founded Year</span>
+              </label>
+              <input type="number" name="foundedYear" 
+                class="input input-bordered rounded-xl" placeholder="2010" min="1800" max="2026" />
+            </div>
+            
+            <div class="form-control md:col-span-2">
+              <label class="label py-2">
+                <span class="label-text font-bold">Website</span>
+              </label>
+              <input type="url" name="website" 
+                class="input input-bordered rounded-xl" placeholder="https://example.com" />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+        <div class="card-body p-6">
+          <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-images text-primary"></i>Branding
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold"><i class="fa-solid fa-image mr-2"></i>Logo</span>
+              </label>
+              <input type="file" name="logo" accept="image/*" 
+                class="file-input file-input-bordered rounded-xl" />
+              <label class="label">
+                <span class="label-text-alt text-base-content/50">Recommended: 200x200px, PNG/JPG</span>
+              </label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold"><i class="fa-solid fa-image mr-2"></i>Cover Image</span>
+              </label>
+              <input type="file" name="coverImage" accept="image/*" 
+                class="file-input file-input-bordered rounded-xl" />
+              <label class="label">
+                <span class="label-text-alt text-base-content/50">Recommended: 1500x400px</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card bg-base-100 shadow-lg border border-base-200/50 rounded-2xl">
+        <div class="card-body p-6">
+          <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-link text-primary"></i>Social Links
+          </h2>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold"><i class="fa-brands fa-linkedin mr-2"></i>LinkedIn</span>
+              </label>
+              <input type="url" name="linkedin" 
+                class="input input-bordered rounded-xl" placeholder="https://linkedin.com/company/..." />
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold"><i class="fa-brands fa-twitter mr-2"></i>Twitter / X</span>
+              </label>
+              <input type="url" name="twitter" 
+                class="input input-bordered rounded-xl" placeholder="https://twitter.com/..." />
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold"><i class="fa-brands fa-facebook mr-2"></i>Facebook</span>
+              </label>
+              <input type="url" name="facebook" 
+                class="input input-bordered rounded-xl" placeholder="https://facebook.com/..." />
+            </div>
+            
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-bold"><i class="fa-brands fa-instagram mr-2"></i>Instagram</span>
+              </label>
+              <input type="url" name="instagram" 
+                class="input input-bordered rounded-xl" placeholder="https://instagram.com/..." />
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="sticky bottom-4 z-40">
+        <div class="bg-base-100/90 backdrop-blur shadow-xl border border-base-200/50 p-4 rounded-2xl flex justify-between items-center">
+          <p class="text-sm text-base-content/60">Your profile will be reviewed for verification</p>
+          <div class="flex gap-3">
+            <a href="/dashboard/employer" class="btn btn-ghost rounded-xl">Cancel</a>
+            <button type="submit" class="btn btn-primary rounded-xl">
+              <i class="fa-solid fa-save mr-2"></i>Create Company
+            </button>
+          </div>
+        </div>
+      </div>
+    </form>
   </div>
-  
-  <form action="/company" method="POST" class="space-y-6">
-    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
-          <i class="fa-solid fa-building text-primary"></i>Company Details
-        </h2>
-        
-        <div class="form-control">
-          <label class="label py-2">
-            <span class="label-text font-medium text-sm">Company Name</span>
-          </label>
-          <input type="text" name="name" required 
-            class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" />
-        </div>
-        
-        <div class="form-control mt-4">
-          <label class="label py-2">
-            <span class="label-text font-medium text-sm">Description</span>
-          </label>
-          <textarea name="description" required 
-            class="textarea textarea-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
-            rows="4" placeholder="Tell candidates about your company..."></textarea>
-        </div>
-      </div>
-    </div>
-    
-    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-2">
-      <div class="card-body p-6">
-        <h2 class="font-bold text-lg mb-5 flex items-center gap-2">
-          <i class="fa-solid fa-sliders text-primary"></i>Company Info
-        </h2>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Industry</span>
-            </label>
-            <select name="industry" required 
-              class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
-              <option value="">Select Industry</option>
-              <option value="Technology">Technology</option>
-              <option value="Finance">Finance</option>
-              <option value="Healthcare">Healthcare</option>
-              <option value="Education">Education</option>
-              <option value="Retail">Retail</option>
-              <option value="Manufacturing">Manufacturing</option>
-              <option value="Media">Media</option>
-              <option value="Consulting">Consulting</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-          
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Company Size</span>
-            </label>
-            <select name="size" required 
-              class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
-              <option value="">Select Size</option>
-              <option value="1-10">1-10 employees</option>
-              <option value="11-50">11-50 employees</option>
-              <option value="51-200">51-200 employees</option>
-              <option value="201-500">201-500 employees</option>
-              <option value="501-1000">501-1000 employees</option>
-              <option value="1000+">1000+ employees</option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Headquarters</span>
-            </label>
-            <input type="text" name="headquarters" 
-              class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
-              placeholder="City, Country" />
-          </div>
-          
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Website</span>
-            </label>
-            <input type="url" name="website" 
-              class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
-              placeholder="https://example.com" />
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="form-control gsap-reveal">
-      <button type="submit" class="btn btn-primary-gradient btn-block rounded-xl h-12 font-semibold shadow-primary/30 hover:shadow-lg">
-        <span>Create Company</span>
-        <i class="fa-solid fa-check ml-2"></i>
-      </button>
-    </div>
-  </form>
 </div>
 {% endblock %}
