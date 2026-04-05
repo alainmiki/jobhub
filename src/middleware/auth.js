@@ -11,7 +11,7 @@ export const createAuthMiddleware = (auth) => {
       });
 
       if (session) {
-        req.session = session.session;
+        req.authSession = session.session;
         req.user = session.user;
         req.userId = session.user.id;
         
@@ -38,7 +38,7 @@ export const createAuthMiddleware = (auth) => {
           console.warn('[Auth] Could not fetch user profile or notifications:', profileError.message);
         }
       } else {
-        req.session = null;
+        req.authSession = null;
         req.user = null;
         req.userId = null;
         req.userProfile = null;
@@ -125,7 +125,7 @@ export const validateInput = (req, res, next) => {
 
   if (req.query) {
     for (const key in req.query) {
-      if (typeof req.query[key] === 'string' && !excludedFields.includes(key)) {
+      if (typeof req.query[key] === 'string') {
         req.query[key] = sanitize(req.query[key]);
       }
     }

@@ -96,7 +96,7 @@ export const initAuth = async (db) => {
           type: "string",
           required: false,
           defaultValue: "candidate",
-          inputable: false
+          inputable: true
         },
         image: {
           type: "string",

@@ -138,7 +138,7 @@ app.use(createAuthMiddleware(auth));
 // Make user available to all views
 app.use((req, res, next) => {
   res.locals.user = req.user || null;
-  res.locals.session = req.session || null;
+  res.locals.authSession = req.authSession || null;
   res.locals.userId = req.userId || null;
   next();
 });
