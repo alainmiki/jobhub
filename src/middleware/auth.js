@@ -106,7 +106,7 @@ export const getUserProfile = async (userId) => {
 };
 
 export const validateInput = (req, res, next) => {
-  const excludedFields = ['password', 'confirmPassword', 'newPassword', 'currentPassword'];
+  const excludedFields = ['password', 'confirmPassword', 'newPassword', 'currentPassword', '_csrf'];
 
   const sanitize = (value) => {
     if (typeof value === 'string') {
@@ -125,7 +125,7 @@ export const validateInput = (req, res, next) => {
 
   if (req.query) {
     for (const key in req.query) {
-      if (typeof req.query[key] === 'string') {
+      if (typeof req.query[key] === 'string' && !excludedFields.includes(key)) {
         req.query[key] = sanitize(req.query[key]);
       }
     }
