@@ -80,6 +80,10 @@ app.use((req, res, next) => {
   next();
 });
 
+// Mount Better-Auth handler BEFORE body parsers and CSRF
+// This handles all /api/auth/* internal requests and should not be CSRF-protected by csurf
+app.all("/api/auth/*path", toNodeHandler(auth));
+
 // NOW add express.json() AFTER Better-Auth handler
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -120,23 +124,7 @@ app.use((req, res, next) => {
 });
 
 // CSRF protection for custom forms
-const csrfProtection = csrf({
-  cookie: {
-    key: '_csrf',
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
-    httpOnly: true
-  }
-});
-
-// Skip CSRF for API routes handled by Better-Auth
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api/auth') || req.path.startsWith('/sign-up') || req.path.startsWith('/sign-in')) {
-    return next();
-  }
-  csrfProtection(req, res, next);
-});
-
+app.use(csrf());
 app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   next();
@@ -149,10 +137,6 @@ app.use(createAuthMiddleware(auth));
 
 // Make user available to all views
 app.use((req, res, next) => {
-  // Ensure csrfToken is always available for views
-  if (!res.locals.csrfToken && req.csrfToken) {
-    res.locals.csrfToken = req.csrfToken();
-  }
   res.locals.user = req.user || null;
   res.locals.session = req.session || null;
   res.locals.userId = req.userId || null;
@@ -161,10 +145,6 @@ app.use((req, res, next) => {
 
 // Input validation
 app.use(validateInput);
-
-// Mount Better-Auth handler - handles all /api/auth/* requests
-// This needs to be after body parsers and CSRF for forms posting to /api/auth/*
-app.all("/api/auth/*path", toNodeHandler(auth));
 
 const PORT = process.env.PORT || 3000;
 
