@@ -1,18 +1,19 @@
- import express from 'express';
+import express from 'express';
 import { toNodeHandler } from 'better-auth/node';
 import { isAuthenticated } from '../middleware/auth.js';
+import { asyncHandler } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
 
-const router = express.Router();
-
 export const initAuthRouter = (auth) => {
+  const router = express.Router();
+
   // Standard Auth UI Routes
-  router.get('/sign-in', (req, res) => {
+  router.get('/sign-in', (req, res, next) => {
     const redirect = req.query.redirect || '/';
     res.render('sign-in', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}` });
   });
 
-  router.post('/sign-in', async (req, res) => {
+  router.post('/sign-in', asyncHandler(async (req, res, next) => {
     const { email, password, redirect = '/' } = req.body;
     try {
       const response = await auth.api.signInEmail({
@@ -27,7 +28,7 @@ export const initAuthRouter = (auth) => {
       }
 
       response.headers.forEach((v, k) => res.append(k, v));
-      return res.redirect(redirect);
+      return res.redirect('/');
     } catch (error) {
       return res.render('sign-in', { 
         error: error.message, 
@@ -36,14 +37,14 @@ export const initAuthRouter = (auth) => {
         redirectQuery: `redirect=${encodeURIComponent(redirect)}` 
       });
     }
-  });
+  }));
 
-  router.get('/sign-up', (req, res) => {
+  router.get('/sign-up', (req, res, next) => {
     const redirect = req.query.redirect || '/';
     res.render('sign-up', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}` });
   });
 
-  router.post('/sign-up', async (req, res) => {
+  router.post('/sign-up', asyncHandler(async (req, res, next) => {
     const { name, email, password, role = 'candidate', redirect = '/' } = req.body;
     try {
       const response = await auth.api.signUpEmail({
@@ -58,7 +59,7 @@ export const initAuthRouter = (auth) => {
       }
 
       response.headers.forEach((v, k) => res.append(k, v));
-      return res.redirect(redirect);
+      return res.redirect('/sign-in');
     } catch (error) {
       return res.render('sign-up', { 
         error: error.message, 
@@ -67,13 +68,13 @@ export const initAuthRouter = (auth) => {
         redirectQuery: `redirect=${encodeURIComponent(redirect)}` 
       });
     }
-  });
+  }));
 
-  router.get('/forgot-password', (req, res) => {
+  router.get('/forgot-password', (req, res, next) => {
     res.render('forgot-password');
   });
 
-  router.post('/forgot-password', async (req, res) => {
+  router.post('/forgot-password', asyncHandler(async (req, res, next) => {
     const { email } = req.body;
     try {
       await auth.api.requestPasswordReset({
@@ -84,9 +85,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       return res.render('forgot-password', { error: error.message });
     }
-  });
+  }));
 
-  router.get('/reset-password', (req, res) => {
+  router.get('/reset-password', (req, res, next) => {
     const token = req.query.token;
     if (!token) {
       return res.redirect('/forgot-password');
@@ -94,7 +95,7 @@ export const initAuthRouter = (auth) => {
     res.render('reset-password', { token });
   });
 
-  router.post('/reset-password', async (req, res) => {
+  router.post('/reset-password', asyncHandler(async (req, res, next) => {
     const { password, confirmPassword, token } = req.body;
 
     if (!token) return res.redirect('/forgot-password');
@@ -124,9 +125,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       return res.render('reset-password', { error: error.message, token });
     }
-  });
+  }));
 
-  router.post('/change-password', isAuthenticated(auth), async (req, res) => {
+  router.post('/change-password', isAuthenticated(auth), asyncHandler(async (req, res, next) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (newPassword !== confirmPassword) {
@@ -150,9 +151,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
-  });
+  }));
 
-  router.get('/logout', async (req, res) => {
+  router.get('/logout', asyncHandler(async (req, res, next) => {
     try {
       const response = await auth.api.signOut({
         headers: req.headers,
@@ -163,9 +164,9 @@ export const initAuthRouter = (auth) => {
       logger.error('Logout error:', error);
     }
     return res.redirect('/sign-in');
-  });
+  }));
 
-  router.get('/verify-email', async (req, res) => {
+  router.get('/verify-email', asyncHandler(async (req, res, next) => {
     const { token } = req.query;
     if (!token) return res.render('verify-email', { success: false });
 
@@ -185,21 +186,21 @@ export const initAuthRouter = (auth) => {
       logger.error('Email verification error:', error);
       return res.render('verify-email', { success: false });
     }
-  });
+  }));
 
   // 2FA Flow UI Routes
-  router.get('/2fa', (req, res) => {
+  router.get('/2fa', (req, res, next) => {
     if (!req.user) return res.redirect('/sign-in');
     res.render('2fa', { user: req.user });
   });
 
-  router.get('/enable-2fa', (req, res) => {
+  router.get('/enable-2fa', (req, res, next) => {
     if (!req.user) return res.redirect('/sign-in');
     res.render('enable-2fa', { user: req.user });
   });
 
   // 2FA API Handlers
-  router.post('/api/auth/two-factor/verify-totp', async (req, res) => {
+  router.post('/api/auth/two-factor/verify-totp', asyncHandler(async (req, res, next) => {
     try {
       const { code, trustDevice } = req.body;
       const result = await auth.api.verifyTOTP({
@@ -212,9 +213,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       res.redirect('/2fa?error=Invalid+code');
     }
-  });
+  }));
 
-  router.post('/api/auth/two-factor/send-otp', async (req, res) => {
+  router.post('/api/auth/two-factor/send-otp', asyncHandler(async (req, res, next) => {
     try {
       await auth.api.sendTwoFactorOTP({
         body: { trustDevice: false },
@@ -224,9 +225,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       res.redirect('/2fa?error=Failed+to+send+code');
     }
-  });
+  }));
 
-  router.post('/api/auth/two-factor/verify-otp', async (req, res) => {
+  router.post('/api/auth/two-factor/verify-otp', asyncHandler(async (req, res, next) => {
     try {
       const { code, trustDevice } = req.body;
       const result = await auth.api.verifyTwoFactorOTP({
@@ -239,9 +240,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       res.redirect('/2fa?error=Invalid+code');
     }
-  });
+  }));
 
-  router.post('/api/auth/two-factor/verify-backup-code', async (req, res) => {
+  router.post('/api/auth/two-factor/verify-backup-code', asyncHandler(async (req, res, next) => {
     try {
       const { code } = req.body;
       const result = await auth.api.verifyBackupCode({
@@ -254,9 +255,9 @@ export const initAuthRouter = (auth) => {
     } catch (error) {
       res.redirect('/2fa?method=backup&error=Invalid+backup+code');
     }
-  });
+  }));
 
-  router.post('/enable-2fa', async (req, res) => {
+  router.post('/enable-2fa', asyncHandler(async (req, res, next) => {
     try {
       const { step, password, code } = req.body;
       if (!req.user?.id) return res.redirect('/sign-in');
@@ -307,7 +308,7 @@ export const initAuthRouter = (auth) => {
       logger.error('Enable 2FA error:', error);
       res.redirect('/enable-2fa?error=' + encodeURIComponent(error.message));
     }
-  });
+  }));
 
   return router;
 };

@@ -47,7 +47,7 @@ export const createAuthMiddleware = (auth) => {
       next();
     } catch (error) {
       console.error('[Auth Middleware] Error:', error.message);
-      req.session = null;
+      req.authSession = null;
       req.user = null;
       req.userId = null;
       req.userProfile = null;
