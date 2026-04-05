@@ -3,7 +3,6 @@
 
 <head>
   <script>
-    // Initialize theme immediately to prevent flashing
     (function() {
       const savedTheme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-theme', savedTheme);
@@ -13,42 +12,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ title or 'JobHub - Find Your Dream Job' }}</title>
   <meta name="description" content="Find your dream job or perfect candidate on JobHub - the leading job portal connecting talent with opportunity.">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <meta name="theme-color" content="#4F46E5">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" type="text/css" />
   <link rel="stylesheet" href="/css/output.css" type="text/css">
   <input type="hidden" id="globalCsrfToken" value="{{ csrfToken }}">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
 </head>
-<body class="min-h-screen flex flex-col bg-base-100 text-base-content">
+
+<body class="min-h-screen flex flex-col bg-base-100 text-base-content antialiased overflow-x-hidden">
   {% include "partials/header.html" %}
-  <main class="flex-1">
+  
+  <main class="flex-1" id="main-content">
+    <div class="max-w-7xl mx-auto px-4 mt-4">
+      {% if flash.error %}
+      <div class="alert alert-error shadow-lg mb-6 animate-fade-in">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>{{ flash.error }}</span>
+      </div>
+      {% endif %}
+
+      {% if flash.success %}
+      <div class="alert alert-success shadow-lg mb-6 animate-fade-in">
+        <i class="fa-solid fa-circle-check"></i>
+        <span>{{ flash.success }}</span>
+      </div>
+      {% endif %}
+    </div>
+
     {% block content %}{% endblock %}
   </main>
+  
   {% include "partials/footer.html" %}
 
-  <!-- Floating Theme Selector -->
-  <div class="fixed bottom-6 right-6 z-50 dropdown dropdown-top dropdown-end">
-    <div tabindex="0" role="button" class="btn btn-primary btn-circle shadow-lg hover:scale-110 transition-transform">
-      <i class="fa-solid fa-palette text-xl"></i>
+  <button id="scroll-to-top" class="fixed bottom-6 right-6 btn btn-primary btn-circle shadow-lg z-50" aria-label="Scroll to top">
+    <i class="fa-solid fa-arrow-up"></i>
+  </button>
+
+  <div class="fixed bottom-6 right-24 z-50 dropdown dropdown-top dropdown-end">
+    <div tabindex="0" role="button" class="btn btn-circle shadow-lg hover:scale-110 transition-transform bg-base-200 border border-base-300" aria-label="Select theme">
+      <i class="fa-solid fa-palette text-lg"></i>
     </div>
-    <ul tabindex="0" class="dropdown-content menu p-2 shadow-2xl bg-base-200 rounded-box w-52 mb-4 border border-base-content/10">
-      <li class="menu-title text-sm opacity-60">Select Theme</li>
-      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Light" value="light"/></li>
-      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Dark" value="dark"/></li>
-      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Nord" value="nord"/></li>
-      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Business" value="business"/></li>
-      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Silk" value="silk"/></li>
-      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start" aria-label="Dracula" value="dracula"/></li>
+    <ul tabindex="0" class="dropdown-content z-[60] p-2 shadow-2xl bg-base-200 rounded-xl w-56 mb-4 border border-base-300/50">
+      <li class="menu-title text-xs opacity-50 uppercase tracking-widest px-3 py-2">Theme</li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start rounded-lg" aria-label="Light" value="light"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start rounded-lg" aria-label="Dark" value="dark"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start rounded-lg" aria-label="Nord" value="nord"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start rounded-lg" aria-label="Business" value="business"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start rounded-lg" aria-label="Silk" value="silk"/></li>
+      <li><input type="radio" name="theme-buttons" class="theme-controller btn btn-sm btn-ghost justify-start rounded-lg" aria-label="Dracula" value="dracula"/></li>
     </ul>
   </div>
 
   <script>
-    // Handle theme selection and persistence
     document.addEventListener('DOMContentLoaded', () => {
       const themeControllers = document.querySelectorAll('.theme-controller');
       const currentTheme = document.documentElement.getAttribute('data-theme');
 
       themeControllers.forEach(controller => {
-        // Set the initial state of the inputs
         if (controller.value === currentTheme) {
           controller.checked = true;
         }
@@ -58,6 +78,21 @@
           document.documentElement.setAttribute('data-theme', theme);
           localStorage.setItem('theme', theme);
         });
+      });
+
+      const scrollBtn = document.getElementById('scroll-to-top');
+      window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+          scrollBtn.style.opacity = '1';
+          scrollBtn.style.pointerEvents = 'auto';
+        } else {
+          scrollBtn.style.opacity = '0';
+          scrollBtn.style.pointerEvents = 'none';
+        }
+      });
+
+      scrollBtn.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     });
   </script>

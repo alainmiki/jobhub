@@ -46,6 +46,7 @@
         {% if application.job.postedBy.toString() === userId or application.applicantUserId.toString() === userId %}
         <div class="card-actions justify-end mt-6">
           <form action="/applications/{{ application._id }}/status" method="POST" class="flex gap-2">
+            <input type="hidden" name="_csrf" value="{{ csrfToken }}">
             <select name="status" class="select select-bordered">
               <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
               <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>

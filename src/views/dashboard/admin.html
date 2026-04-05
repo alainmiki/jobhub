@@ -1,79 +1,139 @@
 {% extends "layout.html" %}
-
 {% block content %}
-<div class="max-w-6xl mx-auto py-8 px-4">
-  <h1 class="text-3xl font-bold mb-8">Admin Dashboard</h1>
-  
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-    <div class="stat bg-base-200 rounded-lg">
-      <div class="stat-title">Total Jobs</div>
-      <div class="stat-value text-primary">{{ stats.totalJobs }}</div>
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="mb-8 gsap-reveal">
+      <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">Admin Dashboard</h1>
+      <p class="text-base-content/60">System overview and pending tasks</p>
     </div>
-    <div class="stat bg-base-200 rounded-lg">
-      <div class="stat-title">Pending Approval</div>
-      <div class="stat-value text-warning">{{ stats.pendingJobs }}</div>
-    </div>
-    <div class="stat bg-base-200 rounded-lg">
-      <div class="stat-title">Approved Jobs</div>
-      <div class="stat-value text-success">{{ stats.approvedJobs }}</div>
-    </div>
-    <div class="stat bg-base-200 rounded-lg">
-      <div class="stat-title">Total Applications</div>
-      <div class="stat-value text-info">{{ stats.totalApplications }}</div>
-    </div>
-  </div>
-  
-  {% if stats.pendingJobs > 0 %}
-  <div class="mb-8">
-    <h2 class="text-xl font-bold mb-4">Jobs Pending Approval</h2>
-    <div class="space-y-4">
-      {% for job in recentJobs %}
-      {% if job.status === 'pending' %}
-      <div class="card bg-base-100 shadow-sm">
-        <div class="card-body flex-row items-center justify-between">
-          <div>
-            <h3 class="font-bold">{{ job.title }}</h3>
-            <p class="text-sm text-base-content/70">{{ job.company.name }}</p>
-          </div>
-          <div class="flex gap-2">
-            <form action="/dashboard/jobs/{{ job._id }}/approve" method="POST">
-              <button type="submit" class="btn btn-success btn-sm">Approve</button>
-            </form>
-            <form action="/dashboard/jobs/{{ job._id }}/reject" method="POST">
-              <button type="submit" class="btn btn-error btn-sm">Reject</button>
-            </form>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-1">
+        <div class="card-body p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-base-content/50 font-medium">Total Jobs</p>
+              <p class="text-3xl font-bold tracking-tight">{{ stats.totalJobs }}</p>
+              <p class="text-xs text-base-content/40 mt-1">{{ stats.approvedJobs }} approved</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <i class="fa-solid fa-briefcase text-xl text-primary"></i>
+            </div>
           </div>
         </div>
       </div>
-      {% endif %}
-      {% endfor %}
+      
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-2">
+        <div class="card-body p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-base-content/50 font-medium">Pending Jobs</p>
+              <p class="text-3xl font-bold tracking-tight text-warning">{{ stats.pendingJobs }}</p>
+              <a href="/admin/jobs/pending" class="text-xs text-primary hover:underline mt-1 inline-block">Review all</a>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
+              <i class="fa-solid fa-clock text-xl text-warning"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-3">
+        <div class="card-body p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-base-content/50 font-medium">Companies</p>
+              <p class="text-3xl font-bold tracking-tight">{{ stats.totalCompanies }}</p>
+              <p class="text-xs text-base-content/40 mt-1">
+                {% if stats.pendingCompanies > 0 %}{{ stats.pendingCompanies }} pending{% else %}All verified{% endif %}
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+              <i class="fa-solid fa-building text-xl text-secondary"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-4">
+        <div class="card-body p-5">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-base-content/50 font-medium">Applications</p>
+              <p class="text-3xl font-bold tracking-tight">{{ stats.totalApplications }}</p>
+              <p class="text-xs text-base-content/40 mt-1">Across all listings</p>
+            </div>
+            <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+              <i class="fa-solid fa-file-lines text-xl text-accent"></i>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-  </div>
-  {% endif %}
-  
-  <div>
-    <h2 class="text-xl font-bold mb-4">Recent Jobs</h2>
-    <div class="overflow-x-auto">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Title</th>
-            <th>Company</th>
-            <th>Status</th>
-            <th>Created</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for job in recentJobs %}
-          <tr>
-            <td><a href="/jobs/{{ job._id }}" class="link link-primary">{{ job.title }}</a></td>
-            <td>{{ job.company.name }}</td>
-            <td><span class="badge badge-{{ 'pending' if job.status === 'pending' else 'success' if job.status === 'approved' else 'error' }}">{{ job.status }}</span></td>
-            <td>{{ job.createdAt | date('MMM d, YYYY') }}</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-1 space-y-6">
+        <h3 class="text-xl font-bold flex items-center gap-2">
+          <i class="fa-solid fa-bolt text-warning"></i>Quick Actions
+        </h3>
+        <div class="flex flex-col gap-3">
+          <a href="/admin/users" class="btn btn-outline justify-between rounded-xl group">
+            <span><i class="fa-solid fa-users mr-2"></i>User Management</span>
+            <i class="fa-solid fa-chevron-right transition-transform group-hover:translate-x-1"></i>
+          </a>
+          <a href="/admin/jobs/pending" class="btn btn-outline justify-between rounded-xl group">
+            <span><i class="fa-solid fa-check-to-square mr-2"></i>Approve Jobs</span>
+            {% if stats.pendingJobs > 0 %}
+            <span class="badge badge-warning badge-sm">{{ stats.pendingJobs }}</span>
+            {% endif %}
+          </a>
+          <a href="/admin/companies/pending" class="btn btn-outline justify-between rounded-xl group">
+            <span><i class="fa-solid fa-building-columns mr-2"></i>Verify Companies</span>
+            {% if stats.pendingCompanies > 0 %}
+            <span class="badge badge-warning badge-sm">{{ stats.pendingCompanies }}</span>
+            {% endif %}
+          </a>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2">
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body p-6">
+            <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-clock text-primary"></i>Recent Job Postings
+            </h3>
+            <div class="overflow-x-auto">
+              <table class="table table-sm">
+                <thead>
+                  <tr class="border-base-200/50">
+                    <th class="text-xs uppercase tracking-wider text-base-content/50">Title</th>
+                    <th class="text-xs uppercase tracking-wider text-base-content/50">Company</th>
+                    <th class="text-xs uppercase tracking-wider text-base-content/50">Status</th>
+                    <th class="text-xs uppercase tracking-wider text-base-content/50">Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for job in recentJobs %}
+                  <tr class="border-base-200/30 hover:bg-base-200/30 transition-colors">
+                    <td class="font-medium">{{ job.title }}</td>
+                    <td>{{ job.company.name }}</td>
+                    <td>
+                      <span class="badge badge-sm badge-outline 
+                        {% if job.status == 'approved' %}badge-success
+                        {% elseif job.status == 'pending' %}badge-warning
+                        {% else %}badge-error{% endif %}">
+                        {{ job.status }}
+                      </span>
+                    </td>
+                    <td class="text-base-content/60 text-sm">{{ job.createdAt.toLocaleDateString() }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>

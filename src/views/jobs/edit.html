@@ -10,6 +10,7 @@
     <h1 class="text-3xl font-bold mb-6">Edit Job</h1>
     
     <form method="POST" action="/jobs/{{ job._id }}?_method=PUT" class="space-y-6">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       <div class="card bg-base-100 shadow">
         <div class="card-body">
           <div class="form-control">

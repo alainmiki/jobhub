@@ -1,115 +1,115 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-[calc(100vh-200px)] flex items-center justify-center py-12 px-4 bg-base-200/30">
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 hero-pattern">
   <div class="w-full max-w-md">
-    <!-- Logo/Brand -->
-    <div class="text-center mb-8">
-      <a href="/" class="inline-flex items-center gap-2 text-2xl font-bold text-primary">
-        <i class="fa-solid fa-briefcase"></i>
-        <span>JobHub</span>
-      </a>
+    <div class="text-center mb-8 gsap-reveal">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30 mb-4">
+        <i class="fa-solid fa-right-to-bracket text-white text-xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight mb-2">Welcome Back</h1>
+      <p class="text-base-content/60">Sign in to continue your job search journey</p>
     </div>
     
-    <div class="card bg-base-100 border border-base-200 shadow-xl">
-      <div class="card-body p-8">
-        <h2 class="text-2xl font-bold text-center mb-2">Welcome Back</h2>
-        <p class="text-center text-base-content/60 mb-6">Sign in to continue to your account</p>
-        
-        <!-- Error/Success Messages -->
-        <div id="messageContainer" class="hidden mb-4"></div>
+    <div class="card bg-base-100 shadow-xl rounded-2xl border border-base-200/50 card-border-glow gsap-reveal stagger-1">
+      <div class="card-body p-6 sm:p-8">
+        {% if error %}
+        <div class="alert alert-error mb-4 rounded-xl bg-error/10 border border-error/20">
+          <i class="fa-solid fa-circle-exclamation text-error"></i>
+          <span class="text-sm">{{ error }}</span>
+        </div>
+        {% endif %}
 
-        <form id="signinForm" class="space-y-5">
+        <form id="signinForm" action="/sign-in" method="POST" class="space-y-5">
+          <input type="hidden" name="_gotcha" style="display:none">
           <input type="hidden" name="redirect" value="{{ redirect or '/' }}">
+          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
           
           <div class="form-control">
-            <label class="label">
-              <span class="label-text font-medium">Email Address</span>
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Email Address</span>
             </label>
             <div class="relative">
-              <input type="email" id="email" name="email" required class="input input-bordered w-full pl-10" placeholder="you@example.com" />
-              <i class="fa-solid fa-envelope absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+              <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                <i class="fa-regular fa-envelope text-base-content/40"></i>
+              </div>
+              <input type="email" name="email" required 
+                class="input input-bordered w-full pl-12 rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary focus:bg-base-100" 
+                placeholder="you@example.com" />
             </div>
           </div>
           
           <div class="form-control">
-            <label class="label">
-              <span class="label-text font-medium">Password</span>
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Password</span>
             </label>
             <div class="relative">
-              <input type="password" id="password" name="password" required class="input input-bordered w-full pl-10" placeholder="••••••••" />
-              <i class="fa-solid fa-lock absolute left-3 top-1/2 -translate-y-1/2 text-base-content/40"></i>
+              <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+                <i class="fa-solid fa-lock text-base-content/40"></i>
+              </div>
+              <input type="password" name="password" required 
+                class="input input-bordered w-full pl-12 rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary focus:bg-base-100" 
+                placeholder="Enter your password" />
+              <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-4 toggle-password" aria-label="Toggle password visibility">
+                <i class="fa-regular fa-eye text-base-content/40 hover:text-base-content"></i>
+              </button>
             </div>
-            <label class="label">
-              <a href="/forgot-password" class="label-text-alt link link-hover text-sm">Forgot password?</a>
+            <label class="label py-2">
+              <a href="/forgot-password" class="label-text-alt link link-primary text-sm font-medium hover:underline">Forgot password?</a>
             </label>
           </div>
           
-          <div id="errorMessage" class="text-error text-sm hidden"></div>
+          <div class="error-message text-error text-sm mt-2"></div>
 
-          <div class="form-control mt-2">
-            <button type="submit" id="submitBtn" class="btn btn-primary btn-block rounded-full">
-              <span class=" Sign In">Sign In</span>
-              <i class="fa-solid fa-arrow-right ml-2"></i>
+          <div class="form-control mt-6">
+            <button type="submit" class="btn btn-primary-gradient btn-block rounded-xl h-12 font-semibold shadow-primary/30 hover:shadow-lg">
+              <span>Sign In</span>
+              <i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
             </button>
           </div>
         </form>
         
-        <div class="divider my-6">OR</div>
+        <div class="divider my-6 text-base-content/40 text-sm">or continue with</div>
         
         <div class="text-center">
-          <p class="text-base-content/70">Don't have an account? 
-            <a href="/sign-up?{{ redirectQuery }}" class="link link-primary font-medium">Create one</a>
-          </p>
+          <p class="text-base-content/60 text-sm">Don't have an account? <a href="/sign-up?{{ redirectQuery }}" class="link link-primary font-semibold hover:underline">Create one</a></p>
         </div>
       </div>
     </div>
     
-    <p class="text-center text-sm text-base-content/50 mt-6">
-      By signing in, you agree to our <a href="#" class="link">Terms of Service</a> and <a href="#" class="link">Privacy Policy</a>
+    <p class="text-center text-xs text-base-content/40 mt-6">
+      By signing in, you agree to our <a href="#" class="link link-primary">Terms of Service</a> and <a href="#" class="link link-primary">Privacy Policy</a>
     </p>
   </div>
 </div>
+{% endblock %}
 
-<script type="module">
-import { authClient, signIn } from '/js/auth-client.js';
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('signinForm');
+    form.addEventListener('submit', (e) => {
+      const btn = form.querySelector('button[type="submit"]');
+      btn.classList.add('loading');
+      btn.disabled = true;
+    });
 
-document.getElementById('signinForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  const redirect = document.querySelector('input[name="redirect"]').value || '/dashboard';
-  const submitBtn = document.getElementById('submitBtn');
-  const errorMessage = document.getElementById('errorMessage');
-  
-  // Clear previous errors
-  errorMessage.classList.add('hidden');
-  errorMessage.textContent = '';
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="loading loading-spinner"></span> Signing in...';
-  
-  try {
-    const result = await signIn(email, password);
-    
-    if (!result.success) {
-      errorMessage.textContent = result.error.message || 'Sign in failed. Please try again.';
-      errorMessage.classList.remove('hidden');
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<span>Sign In</span><i class="fa-solid fa-arrow-right ml-2"></i>';
-      return;
-    }
-    
-    // Success - redirect to dashboard
-    window.location.href = redirect;
-    
-  } catch (error) {
-    console.error('Sign in error:', error);
-    errorMessage.textContent = 'An unexpected error occurred. Please try again.';
-    errorMessage.classList.remove('hidden');
-    submitBtn.disabled = false;
-    submitBtn.innerHTML = '<span>Sign In</span><i class="fa-solid fa-arrow-right ml-2"></i>';
-  }
-});
+    const toggleButtons = document.querySelectorAll('.toggle-password');
+    toggleButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const input = btn.previousElementSibling;
+        const icon = btn.querySelector('i');
+        if (input.type === 'password') {
+          input.type = 'text';
+          icon.classList.remove('fa-eye');
+          icon.classList.add('fa-eye-slash');
+        } else {
+          input.type = 'password';
+          icon.classList.remove('fa-eye-slash');
+          icon.classList.add('fa-eye');
+        }
+      });
+    });
+  });
 </script>
 {% endblock %}

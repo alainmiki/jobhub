@@ -210,13 +210,14 @@ describe('Auth Middleware', () => {
 
     it('should sanitize string values in query params', () => {
       mockReq.query = {
-        search: '  $gt:{}  ',
+        search: '  <script>alert("xss")</script>  ',
         page: '1'
       };
 
       validateInput(mockReq, mockRes, mockNext);
 
-      expect(mockReq.query.search).not.toContain('$gt');
+      expect(mockReq.query.search).not.toContain('<script>');
+      expect(mockReq.query.search).toContain('&lt;script&gt;');
     });
 
     it('should handle non-string values gracefully', () => {

@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <!-- Navigation Header -->
+  <div class="mb-6 flex items-center justify-between">
+    <a href="/admin/users" class="btn btn-ghost btn-sm">
+      <i class="fa-solid fa-arrow-left mr-2"></i> Back to Users
+    </a>
+    <div class="badge badge-outline opacity-50 uppercase text-xs tracking-widest">Admin View</div>
+  </div>
+
+  <!-- User Info Card -->
+  <div class="card bg-base-100 shadow-xl mb-6 border border-base-200">
+    <div class="card-body">
+      <div class="flex flex-col md:flex-row items-center gap-6">
+        <div class="avatar placeholder">
+          <div class="bg-primary text-primary-content rounded-full w-24 ring ring-primary ring-offset-base-100 ring-offset-2">
+            <span class="text-3xl font-bold">{{ targetUser.name[0] | upper }}</span>
+          </div>
+        </div>
+        <div class="text-center md:text-left flex-1">
+          <h2 class="card-title text-3xl font-bold mb-1">{{ targetUser.name }}</h2>
+          <p class="text-base-content/60 font-mono text-sm mb-3">{{ targetUser.email }}</p>
+          <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+            <span class="badge badge-lg {% if targetUser.role == 'admin' %}badge-error{% elseif targetUser.role == 'employer' %}badge-warning{% else %}badge-info{% endif %}">
+              {{ targetUser.role | upper }}
+            </span>
+            {% if targetUser.emailVerified %}
+              <span class="badge badge-lg badge-success gap-1"><i class="fa-solid fa-check-circle"></i> Verified</span>
+            {% else %}
+              <span class="badge badge-lg badge-ghost gap-1">Unverified</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="flex flex-col gap-2">
+          <button class="btn btn-outline btn-warning btn-sm">Change Role</button>
+          <button class="btn btn-outline btn-error btn-sm">Disable Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Details Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+      <div class="card bg-base-100 shadow-xl border border-base-200">
+        <div class="card-body">
+          <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
+            <i class="fa-solid fa-address-card text-primary"></i> Profile Data
+          </h3>
+          {% if profile %}
+            <div class="prose max-w-none">
+              <p><strong>Bio:</strong> {{ profile.bio or 'No bio provided.' }}</p>
+              <p><strong>Location:</strong> {{ profile.location or 'Not specified' }}</p>
+              <p><strong>Phone:</strong> {{ profile.phone or 'Not specified' }}</p>
+            </div>
+          {% else %}
+            <div class="alert badge-ghost text-sm">No extended profile found for this user.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -2,120 +2,119 @@
 
 {% block content %}
 <div class="min-h-screen bg-base-200/30 py-8 px-4">
-  <div class="max-w-6xl mx-auto">
-    <!-- Header -->
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 gsap-reveal">
       <div>
-        <h1 class="text-3xl font-bold mb-1">Employer Dashboard</h1>
+        <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-1">Employer Dashboard</h1>
         <p class="text-base-content/60">Manage your job postings and applications</p>
       </div>
-      <a href="/company/create" class="btn btn-primary rounded-full">
-        <i class="fas fa-plus mr-2"></i>Post New Job
+      <a href="/company/create" class="btn btn-primary-gradient rounded-xl shadow-primary/30 hover:shadow-lg">
+        <i class="fa-solid fa-plus mr-2"></i><span>Post New Job</span>
       </a>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-      <div class="card bg-base-100 border border-base-200 hover:border-primary/50 transition-colors">
-        <div class="card-body p-4">
-          <div class="flex items-center gap-3">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-5 mb-8">
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-1">
+        <div class="card-body p-5">
+          <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <i class="fas fa-briefcase text-xl text-primary"></i>
+              <i class="fa-solid fa-briefcase text-xl text-primary"></i>
             </div>
             <div>
-              <div class="text-2xl font-bold">{{ stats.totalJobs }}</div>
-              <div class="text-xs text-base-content/60">Total Jobs</div>
+              <p class="text-2xl font-bold">{{ stats.totalJobs }}</p>
+              <p class="text-xs text-base-content/50">Total Jobs</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="card bg-base-100 border border-base-200 hover:border-info/50 transition-colors">
-        <div class="card-body p-4">
-          <div class="flex items-center gap-3">
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-2">
+        <div class="card-body p-5">
+          <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-info/10 flex items-center justify-center">
-              <i class="fas fa-eye text-xl text-info"></i>
+              <i class="fa-solid fa-eye text-xl text-info"></i>
             </div>
             <div>
-              <div class="text-2xl font-bold">{{ stats.totalViews }}</div>
-              <div class="text-xs text-base-content/60">Total Views</div>
+              <p class="text-2xl font-bold">{{ stats.totalViews }}</p>
+              <p class="text-xs text-base-content/50">Total Views</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="card bg-base-100 border border-base-200 hover:border-success/50 transition-colors">
-        <div class="card-body p-4">
-          <div class="flex items-center gap-3">
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-3">
+        <div class="card-body p-5">
+          <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-success/10 flex items-center justify-center">
-              <i class="fas fa-users text-xl text-success"></i>
+              <i class="fa-solid fa-users text-xl text-success"></i>
             </div>
             <div>
-              <div class="text-2xl font-bold">{{ stats.totalApplications }}</div>
-              <div class="text-xs text-base-content/60">Applications</div>
+              <p class="text-2xl font-bold">{{ stats.totalApplications }}</p>
+              <p class="text-xs text-base-content/50">Applications</p>
             </div>
           </div>
         </div>
       </div>
       
-      <div class="card bg-base-100 border border-base-200 hover:border-warning/50 transition-colors">
-        <div class="card-body p-4">
-          <div class="flex items-center gap-3">
+      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-4">
+        <div class="card-body p-5">
+          <div class="flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-              <i class="fas fa-clock text-xl text-warning"></i>
+              <i class="fa-solid fa-clock text-xl text-warning"></i>
             </div>
             <div>
-              <div class="text-2xl font-bold">{{ stats.pending }}</div>
-              <div class="text-xs text-base-content/60">Pending</div>
+              <p class="text-2xl font-bold">{{ stats.pending }}</p>
+              <p class="text-xs text-base-content/50">Pending</p>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Recent Applications -->
-    <div class="card bg-base-100 border border-base-200">
-      <div class="card-body">
-        <h2 class="text-xl font-bold mb-4"><i class="fas fa-file-lines text-primary mr-2"></i>Recent Applications</h2>
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+      <div class="card-body p-6">
+        <h2 class="font-bold text-lg mb-6 flex items-center gap-2">
+          <i class="fa-solid fa-file-lines text-primary"></i>Recent Applications
+        </h2>
         
         {% if recentApplications and recentApplications.length > 0 %}
         <div class="overflow-x-auto">
           <table class="table">
             <thead>
-              <tr>
-                <th>Candidate</th>
-                <th>Job Title</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
+              <tr class="border-base-200/50">
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Candidate</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Job Title</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Status</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Date</th>
+                <th class="text-xs uppercase tracking-wider text-base-content/50">Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for app in recentApplications %}
-              <tr class="hover">
+              <tr class="border-base-200/30 hover:bg-base-200/30 transition-colors">
                 <td>
                   <div class="flex items-center gap-3">
                     <div class="avatar">
-                      <div class="w-10 rounded-full bg-base-200">
-                        <span class="text-sm">{{ app.applicantUserId.name[0] }}</span>
+                      <div class="w-10 rounded-xl bg-base-200">
+                        <span class="text-sm font-medium">{{ app.applicantUserId.name[0] }}</span>
                       </div>
                     </div>
-                    <span>{{ app.applicantUserId.name }}</span>
+                    <span class="font-medium">{{ app.applicantUserId.name }}</span>
                   </div>
                 </td>
                 <td>{{ app.job.title }}</td>
                 <td>
-                  <span class="badge 
+                  <span class="badge badge-sm badge-outline 
                     {% if app.status == 'accepted' %}badge-success
-                    {% elif app.status == 'rejected' %}badge-error
-                    {% elif app.status == 'shortlisted' %}badge-info
+                    {% elseif app.status == 'rejected' %}badge-error
+                    {% elseif app.status == 'shortlisted' %}badge-info
                     {% else %}badge-warning{% endif %}">
                     {{ app.status }}
                   </span>
                 </td>
-                <td>{{ app.createdAt.toLocaleDateString() }}</td>
+                <td class="text-base-content/60 text-sm">{{ app.createdAt.toLocaleDateString() }}</td>
                 <td>
-                  <a href="/applications/{{ app._id }}" class="btn btn-ghost btn-xs">View</a>
+                  <a href="/applications/{{ app._id }}" class="btn btn-ghost btn-xs rounded-lg">View</a>
                 </td>
               </tr>
               {% endfor %}
@@ -123,8 +122,14 @@
           </table>
         </div>
         {% else %}
-        <div class="text-center py-8">
+        <div class="text-center py-12">
+          <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-base-200 flex items-center justify-center">
+            <i class="fa-solid fa-inbox text-2xl text-base-content/30"></i>
+          </div>
           <p class="text-base-content/60">No applications yet</p>
+          <a href="/jobs" class="btn btn-primary-gradient btn-sm rounded-xl mt-4">
+            <i class="fa-solid fa-plus mr-2"></i>Post a Job
+          </a>
         </div>
         {% endif %}
       </div>

@@ -160,6 +160,7 @@
     <p class="text-base-content/60 mb-6">{{ job.company.name }}</p>
     
     <form action="/applications" method="POST" class="space-y-4">
+      <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       <input type="hidden" name="jobId" value="{{ job._id }}" />
       
       <div class="form-control">

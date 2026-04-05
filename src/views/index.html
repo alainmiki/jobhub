@@ -1,41 +1,38 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<!-- Hero Section -->
-<section class="relative min-h-[80vh] flex items-center justify-center bg-gradient-to-br from-base-200 via-base-100 to-base-200">
-  <!-- Background Pattern -->
+<section class="relative min-h-[85vh] flex items-center justify-center bg-gradient-to-br from-base-200 via-base-100 to-base-200 overflow-hidden">
   <div class="absolute inset-0 opacity-30">
-    <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl"></div>
+    <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl animate-pulse"></div>
+    <div class="absolute bottom-20 right-10 w-96 h-96 bg-secondary/20 rounded-full blur-3xl animate-pulse" style="animation-delay: 1s;"></div>
   </div>
   
   <div class="relative text-center px-4 max-w-4xl mx-auto">
-    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6 gsap-reveal">
       <i class="fa-solid fa-star"></i>
       <span>Trusted by 10,000+ professionals</span>
     </div>
     
-    <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-      Find Your <span class="text-primary">Dream Job</span><br>
+    <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight gsap-reveal stagger-1">
+      Find Your <span class="text-gradient-primary">Dream Job</span><br>
       or Perfect Candidate
     </h1>
     
-    <p class="text-xl md:text-2xl text-base-content/70 mb-10 max-w-2xl mx-auto">
+    <p class="text-xl md:text-2xl text-base-content/70 mb-10 max-w-2xl mx-auto gsap-reveal stagger-2">
       Connecting talented individuals with amazing opportunities. 
       Browse thousands of jobs or find your next team member.
     </p>
     
-    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-      <a href="/jobs" class="btn btn-primary btn-lg px-8 rounded-full hover:scale-105 transition-transform">
-        <i class="fa-solid fa-search mr-2"></i>Browse Jobs
+    <div class="flex flex-col sm:flex-row gap-4 justify-center gsap-reveal stagger-3">
+      <a href="/jobs" class="btn btn-primary-gradient btn-lg px-8 rounded-xl shadow-primary/30 hover:shadow-lg btn-hover-lift">
+        <i class="fa-solid fa-search mr-2"></i><span>Browse Jobs</span>
       </a>
-      <a href="/sign-up" class="btn btn-outline btn-lg px-8 rounded-full hover:scale-105 transition-transform">
-        <i class="fa-solid fa-user-plus mr-2"></i>Post a Job
+      <a href="/sign-up" class="btn btn-outline btn-lg px-8 rounded-xl btn-hover-lift">
+        <i class="fa-solid fa-user-plus mr-2"></i><span>Post a Job</span>
       </a>
     </div>
     
-    <!-- Stats -->
-    <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16">
+    <div class="flex flex-wrap justify-center gap-8 md:gap-16 mt-16 gsap-reveal stagger-4">
       <div class="text-center">
         <div class="text-3xl md:text-4xl font-bold text-primary">5,000+</div>
         <div class="text-base-content/60">Active Jobs</div>
@@ -52,61 +49,60 @@
   </div>
 </section>
 
-<!-- Featured Jobs Section -->
 <section class="py-20 px-4">
-  <div class="max-w-6xl mx-auto">
-    <div class="flex items-center justify-between mb-12">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between mb-12 gsap-reveal">
       <div>
-        <h2 class="text-3xl md:text-4xl font-bold mb-2">Featured Opportunities</h2>
+        <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">Featured Opportunities</h2>
         <p class="text-base-content/60">Discover the latest job openings from top companies</p>
       </div>
-      <a href="/jobs" class="btn btn-ghost btn-sm hidden md:flex items-center gap-2">
+      <a href="/jobs" class="btn btn-ghost btn-sm rounded-xl hidden md:flex items-center gap-2">
         View All Jobs
         <i class="fa-solid fa-arrow-right"></i>
       </a>
     </div>
     
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
       {% for job in featuredJobs %}
-      <div class="card bg-base-100 border border-base-200 hover:border-primary/50 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
+      <a href="/jobs/{{ job._id }}" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-primary/50 hover:shadow-xl transition-all duration-300 group card-hover-lift gsap-animate">
         <div class="card-body p-6">
           <div class="flex items-start gap-4 mb-4">
-            <div class="w-14 h-14 rounded-xl bg-base-200 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/10 transition-colors">
+            <div class="w-14 h-14 rounded-xl bg-base-200 flex items-center justify-center flex-shrink-0 overflow-hidden group-hover:bg-primary/10 transition-colors">
               {% if job.company.logo %}
               <img src="{{ job.company.logo }}" alt="{{ job.company.name }}" class="w-8 h-8 object-contain" />
               {% else %}
-              <i class="fas fa-building text-xl text-base-content/40 group-hover:text-primary transition-colors"></i>
+              <i class="fa-solid fa-building text-xl text-base-content/40 group-hover:text-primary transition-colors"></i>
               {% endif %}
             </div>
             <div class="flex-1 min-w-0">
               <h3 class="font-bold text-lg truncate group-hover:text-primary transition-colors">
-                <a href="/jobs/{{ job._id }}">{{ job.title }}</a>
+                {{ job.title }}
               </h3>
               <p class="text-sm text-base-content/70 truncate">{{ job.company.name }}</p>
             </div>
           </div>
           
           <div class="flex flex-wrap gap-3 text-sm text-base-content/60 mb-4">
-            <span class="flex items-center gap-1">
-              <i class="fas fa-location-dot"></i>{{ job.location }}
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-location-dot text-xs"></i>{{ job.location }}
             </span>
-            <span class="badge badge-ghost badge-sm">{{ job.type }}</span>
+            <span class="badge badge-sm badge-outline">{{ job.type }}</span>
           </div>
           
           <div class="card-actions justify-end mt-auto">
-            <a href="/jobs/{{ job._id }}" class="btn btn-primary btn-sm rounded-full">
-              View Details
-              <i class="fa-solid fa-arrow-right ml-2"></i>
-            </a>
+            <span class="btn btn-primary-gradient btn-sm rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+              View
+              <i class="fa-solid fa-arrow-right ml-1 text-xs"></i>
+            </span>
           </div>
         </div>
-      </div>
+      </a>
       {% endfor %}
       
       {% if not featuredJobs or featuredJobs.length === 0 %}
       <div class="col-span-full text-center py-12">
-        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-base-200 flex items-center justify-center">
-          <i class="fas fa-briefcase text-3xl text-base-content/30"></i>
+        <div class="w-20 h-20 mx-auto mb-4 rounded-2xl bg-base-200 flex items-center justify-center">
+          <i class="fa-solid fa-briefcase text-3xl text-base-content/30"></i>
         </div>
         <p class="text-base-content/60 text-lg">No jobs available at the moment</p>
         <p class="text-base-content/40 text-sm">Check back later for new opportunities!</p>
@@ -115,7 +111,7 @@
     </div>
     
     <div class="text-center mt-8 md:hidden">
-      <a href="/jobs" class="btn btn-ghost">
+      <a href="/jobs" class="btn btn-ghost rounded-xl">
         View All Jobs
         <i class="fa-solid fa-arrow-right ml-2"></i>
       </a>
@@ -123,45 +119,44 @@
   </div>
 </section>
 
-<!-- How It Works Section -->
-<section class="py-20 px-4 bg-base-200/50">
+<section class="py-20 px-4 bg-base-200/30">
   <div class="max-w-5xl mx-auto">
-    <div class="text-center mb-16">
-      <h2 class="text-3xl md:text-4xl font-bold mb-4">How It Works</h2>
+    <div class="text-center mb-16 gsap-reveal">
+      <h2 class="text-3xl md:text-4xl font-bold tracking-tight mb-4">How It Works</h2>
       <p class="text-base-content/60 max-w-xl mx-auto">Get started in minutes and land your dream job or find the perfect candidate</p>
     </div>
     
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="relative">
-        <div class="text-center p-8 rounded-2xl bg-base-100 border border-base-200 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+      <div class="relative gsap-reveal stagger-1">
+        <div class="text-center p-8 rounded-2xl bg-base-100 border border-base-200/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 card-hover-lift">
           <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <i class="fas fa-user-plus text-3xl text-primary"></i>
+            <i class="fa-solid fa-user-plus text-3xl text-primary"></i>
           </div>
           <h3 class="font-bold text-xl mb-3">Create Profile</h3>
           <p class="text-base-content/60">Build your professional profile showcasing your skills and experience to stand out.</p>
         </div>
-        <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-          <i class="fas fa-arrow-right text-2xl text-base-content/20"></i>
+        <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+          <i class="fa-solid fa-chevron-right text-2xl text-base-content/30"></i>
         </div>
       </div>
       
-      <div class="relative">
-        <div class="text-center p-8 rounded-2xl bg-base-100 border border-base-200 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+      <div class="relative gsap-reveal stagger-2">
+        <div class="text-center p-8 rounded-2xl bg-base-100 border border-base-200/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 card-hover-lift">
           <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <i class="fas fa-search text-3xl text-primary"></i>
+            <i class="fa-solid fa-magnifying-glass text-3xl text-primary"></i>
           </div>
           <h3 class="font-bold text-xl mb-3">Search Jobs</h3>
           <p class="text-base-content/60">Browse thousands of job listings or get personalized recommendations.</p>
         </div>
-        <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2">
-          <i class="fas fa-arrow-right text-2xl text-base-content/20"></i>
+        <div class="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+          <i class="fa-solid fa-chevron-right text-2xl text-base-content/30"></i>
         </div>
       </div>
       
-      <div>
-        <div class="text-center p-8 rounded-2xl bg-base-100 border border-base-200 hover:border-primary/30 hover:shadow-xl transition-all duration-300">
+      <div class="gsap-reveal stagger-3">
+        <div class="text-center p-8 rounded-2xl bg-base-100 border border-base-200/50 hover:border-primary/30 hover:shadow-xl transition-all duration-300 card-hover-lift">
           <div class="w-20 h-20 mx-auto mb-6 rounded-2xl bg-primary/10 flex items-center justify-center">
-            <i class="fas fa-paper-plane text-3xl text-primary"></i>
+            <i class="fa-solid fa-paper-plane text-3xl text-primary"></i>
           </div>
           <h3 class="font-bold text-xl mb-3">Apply & Get Hired</h3>
           <p class="text-base-content/60">Submit applications and connect directly with employers for opportunities.</p>
@@ -171,18 +166,17 @@
   </div>
 </section>
 
-<!-- CTA Section -->
 <section class="py-20 px-4">
   <div class="max-w-4xl mx-auto text-center">
-    <div class="p-12 rounded-3xl bg-gradient-to-br from-primary to-primary/80 text-primary-content">
+    <div class="p-12 rounded-3xl bg-gradient-to-br from-primary to-secondary text-white gsap-reveal">
       <h2 class="text-3xl md:text-4xl font-bold mb-4">Ready to Get Started?</h2>
       <p class="text-lg mb-8 opacity-90">Join thousands of professionals who found their dream job on JobHub</p>
       <div class="flex flex-col sm:flex-row gap-4 justify-center">
-        <a href="/sign-up" class="btn btn-secondary btn-lg rounded-full">
+        <a href="/sign-up" class="btn btn-white text-primary rounded-xl">
           Create Free Account
           <i class="fa-solid fa-arrow-right ml-2"></i>
         </a>
-        <a href="/jobs" class="btn btn-outline btn-lg rounded-full border-primary-content text-primary-content hover:bg-primary-content hover:text-primary">
+        <a href="/jobs" class="btn btn-outline btn-lg rounded-xl border-white text-white hover:bg-white hover:text-primary">
           Browse Jobs
         </a>
       </div>

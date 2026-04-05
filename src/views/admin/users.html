@@ -2,27 +2,31 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
-  <div class="flex items-center justify-between mb-8">
-    <h1 class="text-3xl font-bold">User Management</h1>
-    <a href="/dashboard/admin" class="btn btn-ghost">
-      <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+  <div class="flex items-center justify-between mb-8 gsap-reveal">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight mb-1">User Management</h1>
+      <p class="text-base-content/60">Manage and review platform users</p>
+    </div>
+    <a href="/dashboard/admin" class="btn btn-ghost btn-sm rounded-xl">
+      <i class="fa-solid fa-arrow-left mr-2"></i>Back
     </a>
   </div>
 
-  <div class="card bg-base-100 shadow-xl">
-    <div class="card-body">
-      <form method="GET" class="flex gap-4 mb-6">
-        <div class="flex-1">
+  <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
+    <div class="card-body p-6">
+      <form method="GET" class="flex flex-wrap gap-4 mb-6">
+        <div class="flex-1 min-w-[200px]">
           <input type="text" name="search" placeholder="Search by email or name..." 
-                 class="input input-bordered w-full" value="{{ filters.search or '' }}">
+            class="input input-bordered w-full rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" 
+            value="{{ filters.search or '' }}">
         </div>
-        <select name="role" class="select select-bordered">
+        <select name="role" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
           <option value="">All Roles</option>
           <option value="candidate" {% if filters.role == 'candidate' %}selected{% endif %}>Candidate</option>
           <option value="employer" {% if filters.role == 'employer' %}selected{% endif %}>Employer</option>
           <option value="admin" {% if filters.role == 'admin' %}selected{% endif %}>Admin</option>
         </select>
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary-gradient rounded-xl">
           <i class="fa-solid fa-search mr-2"></i>Filter
         </button>
       </form>
@@ -30,34 +34,37 @@
       <div class="overflow-x-auto">
         <table class="table">
           <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Created</th>
-              <th>Actions</th>
+            <tr class="border-base-200/50">
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Name</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Email</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Role</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Created</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for user in users %}
-            <tr>
-              <td>{{ user.name }}</td>
+            <tr class="border-base-200/30 hover:bg-base-200/30 transition-colors">
+              <td class="font-medium">{{ user.name }}</td>
               <td>{{ user.email }}</td>
               <td>
-                <span class="badge {% if user.role == 'admin' %}badge-error{% elseif user.role == 'employer' %}badge-warning{% else %}badge-info{% endif %}">
+                <span class="badge badge-sm badge-outline 
+                  {% if user.role == 'admin' %}badge-error
+                  {% elseif user.role == 'employer' %}badge-warning
+                  {% else %}badge-info{% endif %}">
                   {{ user.role }}
                 </span>
               </td>
-              <td>{{ user.createdAt.toLocaleDateString() }}</td>
+              <td class="text-base-content/60 text-sm">{{ user.createdAt.toLocaleDateString() }}</td>
               <td>
                 <div class="dropdown dropdown-end">
-                  <button tabindex="0" class="btn btn-ghost btn-sm">
+                  <button tabindex="0" class="btn btn-ghost btn-sm btn-circle">
                     <i class="fa-solid fa-ellipsis-vertical"></i>
                   </button>
-                  <ul tabindex="0" class="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-40">
-                    <li><a href="/admin/users/{{ user._id }}">View Details</a></li>
+                  <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-xl bg-base-100 rounded-xl w-44 border border-base-200/50">
+                    <li><a href="/admin/users/{{ user._id }}" class="rounded-lg"><i class="fa-solid fa-eye mr-2"></i>View Details</a></li>
                     <li>
-                      <button onclick="openRoleModal('{{ user._id }}', '{{ user.role }}')">Change Role</button>
+                      <button onclick="openRoleModal('{{ user._id }}', '{{ user.role }}')" class="rounded-lg"><i class="fa-solid fa-user-pen mr-2"></i>Change Role</button>
                     </li>
                   </ul>
                 </div>
@@ -69,11 +76,11 @@
       </div>
 
       {% if pagination.totalPages > 1 %}
-      <div class="flex justify-center mt-4">
-        <div class="join">
+      <div class="flex justify-center mt-6">
+        <div class="join rounded-xl overflow-hidden">
           {% for i in range(1, pagination.totalPages + 1) %}
           <a href="?page={{ i }}{% if filters.role %}&role={{ filters.role }}{% endif %}{% if filters.search %}&search={{ filters.search }}{% endif %}" 
-             class="join-item btn {% if pagination.page == i %}btn-primary{% endif %}">
+            class="join-item btn btn-sm {% if pagination.page == i %}btn-primary{% else %}btn-ghost{% endif %} rounded-lg">
             {{ i }}
           </a>
           {% endfor %}
@@ -84,28 +91,32 @@
   </div>
 </div>
 
-<!-- Role Change Modal -->
 <dialog id="roleModal" class="modal">
-  <div class="modal-box">
-    <h3 class="font-bold text-lg">Change User Role</h3>
+  <div class="modal-box rounded-2xl">
+    <h3 class="font-bold text-lg mb-5 flex items-center gap-2">
+      <i class="fa-solid fa-user-pen text-primary"></i>Change User Role
+    </h3>
     <form id="roleForm" method="POST">
       <input type="hidden" name="userId" id="modalUserId">
-      <div class="form-control mt-4">
-        <label class="label">
-          <span class="label-text">Select Role</span>
+      <div class="form-control">
+        <label class="label py-2">
+          <span class="label-text font-medium text-sm">Select Role</span>
         </label>
-        <select name="role" class="select select-bordered" id="modalRoleSelect">
+        <select name="role" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50" id="modalRoleSelect">
           <option value="candidate">Candidate</option>
           <option value="employer">Employer</option>
           <option value="admin">Admin</option>
         </select>
       </div>
-      <div class="modal-action">
-        <button type="submit" class="btn btn-primary">Save</button>
-        <button type="button" class="btn" onclick="document.getElementById('roleModal').close()">Cancel</button>
+      <div class="modal-action mt-6">
+        <button type="submit" class="btn btn-primary-gradient rounded-xl">Save</button>
+        <button type="button" class="btn btn-ghost rounded-xl" onclick="document.getElementById('roleModal').close()">Cancel</button>
       </div>
     </form>
   </div>
+  <form method="dialog" class="modal-backdrop">
+    <button>close</button>
+  </form>
 </dialog>
 
 <script>

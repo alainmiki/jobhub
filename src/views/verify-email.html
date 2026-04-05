@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 hero-pattern">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8 gsap-reveal">
+      {% if success %}
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-success to-accent shadow-lg shadow-success/30 mb-4">
+        <i class="fa-solid fa-check text-white text-xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight mb-2">Email Verified!</h1>
+      <p class="text-base-content/60">Your email has been successfully verified</p>
+      {% else %}
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-error to-warning shadow-lg shadow-error/30 mb-4">
+        <i class="fa-solid fa-xmark text-white text-xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight mb-2">Verification Failed</h1>
+      <p class="text-base-content/60">Unable to verify your email address</p>
+      {% endif %}
+    </div>
+    
+    <div class="card bg-base-100 shadow-xl rounded-2xl border border-base-200/50 card-border-glow gsap-reveal stagger-1">
+      <div class="card-body p-6 sm:p-8 text-center">
+        {% if success %}
+        <div class="alert alert-success mb-6 rounded-xl bg-success/10 border border-success/20">
+          <i class="fa-solid fa-circle-check text-success"></i>
+          <span>Your account is now active!</span>
+        </div>
+        <p class="text-base-content/70 mb-6">Thank you for verifying your email. You now have full access to JobHub.</p>
+        <a href="/sign-in" class="btn btn-primary-gradient rounded-xl">
+          <span>Sign In</span>
+          <i class="fa-solid fa-arrow-right ml-2"></i>
+        </a>
+        {% else %}
+        <div class="alert alert-error mb-6 rounded-xl bg-error/10 border border-error/20">
+          <i class="fa-solid fa-circle-exclamation text-error"></i>
+          <span>The verification link may be invalid or expired</span>
+        </div>
+        <p class="text-base-content/70 mb-6">Please try signing up again or contact support if you continue to experience issues.</p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href="/sign-up" class="btn btn-primary-gradient rounded-xl">
+            <span>Sign Up</span>
+            <i class="fa-solid fa-user-plus ml-2"></i>
+          </a>
+          <a href="/sign-in" class="btn btn-outline btn-sm rounded-xl">
+            <i class="fa-solid fa-right-to-bracket mr-2"></i>Sign In
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

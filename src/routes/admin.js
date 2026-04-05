@@ -1,179 +1,144 @@
 import express from 'express';
-import { body, param } from 'express-validator';
-import User from '../models/User.js';
+import mongoose from 'mongoose';
 import UserProfile from '../models/UserProfile.js';
-import { createAuthMiddleware, isAuthenticated, isRole } from '../middleware/auth.js';
+import { isAuthenticated, isRole } from '../middleware/auth.js';
+import Job from '../models/Job.js';
+import Company from '../models/Company.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { validate } from '../middleware/validation.js';
+import { paginate } from '../middleware/pagination.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
-const validRoles = ['candidate', 'employer', 'admin'];
-
 export const initAdminRouter = (auth) => {
-  router.use(createAuthMiddleware(auth));
+  router.use(isAuthenticated(auth));
+  router.use(isRole(auth, 'admin'));
 
-  router.get('/users',
-    isAuthenticated(auth),
-    isRole(auth, 'admin'),
+  // GET /admin/users - User management list with filters and pagination
+  router.get('/users', 
+    paginate(20), 
     asyncHandler(async (req, res) => {
-      const { page = 1, limit = 20, role, search } = req.query;
+      const { search, role } = req.query;
+      const User = mongoose.model('user'); // Access Better-Auth user model
       
-      const filter = {};
-      if (role && validRoles.includes(role)) {
-        filter.role = role;
-      }
+      const query = {};
       if (search) {
-        filter.$or = [
-          { email: { $regex: search, $options: 'i' } },
-          { name: { $regex: search, $options: 'i' } }
+        query.$or = [
+          { name: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } }
         ];
       }
-      
-      const skip = (parseInt(page) - 1) * parseInt(limit);
-      
+      if (role) {
+        query.role = role;
+      }
+
       const [users, total] = await Promise.all([
-        User.find(filter)
-          .select('-image -coverImage')
-          .skip(skip)
-          .limit(parseInt(limit))
-          .sort({ createdAt: -1 }),
-        User.countDocuments(filter)
+        User.find(query)
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        User.countDocuments(query)
       ]);
-      
+
       res.render('admin/users', {
         users,
+        filters: { search, role },
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          totalPages: Math.ceil(total / parseInt(limit))
-        },
-        filters: { role, search }
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
       });
     })
   );
 
-  router.post('/users/:id/role',
-    isAuthenticated(auth),
-    isRole(auth, 'admin'),
-    [
-      param('id').isMongoId().withMessage('Invalid user ID'),
-      body('role').isIn(validRoles).withMessage('Invalid role')
-    ],
-    validate,
-    asyncHandler(async (req, res) => {
-      const { role } = req.body;
-      const userId = req.params.id;
-      
-      const user = await User.findById(userId);
-      
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      
-      if (user.id === req.userId) {
-        return res.status(400).json({ error: 'Cannot change your own role' });
-      }
-      
-      user.role = role;
-      await user.save();
-      
-      await UserProfile.findOneAndUpdate(
-        { userId },
-        { role },
-        { upsert: true }
-      );
-      
-      logger.warn(`SECURITY: Role changed for user ${userId} to ${role} by admin ${req.userId}`);
-      
-      res.json({ success: true, message: `Role updated to ${role}` });
-    })
-  );
+  // GET /admin/users/:id - User detail view
+  router.get('/users/:id', asyncHandler(async (req, res) => {
+    const User = mongoose.model('user');
+    
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).render('error', {
+        message: 'User not found',
+        title: '404 - Not Found'
+      });
+    }
 
-  router.post('/users/:id/disable',
-    isAuthenticated(auth),
-    isRole(auth, 'admin'),
-    [
-      param('id').isMongoId().withMessage('Invalid user ID'),
-      body('disabled').isBoolean().withMessage('Invalid value')
-    ],
-    validate,
-    asyncHandler(async (req, res) => {
-      const { disabled } = req.body;
-      const userId = req.params.id;
-      
-      if (userId === req.userId) {
-        return res.status(400).json({ error: 'Cannot disable your own account' });
-      }
-      
-      const user = await User.findByIdAndUpdate(
-        userId,
-        { 
-          disabled,
-          disabledAt: disabled ? new Date() : null
-        },
-        { new: true }
-      );
-      
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      
-      logger.warn(`SECURITY: User ${userId} ${disabled ? 'disabled' : 'enabled'} by admin ${req.userId}`);
-      
-      res.json({ success: true, message: `User ${disabled ? 'disabled' : 'enabled'} successfully` });
-    })
-  );
+    const profile = await UserProfile.findOne({ userId: targetUser.id });
 
-  router.get('/users/:id',
-    isAuthenticated(auth),
-    isRole(auth, 'admin'),
-    asyncHandler(async (req, res) => {
-      const user = await User.findById(req.params.id)
-        .select('-image -coverImage');
-      
-      if (!user) {
-        return res.status(404).render('error', { message: 'User not found' });
-      }
-      
-      const profile = await UserProfile.findOne({ userId: req.params.id });
-      
-      res.render('admin/user-detail', { user, profile });
-    })
-  );
+    res.render('admin/user-detail', {
+      targetUser,
+      profile
+    });
+  }));
 
+  // POST /admin/users/:id/role - Update user role
+  router.post('/users/:id/role', asyncHandler(async (req, res) => {
+    const { role } = req.body;
+    const User = mongoose.model('user');
+
+    if (!['candidate', 'employer', 'admin'].includes(role)) {
+      return res.status(400).json({ success: false, error: 'Invalid role' });
+    }
+
+    const user = await User.findByIdAndUpdate(req.params.id, { role }, { new: true });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    // Sync the UserProfile role
+    await UserProfile.findOneAndUpdate({ userId: user.id }, { role });
+
+    logger.info(`Admin ${req.userId} updated role for ${user.email} to ${role}`);
+    res.json({ success: true });
+  }));
+
+  // GET /admin/jobs/pending - List pending jobs
   router.get('/jobs/pending',
-    isAuthenticated(auth),
-    isRole(auth, 'admin'),
+    paginate(20),
     asyncHandler(async (req, res) => {
-      const Job = (await import('../models/Job.js')).default;
-      
-      const jobs = await Job.find({ status: 'pending' })
-        .populate('company', 'name logo')
-        .populate('postedBy', 'name email')
-        .sort({ createdAt: -1 });
-      
-      res.render('admin/pending-jobs', { jobs });
+      const filter = { status: 'pending' };
+      const [jobs, total] = await Promise.all([
+        Job.find(filter)
+          .populate('company', 'name logo')
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        Job.countDocuments(filter)
+      ]);
+
+      res.render('admin/pending-jobs', {
+        jobs,
+        pagination: {
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
+      });
     })
   );
 
+  // GET /admin/companies/pending - List pending companies
   router.get('/companies/pending',
-    isAuthenticated(auth),
-    isRole(auth, 'admin'),
+    paginate(20),
     asyncHandler(async (req, res) => {
-      const Company = (await import('../models/Company.js')).default;
-      
-      const companies = await Company.find({ status: 'pending' })
-        .populate('userId', 'name email')
-        .sort({ createdAt: -1 });
-      
-      res.render('admin/pending-companies', { companies });
+      const filter = { verified: false };
+      const [companies, total] = await Promise.all([
+        Company.find(filter)
+          .populate('userId', 'name email') // Populate owner info
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        Company.countDocuments(filter)
+      ]);
+
+      res.render('admin/pending-companies', {
+        companies,
+        pagination: {
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
+      });
     })
   );
 
   return router;
 };
-
-export default initAdminRouter;

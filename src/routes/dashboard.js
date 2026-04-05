@@ -91,13 +91,14 @@ export const initDashboardRouter = (auth) => {
     isAuthenticated(auth),
     isRole(auth, 'admin'),
     asyncHandler(async (req, res) => {
-      const [totalJobs, pendingJobs, approvedJobs, rejectedJobs, totalApplications, totalCompanies] = await Promise.all([
+      const [totalJobs, pendingJobs, approvedJobs, rejectedJobs, totalApplications, totalCompanies, pendingCompanies] = await Promise.all([
         Job.countDocuments(),
         Job.countDocuments({ status: 'pending' }),
         Job.countDocuments({ status: 'approved' }),
         Job.countDocuments({ status: 'rejected' }),
         Application.countDocuments(),
-        Company.countDocuments()
+        Company.countDocuments(),
+        Company.countDocuments({ verified: false }) // Count pending companies
       ]);
 
       const [recentJobs, recentApplications] = await Promise.all([
@@ -119,7 +120,8 @@ export const initDashboardRouter = (auth) => {
           approvedJobs,
           rejectedJobs,
           totalApplications,
-          totalCompanies
+          totalCompanies,
+          pendingCompanies // Pass pending companies count
         },
         recentJobs,
         recentApplications

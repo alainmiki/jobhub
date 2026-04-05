@@ -1,15 +1,7 @@
 import { fromNodeHeaders } from "better-auth/node";
 import UserProfile from '../models/UserProfile.js';
 import validator from 'validator';
-import Notification from '../models/Notification.js';
-import logger from '../config/logger.js';
-
-const logSecurityEvent = (event, details) => {
-  logger.warn(`SECURITY: ${event}`, {
-    ...details,
-    timestamp: new Date().toISOString()
-  });
-};
+import Notification from '../models/Notification.js'; // Import Notification model
 
 export const createAuthMiddleware = (auth) => {
   return async (req, res, next) => {
@@ -36,9 +28,10 @@ export const createAuthMiddleware = (auth) => {
             }
           }
 
+          // Fetch unread notification count
           const unreadNotificationsCount = await Notification.countDocuments({
-            recipient: req.userId,
-            isRead: false
+            recipient: req.userId, // Use req.userId for recipient
+            isRead: false // Standardize to isRead
           });
           req.user.unreadNotificationsCount = unreadNotificationsCount;
         } catch (profileError) {
@@ -66,11 +59,6 @@ export const createAuthMiddleware = (auth) => {
 export const isAuthenticated = (auth) => {
   return (req, res, next) => {
     if (!req.user) {
-      logSecurityEvent('Unauthorized access attempt', {
-        path: req.originalUrl,
-        method: req.method,
-        ip: req.ip
-      });
       const redirectTo = encodeURIComponent(req.originalUrl);
       return res.redirect(`/sign-in?redirect=${redirectTo}`);
     }
@@ -81,23 +69,12 @@ export const isAuthenticated = (auth) => {
 export const isRole = (auth, ...roles) => {
   return (req, res, next) => {
     if (!req.user) {
-      logSecurityEvent('Unauthorized access attempt', {
-        path: req.originalUrl,
-        method: req.method,
-        ip: req.ip
-      });
       const redirectTo = encodeURIComponent(req.originalUrl);
       return res.redirect(`/sign-in?redirect=${redirectTo}`);
     }
     
     const userRole = req.user.role || 'candidate';
     if (!roles.includes(userRole)) {
-      logSecurityEvent('Role-based access denied', {
-        userId: req.userId,
-        userRole,
-        requiredRoles: roles,
-        path: req.originalUrl
-      });
       return res.status(403).render('error', {
         message: `Access denied. This page requires ${roles.join(' or ')} role.`,
         title: "403 - Access Denied"
