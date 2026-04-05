@@ -3,6 +3,7 @@ import { toNodeHandler } from 'better-auth/node';
 import { isAuthenticated } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import logger from '../config/logger.js';
+import { log } from 'console';
 
 export const initAuthRouter = (auth) => {
   const router = express.Router();
@@ -28,7 +29,23 @@ export const initAuthRouter = (auth) => {
       }
 
       response.headers.forEach((v, k) => res.append(k, v));
-      return res.redirect(redirect || '/');
+      log("checking for 2fa redirect")
+      if (response.response?.twoFactorRedirect) {
+        return res.redirect('/2fa');
+      }
+      else{
+        log("got to redirect")
+        if (redirect && redirect !== '/sign-in' && redirect !== '/sign-up') {
+          // return res.redirect(redirect.strip());
+          log("redirecting to dashboard")
+          if(req.user.role === 'employer'){
+            return res.redirect('/dashboard/employer');
+          }else if(req.user.role === 'candidate'){
+            return res.redirect('/dashboard/candidate');
+          }else{
+            return res.redirect('/dashboard/admin');
+          }
+        }}
     } catch (error) {
       return res.render('sign-in', { 
         error: error.message, 

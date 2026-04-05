@@ -95,7 +95,6 @@ userProfileSchema.pre('save', function(next) {
   
   this.profileCompletionScore = Math.round((score / totalFields) * 100);
   this.isProfileComplete = this.profileCompletionScore >= 70;
-  next();
 });
 
 export default mongoose.model('UserProfile', userProfileSchema);

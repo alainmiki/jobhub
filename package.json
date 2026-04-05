@@ -26,10 +26,13 @@
     "@better-auth/prisma-adapter": "^1.5.6",
     "better-auth": "^1.5.6",
     "chokidar": "^3.6.0",
+    "connect-flash": "^0.1.1",
+    "connect-mongo": "^6.0.0",
     "cors": "^2.8.6",
     "csurf": "^1.11.0",
     "dotenv": "^17.4.0",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
     "express-session": "^1.19.0",
     "express-validator": "^7.3.2",
     "helmet": "^8.1.0",
@@ -42,17 +45,17 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.16",
-    "daisyui": "^5.3.10",
+    "@vitest/coverage-v8": "^3.1.0",
     "cross-env": "^10.1.0",
+    "daisyui": "^5.3.10",
+    "jsdom": "^26.1.0",
     "postcss": "^8.5.6",
     "postcss-cli": "^11.0.1",
     "postcss-nested": "^7.0.2",
     "postcss-simple-vars": "^7.0.1",
     "rimraf": "^6.0.1",
-    "tailwindcss": "^4.2.2",
-    "vitest": "^3.1.0",
-    "@vitest/coverage-v8": "^3.1.0",
     "supertest": "^7.0.0",
-    "jsdom": "^26.1.0"
+    "tailwindcss": "^4.2.2",
+    "vitest": "^3.1.0"
   }
 }

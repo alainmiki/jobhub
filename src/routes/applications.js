@@ -21,60 +21,56 @@ export const initApplicationsRouter = (auth) => {
 
   router.post('/',
     isAuthenticated(auth),
-    [
-      body('jobId').isMongoId().withMessage('Invalid job ID'),
-      body('coverLetter').optional().isLength({ max: 5000 }).withMessage('Cover letter too long')
-    ],
-    validate,
-    asyncHandler(async (req, res) => {
-      const session = await mongoose.startSession();
-      session.startTransaction();
-      
+    async (req, res) => {
       try {
-        const job = await Job.findById(req.body.jobId).session(session);
+        const jobId = req.body.jobId;
         
+        if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
+          req.flash('error', 'Invalid job ID');
+          return res.redirect('/jobs');
+        }
+        
+        const job = await Job.findById(jobId);
         if (!job || job.status !== 'approved') {
-          await session.abortTransaction();
-          return res.status(400).json({ error: 'Job not available for application' });
+          req.flash('error', 'Job not available for application');
+          return res.redirect(`/jobs/${jobId}`);
         }
         
         const existingApplication = await Application.findOne({
-          job: req.body.jobId,
+          job: jobId,
           applicantUserId: req.userId
-        }).session(session);
+        });
 
         if (existingApplication) {
-          await session.abortTransaction();
-          return res.status(400).json({ error: 'You have already applied to this job' });
+          req.flash('error', 'You have already applied to this job');
+          return res.redirect(`/jobs/${jobId}`);
         }
 
-        const userProfile = await UserProfile.findOne({ userId: req.userId }).session(session);
+        const userProfile = await UserProfile.findOne({ userId: req.userId });
         
         if (!userProfile) {
-          await session.abortTransaction();
-          return res.status(400).json({ error: 'Please complete your profile first' });
+          req.flash('error', 'Please complete your profile first');
+          return res.redirect('/profile/edit');
         }
         
         if (!userProfile.resume || !userProfile.resume.url) {
-          await session.abortTransaction();
-          return res.status(400).json({ error: 'Please upload a resume before applying' });
+          req.flash('error', 'Please upload a resume before applying');
+          return res.redirect('/profile/edit');
         }
         
         const application = new Application({
-          job: req.body.jobId,
+          job: jobId,
           candidate: userProfile._id,
           applicantUserId: req.userId,
           coverLetter: req.body.coverLetter,
           resume: userProfile.resume
         });
         
-        await application.save({ session });
+        await application.save();
         
-        await Job.findByIdAndUpdate(req.body.jobId, {
+        await Job.findByIdAndUpdate(jobId, {
           $inc: { applicationsCount: 1 }
-        }, { session });
-        
-        await session.commitTransaction();
+        });
         
         const notification = new Notification({
           recipient: job.postedBy,
@@ -86,14 +82,14 @@ export const initApplicationsRouter = (auth) => {
         await notification.save();
         
         logger.info(`Application submitted: ${application._id} for job: ${job._id}`);
-        res.redirect(`/jobs/${req.body.jobId}?applied=true`);
+        req.flash('success', 'Application submitted successfully!');
+        return res.redirect(`/jobs/${jobId}?applied=true`);
       } catch (error) {
-        await session.abortTransaction();
-        throw error;
-      } finally {
-        session.endSession();
+        console.error('[ERROR] Application submission:', error);
+        req.flash('error', 'Failed to submit application. Please try again.');
+        return res.redirect(`/jobs/${req.body.jobId}`);
       }
-    })
+    }
   );
 
   router.get('/my-applications', isAuthenticated(auth), asyncHandler(async (req, res) => {

@@ -116,7 +116,7 @@
               </div>
             </div>
             {% elif user %}
-            <button class="btn btn-primary btn-block btn-lg rounded-full" onclick="document.getElementById('applyModal').showModal()">
+            <button class="btn btn-primary btn-block btn-lg rounded-full" id="applyBtn">
               <i class="fas fa-paper-plane mr-2"></i>Apply Now
             </button>
             <p class="text-center text-xs text-base-content/50 mt-2">Easy apply - takes less than 1 minute</p>
@@ -144,7 +144,7 @@
             <div class="text-center">
               <p class="text-sm text-base-content/60 mb-2">Share this job</p>
               <div class="flex justify-center gap-2">
-                <button class="btn btn-circle btn-sm btn-ghost" onclick="navigator.clipboard.writeText(window.location.href)">
+                <button class="btn btn-circle btn-sm btn-ghost" id="copyLinkBtn">
                   <i class="fas fa-link"></i>
                 </button>
                 <a href="https://twitter.com/intent/tweet?url={{ request.url }}&text={{ job.title }}" target="_blank" class="btn btn-circle btn-sm btn-ghost">
@@ -183,7 +183,7 @@
       
       <div class="modal-action">
         <button type="submit" class="btn btn-primary rounded-full">Submit Application</button>
-        <button type="button" class="btn" onclick="document.getElementById('applyModal').close()">Cancel</button>
+        <button type="button" class="btn" id="closeModalBtn">Cancel</button>
       </div>
     </form>
   </div>
@@ -191,5 +191,16 @@
     <button>close</button>
   </form>
 </dialog>
+<script>
+document.getElementById('applyBtn')?.addEventListener('click', function() {
+  document.getElementById('applyModal').showModal();
+});
+document.getElementById('closeModalBtn')?.addEventListener('click', function() {
+  document.getElementById('applyModal').close();
+});
+document.getElementById('copyLinkBtn')?.addEventListener('click', function() {
+  navigator.clipboard.writeText(window.location.href);
+});
+</script>
 {% endif %}
 {% endblock %}

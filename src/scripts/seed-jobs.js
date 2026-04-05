@@ -7,12 +7,14 @@ dotenv.config();
 
 const seedJobs = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/jobhub_v2');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/jobhub');
     console.log('Connected to MongoDB');
 
-    await Job.deleteMany({});
-    await Company.deleteMany({});
-    console.log('Cleared existing jobs and companies');
+    // Don't delete existing data - just add jobs if none exist
+    const existingJobs = await Job.countDocuments();
+    if (existingJobs > 0) {
+      console.log(`Already have ${existingJobs} jobs in database`);
+    }
 
     // Get users directly from MongoDB user collection
     const db = mongoose.connection.db;
