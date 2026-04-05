@@ -120,7 +120,23 @@ app.use((req, res, next) => {
 });
 
 // CSRF protection for custom forms
-app.use(csrf());
+const csrfProtection = csrf({
+  cookie: {
+    key: '_csrf',
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax',
+    httpOnly: true
+  }
+});
+
+// Skip CSRF for API routes handled by Better-Auth
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api/auth') || req.path.startsWith('/sign-up') || req.path.startsWith('/sign-in')) {
+    return next();
+  }
+  csrfProtection(req, res, next);
+});
+
 app.use((req, res, next) => {
   res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
   next();
