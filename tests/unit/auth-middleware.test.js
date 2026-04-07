@@ -48,7 +48,7 @@ describe('Auth Middleware', () => {
 
       expect(mockReq.user).toEqual(mockSession.user);
       expect(mockReq.userId).toBe('test-user-123');
-      expect(mockReq.session).toEqual(mockSession.session);
+      expect(mockReq.authSession).toEqual(mockSession.session);
       expect(mockNext).toHaveBeenCalled();
     });
 

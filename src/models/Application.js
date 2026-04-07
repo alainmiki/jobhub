@@ -52,17 +52,16 @@ const applicationSchema = new mongoose.Schema({
   isArchived: { type: Boolean, default: false },
   archivedAt: { type: Date },
   viewedAt: { type: Date },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true
 });
 
 applicationSchema.index({ job: 1, candidate: 1 }, { unique: true });
-applicationSchema.index({ applicantUserId: 1 });
-applicationSchema.index({ status: 1, createdAt: -1 });
+applicationSchema.index({ applicantUserId: 1, isArchived: 1, createdAt: -1 });
+applicationSchema.index({ job: 1, status: 1, createdAt: -1 });
 applicationSchema.index({ priority: 1 });
 
 applicationSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
   if (this.isModified('status')) {
     this.timeline.push({
       status: this.status,

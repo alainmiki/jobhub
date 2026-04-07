@@ -3,6 +3,7 @@ import helmet from 'helmet';
 import nunjucks from 'nunjucks';
 import cors from 'cors';
 import session from 'express-session';
+import methodOverride from 'method-override';
 import csrf from 'csurf';
 import flash from 'connect-flash';
 import dotenv from 'dotenv';
@@ -44,6 +45,7 @@ const app = express();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 3000;
@@ -160,10 +162,42 @@ app.use(session({
 
 app.use(csrf());
 app.use(flash());
+
+const safeFlash = (req, type, message) => {
+  try {
+    if (req.flash && typeof req.flash === 'function') {
+      req.flash(type, message);
+    }
+  } catch (e) {
+    console.warn('Flash error:', e.message);
+  }
+};
+
+const flashWrapper = (req, res, next) => {
+  if (!req.flash || typeof req.flash !== 'function') {
+    req.flash = (type, message) => safeFlash(req, type, message);
+  }
+  if (!res.flash || typeof res.flash !== 'function') {
+    res.flash = (type, message) => safeFlash(req, type, message);
+  }
+  next();
+};
+
+app.use(flashWrapper);
+
 app.use((req, res, next) => {
-  res.locals.csrfToken = req.csrfToken();
-  res.locals.successMessage = req.flash('success');
-  res.locals.errorMessage = req.flash('error');
+  res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
+  res.locals.successMessage = [];
+  res.locals.errorMessage = [];
+  
+  try {
+    res.locals.successMessage = req.flash ? req.flash('success') : [];
+    res.locals.errorMessage = req.flash ? req.flash('error') : [];
+  } catch (e) {
+    console.warn('Flash error:', e.message);
+  }
+  
+  res.locals.idempotencyKey = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
   next();
 });
 
@@ -200,37 +234,25 @@ app.get('/', async (req, res) => {
   res.render('index', { featuredJobs });
 });
 
-// app.get('/sign-in', (req, res) => {
-//   const redirect = req.query.redirect || '/';
-//   res.render('sign-in', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}` });
-// });
 
-// app.get('/sign-up', (req, res) => {
-//   const redirect = req.query.redirect || '/';
-//   res.render('sign-up', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}` });
-// });
-
-// app.get('/forgot-password', (req, res) => {
-//   res.render('forgot-password');
-// });
-
-// app.get('/reset-password', (req, res) => {
-//   const token = req.query.token;
-//   if (!token) {
-//     return res.redirect('/forgot-password');
-//   }
-//   res.render('reset-password', { token });
-// });
-
-// app.get('/verify-email', (req, res) => {
-//   const { success } = req.query;
-//   res.render('verify-email', { success: success === 'true' });
-// });
 
 app.use("/",initAuthRouter(auth));
 app.use((err, req, res, next) => {
   if (err.code === 'EBADCSRFTOKEN') {
-    return res.status(403).render('error', { message: 'Form tampered with (Invalid CSRF Token)' });
+    logger.warn(`CSRF error detected: ${err.message}, Path: ${req.path}, Method: ${req.method}`);
+    
+    if (req.xhr || req.headers['accept']?.includes('application/json')) {
+      return res.status(403).json({ error: 'Your session has expired. Please refresh the page and try again.' });
+    }
+    
+    try {
+      if (req.flash && typeof req.flash === 'function') {
+        req.flash('error', 'Your session has expired or the form was tampered with. Please try again.');
+      }
+    } catch (e) {
+      console.warn('Flash error:', e.message);
+    }
+    return res.redirect(req.originalUrl || '/profile');
   }
   logger.error(err.stack);
   res.status(500).render('error', { message: 'Something broke!' });

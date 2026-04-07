@@ -3,14 +3,30 @@ import UserProfile from '../models/UserProfile.js';
 import User from '../models/User.js';
 import Application from '../models/Application.js';
 import Interview from '../models/Interview.js';
+import Job from '../models/Job.js';
 import { isAuthenticated } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { upload } from '../config/multer.js';
+import { upload, handleMulterError } from '../config/multer.js';
+import fs from 'fs/promises';
+import path from 'path';
 import logger from '../config/logger.js';
+import validator from 'validator';
+import mongoose from 'mongoose';
 
 export const initProfileRouter = (auth) => {
   const router = express.Router();
   router.use(isAuthenticated(auth));
+
+  // Helper to delete old files when replaced
+  const deleteOldFile = async (filePath) => {
+    if (!filePath) return;
+    try {
+      const absolutePath = path.join(process.cwd(), 'public', filePath);
+      await fs.unlink(absolutePath);
+    } catch (err) {
+      logger.warn(`Could not delete old file: ${filePath}`);
+    }
+  };
 
   router.get('/', asyncHandler(async (req, res) => {
     let profile = await UserProfile.findOne({ userId: req.userId })
@@ -39,7 +55,12 @@ export const initProfileRouter = (auth) => {
       upcomingInterviews: await Interview.countDocuments({ candidate: profile._id, status: { $in: ['scheduled', 'confirmed'] }, scheduledAt: { $gte: new Date() } })
     };
 
-    res.render('profile/view', { profile, stats, recentApplications: applications });
+    res.render('profile/view', { 
+      profile, 
+      stats, 
+      recentApplications: applications,
+      showGuidance: req.query.complete === 'true'
+    });
   }));
 
   router.get('/edit', asyncHandler(async (req, res) => {
@@ -51,43 +72,112 @@ export const initProfileRouter = (auth) => {
       await profile.save();
       await profile.populate('userId', 'name email image');
     }
-    res.render('profile/edit', { profile });
+    res.render('profile/edit', { 
+      profile,
+      showGuidance: req.query.complete === 'true'
+    });
   }));
 
-  router.put('/', 
+  router.post('/', 
     upload.fields([
       { name: 'image', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 },
       { name: 'resume', maxCount: 1 }
     ]),
+    handleMulterError,
     asyncHandler(async (req, res) => {
       const { 
         bio, headline, location, country, phone, website, linkedin, github, twitter,
-        role, skills, education, experience,
+        // role removed from body to prevent privilege escalation
+        skills, education, experience,
         preferredJobTypes, preferredLocations,
         expectedSalaryMin, expectedSalaryMax, expectedSalaryCurrency,
-        availabilityAvailable, noticePeriod, availabilityStartDate
+        availabilityAvailable, noticePeriod, availabilityStartDate,
+        idempotencyKey
       } = req.body;
+
+      if (!req.csrfToken && req.headers['x-csrf-token']) {
+        req.csrfToken = () => req.headers['x-csrf-token'];
+      }
+
+      const existingProfile = await UserProfile.findOne({ userId: req.userId });
+      if (existingProfile && existingProfile.lastUpdateIdempotencyKey === idempotencyKey && idempotencyKey) {
+        logger.info(`Duplicate request detected for user: ${req.userId}, key: ${idempotencyKey}`);
+        return res.redirect('/profile');
+      }
+
+      const sanitizedBio = bio ? validator.escape(bio.trim().substring(0, 500)) : '';
+      const sanitizedHeadline = headline ? validator.escape(headline.trim().substring(0, 200)) : '';
+      const sanitizedLocation = location ? validator.escape(location.trim().substring(0, 100)) : '';
+      const sanitizedCountry = country ? validator.escape(country.trim().substring(0, 100)) : '';
+      const sanitizedPhone = phone ? validator.trim(validator.escape(phone)) : '';
+      const sanitizedWebsite = website ? validator.trim(validator.escape(website)) : '';
+      const sanitizedLinkedin = linkedin ? validator.trim(validator.escape(linkedin)) : '';
+      const sanitizedGithub = github ? validator.trim(validator.escape(github)) : '';
+      const sanitizedTwitter = twitter ? validator.trim(validator.escape(twitter)) : '';
+
+      if (website && !validator.isURL(website, { protocols: ['http', 'https'], require_protocol: true })) {
+        req.flash('error', 'Please enter a valid website URL (include http:// or https://)');
+        return res.redirect('/profile/edit');
+      }
+      if (linkedin && !validator.isURL(linkedin, { protocols: ['http', 'https'], require_protocol: true })) {
+        req.flash('error', 'Please enter a valid LinkedIn URL');
+        return res.redirect('/profile/edit');
+      }
+      if (github && !validator.isURL(github, { protocols: ['http', 'https'], require_protocol: true })) {
+        req.flash('error', 'Please enter a valid GitHub URL');
+        return res.redirect('/profile/edit');
+      }
+      if (twitter && !validator.isURL(twitter, { protocols: ['http', 'https'], require_protocol: true })) {
+        req.flash('error', 'Please enter a valid Twitter URL');
+        return res.redirect('/profile/edit');
+      }
+
+      if (sanitizedPhone && !/^[\d\s\-+()]+$/.test(sanitizedPhone)) {
+        req.flash('error', 'Please enter a valid phone number');
+        return res.redirect('/profile/edit');
+      }
+
+      if (expectedSalaryMin && (isNaN(expectedSalaryMin) || parseInt(expectedSalaryMin) < 0)) {
+        req.flash('error', 'Minimum salary must be a positive number');
+        return res.redirect('/profile/edit');
+      }
+      if (expectedSalaryMax && (isNaN(expectedSalaryMax) || parseInt(expectedSalaryMax) < 0)) {
+        req.flash('error', 'Maximum salary must be a positive number');
+        return res.redirect('/profile/edit');
+      }
+      if (expectedSalaryMin && expectedSalaryMax && parseInt(expectedSalaryMin) > parseInt(expectedSalaryMax)) {
+        req.flash('error', 'Minimum salary cannot be greater than maximum salary');
+        return res.redirect('/profile/edit');
+      }
       
       const userUpdates = {};
-      if (req.files['image']) userUpdates.image = `/uploads/${req.files['image'][0].filename}`;
-      if (req.files['coverImage']) userUpdates.coverImage = `/uploads/${req.files['coverImage'][0].filename}`;
+      const currentUser = await User.findById(req.userId);
+
+      if (req.files['image']) {
+        if (currentUser.image) await deleteOldFile(currentUser.image);
+        userUpdates.image = `/uploads/${req.files['image'][0].filename}`;
+      }
+      if (req.files['coverImage']) {
+        if (currentUser.coverImage) await deleteOldFile(currentUser.coverImage);
+        userUpdates.coverImage = `/uploads/${req.files['coverImage'][0].filename}`;
+      }
       
       if (Object.keys(userUpdates).length > 0) {
         await User.findByIdAndUpdate(req.userId, userUpdates);
       }
 
       const profileUpdates = {
-        bio,
-        headline,
-        location,
-        country,
-        phone,
-        website,
-        linkedin,
-        github,
-        twitter,
-        role: role || req.user.role,
+        bio: sanitizedBio,
+        headline: sanitizedHeadline,
+        location: sanitizedLocation,
+        country: sanitizedCountry,
+        phone: sanitizedPhone,
+        website: sanitizedWebsite,
+        linkedin: sanitizedLinkedin,
+        twitter: sanitizedTwitter,
+        github: sanitizedGithub,
+        lastUpdateIdempotencyKey: idempotencyKey || null,
         updatedAt: new Date()
       };
 
@@ -140,6 +230,10 @@ export const initProfileRouter = (auth) => {
       }
 
       if (req.files['resume']) {
+        // Delete the previous primary resume file if it exists
+        if (existingProfile && existingProfile.resume && existingProfile.resume.url) {
+          await deleteOldFile(existingProfile.resume.url);
+        }
         const profile = await UserProfile.findOne({ userId: req.userId });
         const newVersion = {
           url: `/uploads/${req.files['resume'][0].filename}`,
@@ -170,6 +264,168 @@ export const initProfileRouter = (auth) => {
       res.redirect('/profile');
     })
   );
+
+  // POST /profile/applications/:id/withdraw - Allow candidates to withdraw applications
+  router.post('/applications/:id/withdraw', asyncHandler(async (req, res) => {
+    const application = await Application.findOne({
+      _id: req.params.id,
+      applicantUserId: req.userId
+    });
+
+    if (!application) {
+      req.flash('error', 'Application not found or unauthorized.');
+      return res.redirect('/profile/applications');
+    }
+
+    if (['accepted', 'rejected'].includes(application.status)) {
+      req.flash('error', `Cannot withdraw an application that has already been ${application.status}.`);
+      return res.redirect('/profile/applications');
+    }
+
+    application.status = 'withdrawn';
+    await application.save();
+
+    req.flash('success', 'Application withdrawn successfully.');
+    res.redirect('/profile/applications');
+  }));
+
+  // GET /profile/matches - Personalized job matches for candidates
+  router.get('/matches', asyncHandler(async (req, res) => {
+    const profile = await UserProfile.findOne({ userId: req.userId });
+
+    if (!profile) return res.redirect('/profile/edit');
+
+    // Enhanced matching logic with scoring
+    let matchConditions = {
+      status: 'approved',
+      isActive: true
+    };
+
+    // Location matching
+    if (profile.location || profile.preferredLocations?.length > 0) {
+      const locations = [];
+      if (profile.location) locations.push(profile.location);
+      if (profile.preferredLocations) locations.push(...profile.preferredLocations);
+
+      matchConditions.$or = matchConditions.$or || [];
+      matchConditions.$or.push(
+        { location: { $in: locations } },
+        { city: { $in: locations } },
+        { country: profile.country }
+      );
+    }
+
+    // Skills matching
+    if (profile.skills?.length > 0) {
+      matchConditions.$or = matchConditions.$or || [];
+      matchConditions.$or.push({ skills: { $in: profile.skills } });
+    }
+
+    // Job type matching
+    if (profile.preferredJobTypes?.length > 0) {
+      matchConditions.type = { $in: profile.preferredJobTypes };
+    }
+
+    // Experience level matching
+    if (profile.yearsOfExperience) {
+      if (profile.yearsOfExperience < 2) {
+        matchConditions.experienceLevel = 'Entry';
+      } else if (profile.yearsOfExperience < 5) {
+        matchConditions.experienceLevel = { $in: ['Entry', 'Mid'] };
+      } else if (profile.yearsOfExperience < 8) {
+        matchConditions.experienceLevel = { $in: ['Mid', 'Senior'] };
+      } else {
+        matchConditions.experienceLevel = { $in: ['Senior', 'Lead', 'Executive'] };
+      }
+    }
+
+    // Salary range matching
+    if (profile.expectedSalary?.min || profile.expectedSalary?.max) {
+      const salaryFilter = {};
+      if (profile.expectedSalary.min) {
+        salaryFilter.$or = [
+          { 'salary.min': { $gte: profile.expectedSalary.min } },
+          { 'salary.max': { $gte: profile.expectedSalary.min } }
+        ];
+      }
+      if (profile.expectedSalary.max) {
+        salaryFilter.$and = salaryFilter.$and || [];
+        salaryFilter.$and.push({
+          $or: [
+            { 'salary.max': { $lte: profile.expectedSalary.max } },
+            { 'salary.min': { $lte: profile.expectedSalary.max } }
+          ]
+        });
+      }
+      if (Object.keys(salaryFilter).length > 0) {
+        Object.assign(matchConditions, salaryFilter);
+      }
+    }
+
+    const jobs = await Job.find(matchConditions)
+      .populate('company', 'name logo verified')
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    // Calculate match scores
+    const jobsWithScores = jobs.map(job => {
+      let score = 0;
+      const maxScore = 100;
+
+      // Skills match (40% weight)
+      const skillMatches = job.skills?.filter(skill => profile.skills?.includes(skill)) || [];
+      score += (skillMatches.length / Math.max(job.skills?.length || 1, 1)) * 40;
+
+      // Location match (20% weight)
+      const locationMatch = (
+        job.location === profile.location ||
+        job.city === profile.location ||
+        job.country === profile.country ||
+        profile.preferredLocations?.includes(job.location) ||
+        profile.preferredLocations?.includes(job.city)
+      );
+      if (locationMatch) score += 20;
+
+      // Job type match (15% weight)
+      if (profile.preferredJobTypes?.includes(job.type)) score += 15;
+
+      // Experience level match (15% weight)
+      if (profile.yearsOfExperience) {
+        const profileLevel = profile.yearsOfExperience < 2 ? 'Entry' :
+                           profile.yearsOfExperience < 5 ? 'Mid' :
+                           profile.yearsOfExperience < 8 ? 'Senior' : 'Lead';
+        if (job.experienceLevel === profileLevel) score += 15;
+      }
+
+      // Salary match (10% weight)
+      if (profile.expectedSalary && job.salary) {
+        const jobMin = job.salary.min || 0;
+        const jobMax = job.salary.max || jobMin;
+        const profileMin = profile.expectedSalary.min || 0;
+        const profileMax = profile.expectedSalary.max || profileMin;
+
+        if (jobMax >= profileMin && jobMin <= profileMax) {
+          score += 10;
+        }
+      }
+
+      return {
+        ...job.toObject(),
+        matchScore: Math.round(Math.min(score, maxScore)),
+        matchReasons: {
+          skills: skillMatches.length > 0,
+          location: locationMatch,
+          jobType: profile.preferredJobTypes?.includes(job.type),
+          experience: score > 60 // Rough indicator
+        }
+      };
+    });
+
+    // Sort by match score descending
+    jobsWithScores.sort((a, b) => b.matchScore - a.matchScore);
+
+    res.render('matches/index', { jobs: jobsWithScores, profile });
+  }));
 
   router.post('/resume/:versionId/set-primary', asyncHandler(async (req, res) => {
     const profile = await UserProfile.findOne({ userId: req.userId });
@@ -211,6 +467,11 @@ export const initProfileRouter = (auth) => {
         remaining[0].isPrimary = true;
         profile.resume = { url: remaining[0].url, fileName: remaining[0].fileName, uploadedAt: remaining[0].uploadedAt };
       }
+    }
+
+    const versionToDelete = profile.resumeVersions.find(v => v._id.toString() === req.params.versionId);
+    if (versionToDelete) {
+      await deleteOldFile(versionToDelete.url);
     }
 
     profile.resumeVersions = profile.resumeVersions.filter(v => v._id.toString() !== req.params.versionId);
@@ -424,7 +685,7 @@ export const initProfileRouter = (auth) => {
     res.render('profile/settings', { profile });
   }));
 
-  router.put('/settings', asyncHandler(async (req, res) => {
+  router.post('/settings', asyncHandler(async (req, res) => {
     let profile = await UserProfile.findOne({ userId: req.userId });
     
     if (!profile) {

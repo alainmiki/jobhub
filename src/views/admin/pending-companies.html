@@ -58,19 +58,23 @@
             </a>
           </td>
           <td>{{ company.createdAt.toLocaleDateString() }}</td>
-          <td>
-            <div class="flex gap-2">
-              <a href="/company/{{ company._id }}" class="btn btn-ghost btn-sm">
-                <i class="fa-solid fa-eye"></i>
-              </a>
-              <form method="POST" action="/dashboard/companies/{{ company._id }}/verify">
-                <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-                <button type="submit" class="btn btn-success btn-sm">
-                  <i class="fa-solid fa-check"></i>
-                </button>
-              </form>
-            </div>
-          </td>
+           <td>
+             <div class="flex gap-2">
+               <a href="/company/{{ company._id }}" class="btn btn-ghost btn-sm">
+                 <i class="fa-solid fa-eye"></i>
+               </a>
+               <form method="POST" action="/admin/companies/{{ company._id }}/approve" class="inline">
+                 <button type="submit" class="btn btn-success btn-sm">
+                   <i class="fa-solid fa-check"></i> Approve
+                 </button>
+               </form>
+               <form method="POST" action="/admin/companies/{{ company._id }}/reject" class="inline">
+                 <button type="submit" class="btn btn-error btn-sm" onclick="return confirm('Are you sure you want to reject this company?')">
+                   <i class="fa-solid fa-xmark"></i> Reject
+                 </button>
+               </form>
+             </div>
+           </td>
         </tr>
         {% endfor %}
       </tbody>

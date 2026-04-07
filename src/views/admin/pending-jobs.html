@@ -48,14 +48,12 @@
         <p class="text-sm mt-3 line-clamp-3">{{ job.description }}</p>
 
         <div class="card-actions justify-end mt-4">
-          <form method="POST" action="/dashboard/jobs/{{ job._id }}/reject">
-            <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-            <button type="submit" class="btn btn-error btn-sm">
+          <form method="POST" action="/admin/jobs/{{ job._id }}/reject" class="inline">
+            <button type="submit" class="btn btn-error btn-sm" onclick="return confirm('Are you sure you want to reject this job?')">
               <i class="fa-solid fa-xmark mr-1"></i>Reject
             </button>
           </form>
-          <form method="POST" action="/dashboard/jobs/{{ job._id }}/approve">
-            <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+          <form method="POST" action="/admin/jobs/{{ job._id }}/approve" class="inline">
             <button type="submit" class="btn btn-success btn-sm">
               <i class="fa-solid fa-check mr-1"></i>Approve
             </button>

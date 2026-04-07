@@ -8,7 +8,7 @@ import UserProfile from '../models/UserProfile.js';
 import Notification from '../models/Notification.js';
 import Company from '../models/Company.js';
 import Interview from '../models/Interview.js';
-import { createAuthMiddleware, isAuthenticated, isRole, isEmployer } from '../middleware/auth.js';
+import { createAuthMiddleware, isAuthenticated, isRole, isEmployer, requireProfileComplete } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate } from '../middleware/validation.js';
 import logger from '../config/logger.js';
@@ -21,6 +21,7 @@ export const initApplicationsRouter = (auth) => {
 
   router.post('/',
     isAuthenticated(auth),
+    requireProfileComplete(auth),
     async (req, res) => {
       try {
         const jobId = req.body.jobId;
@@ -285,6 +286,77 @@ export const initApplicationsRouter = (auth) => {
     })
   );
 
+  // PATCH /applications/bulk-status - Bulk update application statuses
+  router.patch('/bulk-status',
+    isAuthenticated(auth),
+    isEmployer(auth),
+    [
+      body('ids').isArray({ min: 1 }).withMessage('At least one application ID is required'),
+      body('ids.*').isMongoId().withMessage('Invalid application ID format'),
+      body('status').isIn(APPLICATION_STATUS).withMessage('Invalid status')
+    ],
+    validate,
+    asyncHandler(async (req, res) => {
+      const { ids, status, notes } = req.body;
+
+      // Find jobs posted by this employer to authorize the update
+      const employerJobs = await Job.find({ postedBy: req.userId }).select('_id');
+      const jobIds = employerJobs.map(j => j._id.toString());
+
+      // Find applications that belong to this employer's jobs
+      const applications = await Application.find({
+        _id: { $in: ids },
+        job: { $in: jobIds }
+      }).populate('job', 'title');
+
+      if (applications.length === 0) {
+        return res.status(404).json({ error: 'No authorized applications found to update' });
+      }
+
+      const notificationTypes = {
+        viewed: 'application_viewed',
+        shortlisted: 'application_shortlisted',
+        rejected: 'application_rejected',
+        accepted: 'application_accepted',
+        interview_scheduled: 'interview_scheduled'
+      };
+
+      const results = {
+        updated: 0,
+        failed: ids.length - applications.length
+      };
+
+      // Iterate and update to trigger pre-save hooks (for timeline) and notifications
+      const updatePromises = applications.map(async (app) => {
+        app.status = status;
+        if (notes) app.employerNotes = notes;
+        await app.save();
+        results.updated++;
+
+        // Send individual notifications
+        if (notificationTypes[status]) {
+          await Notification.create({
+            recipient: app.applicantUserId,
+            type: notificationTypes[status],
+            title: `Application ${status.replace('_', ' ')}`,
+            message: `Your application for ${app.job.title} has been updated to ${status.replace('_', ' ')}`,
+            link: `/applications/${app._id}`
+          });
+        }
+      });
+
+      await Promise.all(updatePromises);
+
+      logger.info(`Bulk status update by ${req.userId}: ${results.updated} applications set to ${status}`);
+      
+      res.json({ 
+        success: true, 
+        message: `Successfully updated ${results.updated} applications.`,
+        results 
+      });
+    })
+  );
+
   router.post('/:id/withdraw', isAuthenticated(auth), asyncHandler(async (req, res) => {
     const application = await Application.findById(req.params.id);
     
@@ -405,7 +477,15 @@ export const initApplicationsRouter = (auth) => {
       if (!application) {
         return res.status(404).json({ error: 'Application not found' });
       }
-
+      
+      // Strict Ownership Check: Only the applicant or the job poster can leave feedback
+      const isApplicant = application.applicantUserId.toString() === req.userId;
+      const isJobPoster = application.job.postedBy.toString() === req.userId;
+      
+      if (!isApplicant && !isJobPoster) {
+        return res.status(403).json({ error: 'You are not authorized to provide feedback for this application.' });
+      }
+      
       const toUserId = application.applicantUserId.toString() === req.userId 
         ? application.job.postedBy 
         : application.applicantUserId;
@@ -442,8 +522,9 @@ export const initApplicationsRouter = (auth) => {
       return res.status(404).json({ error: 'Application not found' });
     }
     
+    // Strict Ownership Check: Only the candidate can manage private notes on their application
     if (application.applicantUserId.toString() !== req.userId) {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: 'Access denied. Only the applicant can modify private notes.' });
     }
     
     application.notes = notes;

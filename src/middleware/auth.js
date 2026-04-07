@@ -14,28 +14,25 @@ export const createAuthMiddleware = (auth) => {
         req.authSession = session.session;
         req.user = session.user;
         req.userId = session.user.id;
-        
+
         if (session.user.role) {
           req.user.role = session.user.role;
         }
-        
-        try {
-          const userProfile = await UserProfile.findOne({ userId: session.user.id });
-          if (userProfile) {
-            req.userProfile = userProfile;
-            if (!req.user.role) {
-              req.user.role = userProfile.role;
-            }
+
+        // Fetch user profile
+        const userProfile = await UserProfile.findOne({ userId: session.user.id });
+        if (userProfile) {
+          req.userProfile = userProfile;
+          if (!req.user.role) {
+            req.user.role = userProfile.role;
           }
 
           // Fetch unread notification count
           const unreadNotificationsCount = await Notification.countDocuments({
-            recipient: req.userId, // Use req.userId for recipient
-            isRead: false // Standardize to isRead
+            recipient: req.userId,
+            isRead: false
           });
           req.user.unreadNotificationsCount = unreadNotificationsCount;
-        } catch (profileError) {
-          console.warn('[Auth] Could not fetch user profile or notifications:', profileError.message);
         }
       } else {
         req.authSession = null;
@@ -62,8 +59,22 @@ export const isAuthenticated = (auth) => {
       const redirectTo = encodeURIComponent(req.originalUrl);
       return res.redirect(`/sign-in?redirect=${redirectTo}`);
     }
+
+    if (req.user.isActive === false) {
+      req.flash('error', 'Your account has been deactivated. Please contact an administrator.');
+      return res.redirect('/deactivated');
+    }
+
     next();
   };
+};
+
+export const checkActiveStatus = (req, res, next) => {
+  if (req.user && req.user.isActive === false) {
+    req.flash('error', 'Your account is currently disabled. Please contact support.');
+    return res.redirect('/deactivated');
+  }
+  next();
 };
 
 export const isRole = (auth, ...roles) => {
@@ -95,8 +106,15 @@ export const requireProfileComplete = (auth) => {
     }
     
     if (req.userProfile && !req.userProfile.isProfileComplete) {
-      return res.redirect(`/profile?complete=true`);
+      req.flash('info', 'Please complete at least 70% of your profile to access this feature.');
+      return res.redirect('/profile?complete=true');
     }
+
+    if (req.user.isActive === false) {
+      req.flash('error', 'Action restricted: Account is inactive.');
+      return res.redirect('/deactivated');
+    }
+
     next();
   };
 };

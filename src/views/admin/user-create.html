@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-8 gsap-reveal">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight mb-1">Create New User</h1>
+      <p class="text-base-content/60">Add a new user to the platform</p>
+    </div>
+    <a href="/admin/users" class="btn btn-ghost btn-sm rounded-xl">
+      <i class="fa-solid fa-arrow-left mr-2"></i>Back to Users
+    </a>
+  </div>
+
+  <div class="max-w-2xl mx-auto">
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
+      <div class="card-body p-6">
+        <form method="POST" class="space-y-6">
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Full Name *</span>
+            </label>
+            <input type="text" name="name" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Email Address *</span>
+            </label>
+            <input type="email" name="email" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Role *</span>
+            </label>
+            <select name="role" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+              <option value="candidate">Candidate</option>
+              <option value="employer">Employer</option>
+              <option value="admin">Admin</option>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Temporary Password *</span>
+            </label>
+            <input type="password" name="password" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required minlength="8">
+            <label class="label">
+              <span class="label-text-alt text-base-content/60">User will be prompted to change password on first login</span>
+            </label>
+          </div>
+
+          <div class="card-actions justify-end pt-4">
+            <button type="submit" class="btn btn-primary-gradient rounded-xl">
+              <i class="fa-solid fa-user-plus mr-2"></i>Create User
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

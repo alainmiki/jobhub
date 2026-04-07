@@ -63,12 +63,15 @@ const companySchema = new mongoose.Schema({
     primaryColor: { type: String, default: '#4F46E5' },
     accentColor: { type: String, default: '#10B981' }
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+}, { 
+  timestamps: true 
 });
 
 companySchema.index({ status: 1 });
 companySchema.index({ verified: 1 });
+companySchema.index({ verified: 1, createdAt: -1 });
+companySchema.index({ industry: 1 });
+companySchema.index({ createdAt: -1 });
 companySchema.index({ 'analytics.totalViews': -1 });
 companySchema.index({ 'analytics.totalApplications': -1 });
 
@@ -83,11 +86,6 @@ companySchema.virtual('activeJobs', {
   localField: '_id',
   foreignField: 'company',
   match: { status: 'approved', isActive: true }
-});
-
-companySchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
 });
 
 companySchema.methods.incrementViews = function() {

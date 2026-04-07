@@ -255,7 +255,10 @@
                   <i class="fa-solid fa-file-pdf text-2xl text-error"></i>
                 </div>
                 <div>
-                  <p class="font-medium">{{ profile.resume.fileName }}</p>
+                  <div class="flex items-center gap-2">
+                    <p class="font-medium">{{ profile.resume.fileName }}</p>
+                    <span class="badge badge-success badge-xs">Primary</span>
+                  </div>
                   <p class="text-sm text-base-content/50">Uploaded {{ profile.resume.uploadedAt | date('MMM D, YYYY') }}</p>
                 </div>
               </div>
@@ -316,7 +319,8 @@
             </div>
             <div class="space-y-3 mt-3">
               {% for app in recentApplications %}
-              <a href="/applications/{{ app._id }}" class="flex items-center gap-4 p-4 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors group">
+              <div class="flex items-center gap-4 p-4 bg-base-200/30 rounded-xl hover:bg-base-200/50 transition-colors group relative">
+                <a href="/applications/{{ app._id }}" class="absolute inset-0 z-0"></a>
                 <div class="w-10 h-10 bg-base-100 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
                   {% if app.job and app.job.company and app.job.company.logo %}
                   <img src="{{ app.job.company.logo }}" alt="{{ app.job.company.name }}" class="w-6 h-6 object-contain" />
@@ -328,15 +332,24 @@
                   <p class="font-medium group-hover:text-primary transition-colors truncate">{{ app.job.title if app.job else 'Job' }}</p>
                   <p class="text-sm text-base-content/50 truncate">{{ app.job.company.name if app.job and app.job.company else 'Company' }}</p>
                 </div>
-                <span class="badge badge-sm 
+                <div class="flex items-center gap-2 z-10">
+                  <span class="badge badge-sm 
                   {% if app.status == 'accepted' %}badge-success
                   {% elif app.status == 'rejected' %}badge-error
                   {% elif app.status == 'shortlisted' %}badge-info
                   {% elif app.status == 'interview_scheduled' %}badge-warning
+                  {% elif app.status == 'withdrawn' %}badge-ghost opacity-50
                   {% else %}badge-ghost{% endif %}">
                   {{ app.status | title }}
                 </span>
-              </a>
+                {% if app.status != 'withdrawn' and app.status != 'rejected' and app.status != 'accepted' %}
+                  <form action="/profile/applications/{{ app._id }}/withdraw" method="POST" onsubmit="return confirm('Are you sure you want to withdraw this application?')">
+                    <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                    <button type="submit" class="btn btn-ghost btn-xs text-error hover:bg-error/10">Withdraw</button>
+                  </form>
+                {% endif %}
+                </div>
+              </div>
               {% endfor %}
             </div>
           </div>

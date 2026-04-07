@@ -70,8 +70,10 @@ const userProfileSchema = new mongoose.Schema({
     noticePeriod: { type: String },
     startDate: Date
   },
+  isActive: { type: Boolean, default: true },
   isProfileComplete: { type: Boolean, default: false },
   profileCompletionScore: { type: Number, default: 0 },
+  lastUpdateIdempotencyKey: { type: String, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });
@@ -81,20 +83,28 @@ userProfileSchema.pre('save', function(next) {
 
   let score = 0;
   const totalFields = 10;
-  
+
   if (this.bio && this.bio.trim() !== '') score++;
   if (this.headline && this.headline.trim() !== '') score++;
   if (this.location && this.location.trim() !== '') score++;
   if (this.phone && this.phone.trim() !== '') score++;
   if (this.website && this.website.trim() !== '') score++;
-  if (this.linkedin && this.linkedin.trim() !== '') score++;
   if (this.skills && this.skills.length > 0) score++;
   if (this.education && this.education.length > 0) score++;
   if (this.experience && this.experience.length > 0) score++;
   if (this.resume && this.resume.url) score++;
-  
+
   this.profileCompletionScore = Math.round((score / totalFields) * 100);
   this.isProfileComplete = this.profileCompletionScore >= 70;
+  next();
 });
+
+// Add indexes for common queries
+userProfileSchema.index({ role: 1 });
+userProfileSchema.index({ isProfileComplete: 1 });
+userProfileSchema.index({ skills: 1 });
+userProfileSchema.index({ location: 1 });
+userProfileSchema.index({ 'preferredLocations': 1 });
+userProfileSchema.index({ profileCompletionScore: -1 });
 
 export default mongoose.model('UserProfile', userProfileSchema);

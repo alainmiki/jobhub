@@ -4,15 +4,26 @@ import Job from '../models/Job.js';
 import Company from '../models/Company.js';
 import Application from '../models/Application.js';
 import UserProfile from '../models/UserProfile.js';
+import Notification from '../models/Notification.js';
+import Interview from '../models/Interview.js';
 import { createAuthMiddleware, isAuthenticated, isRole } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate } from '../middleware/validation.js';
+import { sanitizeRegex, logAuditAction } from '../utils/helpers.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
 export const initDashboardRouter = (auth) => {
   router.use(createAuthMiddleware(auth));
+
+  // Security: Prevent disabled accounts from accessing any dashboard routes
+  router.use((req, res, next) => {
+    if (req.user && req.user.isActive === false) {
+      return res.status(403).render('error', { message: 'Your account has been disabled. Please contact support.', title: 'Account Disabled' });
+    }
+    next();
+  });
 
   router.get('/',
     isAuthenticated(auth),
@@ -30,12 +41,31 @@ export const initDashboardRouter = (auth) => {
       }).populate('job');
 
       const stats = {
-        applied: appliedJobs.length,
+        total: appliedJobs.length,
         pending: appliedJobs.filter(a => a.status === 'pending').length,
+        viewed: appliedJobs.filter(a => a.status === 'viewed').length,
         shortlisted: appliedJobs.filter(a => a.status === 'shortlisted').length,
-        rejected: appliedJobs.filter(a => a.status === 'rejected').length,
-        accepted: appliedJobs.filter(a => a.status === 'accepted').length
+        accepted: appliedJobs.filter(a => a.status === 'accepted').length,
+        rejected: appliedJobs.filter(a => a.status === 'rejected').length
       };
+
+      const recentApplications = appliedJobs
+        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+        .slice(0, 5);
+
+      const upcomingInterviews = await Interview.find({
+        candidate: req.userProfile._id,
+        status: { $in: ['scheduled', 'confirmed'] },
+        scheduledAt: { $gte: new Date() }
+      })
+        .populate({
+          path: 'application',
+          populate: { path: 'job', populate: { path: 'company', select: 'name' } }
+        })
+        .sort({ scheduledAt: 1 })
+        .limit(3);
+
+      stats.interviewScheduled = upcomingInterviews.length;
 
       const recommendedJobs = await Job.find({
         status: 'approved',
@@ -45,8 +75,13 @@ export const initDashboardRouter = (auth) => {
         .sort({ createdAt: -1 })
         .limit(5);
 
+      const recentNotifications = await Notification.find({
+        recipient: req.userId,
+        isRead: false
+      }).sort({ createdAt: -1 }).limit(3);
+
       logger.info(`Candidate dashboard loaded for user: ${req.userId}`);
-      res.render('dashboard/candidate', { stats, recommendedJobs });
+      res.render('dashboard/candidate', { stats, recommendedJobs, recentNotifications, recentApplications, upcomingInterviews, profile: req.userProfile });
     })
   );
 
@@ -67,10 +102,11 @@ export const initDashboardRouter = (auth) => {
       };
 
       let recentApplications = [];
+      let needsCompanySetup = !company;
       let jobs = [];
 
       if (company) {
-        jobs = await Job.find({ company: company._id });
+        jobs = await Job.find({ company: company._id }).lean();
 
         stats.totalJobs = jobs.length;
         stats.totalViews = jobs.reduce((sum, job) => sum + (job.views || 0), 0);
@@ -93,7 +129,7 @@ export const initDashboardRouter = (auth) => {
       }
 
       logger.info(`Employer dashboard loaded for user: ${req.userId}`);
-      res.render('dashboard/employer', { stats, company, recentApplications });
+      res.render('dashboard/employer', { stats, company, recentApplications, needsCompanySetup, profile: req.userProfile });
     })
   );
 
@@ -134,7 +170,8 @@ export const initDashboardRouter = (auth) => {
           pendingCompanies // Pass pending companies count
         },
         recentJobs,
-        recentApplications
+        recentApplications,
+        profile: req.userProfile
       });
     })
   );
@@ -159,6 +196,12 @@ export const initDashboardRouter = (auth) => {
         return res.status(404).json({ error: 'Job not found' });
       }
 
+      await logAuditAction(req, 'job_approve', 'job', job._id, {
+        title: job.title,
+        company: job.company,
+        oldStatus: 'pending'
+      });
+
       logger.info(`Job approved: ${req.params.id} by admin: ${req.userId}`);
       res.redirect(`/dashboard/admin`);
     })
@@ -179,6 +222,12 @@ export const initDashboardRouter = (auth) => {
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
       }
+
+      await logAuditAction(req, 'job_reject', 'job', job._id, {
+        title: job.title,
+        company: job.company,
+        oldStatus: 'pending'
+      });
 
       logger.info(`Job rejected: ${req.params.id} by admin: ${req.userId}`);
       res.redirect(`/dashboard/admin`);
@@ -201,8 +250,92 @@ export const initDashboardRouter = (auth) => {
         return res.status(404).json({ error: 'Company not found' });
       }
 
+      await logAuditAction(req, 'company_verify', 'company', company._id, {
+        name: company.name,
+        oldVerified: false
+      });
+
       logger.info(`Company verified: ${req.params.id} by admin: ${req.userId}`);
       res.redirect(`/dashboard/admin`);
+    })
+  );
+
+  // GET /dashboard/employer/candidates - Search candidates (for employers)
+  router.get('/employer/candidates',
+    isAuthenticated(auth),
+    isRole(auth, 'employer'),
+    asyncHandler(async (req, res) => {
+      const company = await Company.findOne({ userId: req.userId });
+
+      if (!company) {
+        req.flash('error', 'You need to create a company profile first');
+        return res.redirect('/company/create');
+      }
+
+      const { search, skills, location, experience, page = 1, limit = 20 } = req.query;
+      const skip = (parseInt(page) - 1) * parseInt(limit);
+
+      const query = {
+        role: 'candidate',
+        isActive: true,
+        isProfileComplete: true
+      };
+
+      if (search) {
+        const safeSearch = sanitizeRegex(search);
+        query.$or = [
+          { headline: { $regex: safeSearch, $options: 'i' } },
+          { bio: { $regex: safeSearch, $options: 'i' } },
+          { skills: { $regex: safeSearch, $options: 'i' } }
+        ];
+      }
+
+      if (skills) {
+        const skillArray = skills.split(',').map(s => s.trim()).filter(s => s);
+        if (skillArray.length > 0) {
+          query.skills = { $in: skillArray };
+        }
+      }
+
+      if (location) {
+        const safeLocation = sanitizeRegex(location);
+        query.$or = query.$or || [];
+        query.$or.push(
+          { location: { $regex: safeLocation, $options: 'i' } },
+          { country: { $regex: safeLocation, $options: 'i' } }
+        );
+      }
+
+      if (experience) {
+        const expNum = parseInt(experience);
+        if (!isNaN(expNum)) {
+          if (experience === '0-2') query.yearsOfExperience = { $lte: 2 };
+          else if (experience === '3-5') query.yearsOfExperience = { $gte: 3, $lte: 5 };
+          else if (experience === '6-10') query.yearsOfExperience = { $gte: 6, $lte: 10 };
+          else if (experience === '10+') query.yearsOfExperience = { $gte: 10 };
+        }
+      }
+
+      const [candidates, total] = await Promise.all([
+        UserProfile.find(query)
+          .populate('userId', 'name email image createdAt')
+          .sort({ profileCompletionScore: -1, updatedAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit)),
+        UserProfile.countDocuments(query)
+      ]);
+
+      res.render('dashboard/candidates', {
+        candidates,
+        company,
+        filters: { search, skills, location, experience },
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total,
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      });
     })
   );
 

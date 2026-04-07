@@ -51,18 +51,16 @@ const interviewSchema = new mongoose.Schema({
     submittedAt: { type: Date }
   },
   reminderSent: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true
 });
 
 interviewSchema.index({ application: 1 });
-interviewSchema.index({ candidate: 1 });
-interviewSchema.index({ interviewer: 1 });
-interviewSchema.index({ scheduledAt: 1 });
+interviewSchema.index({ candidate: 1, scheduledAt: 1, status: 1 });
+interviewSchema.index({ interviewer: 1, scheduledAt: 1, status: 1 });
 interviewSchema.index({ status: 1 });
 
 interviewSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
   if (this.isModified('status') && this.status === 'completed' && !this.endTime) {
     this.endTime = new Date();
   }

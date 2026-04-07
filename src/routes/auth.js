@@ -212,6 +212,10 @@ export const initAuthRouter = (auth) => {
     res.render('2fa', { user: req.user });
   });
 
+  router.get('/deactivated', (req, res) => {
+    res.render('deactivated');
+  });
+
   router.get('/enable-2fa', (req, res, next) => {
     if (!req.user) return res.redirect('/sign-in');
     res.render('enable-2fa', { user: req.user });

@@ -25,8 +25,27 @@
     </div>
     {% endif %}
 
-    <form action="/profile?_method=PUT" method="POST" enctype="multipart/form-data" class="space-y-6">
+    {% if showGuidance %}
+    <dialog id="welcome_modal" class="modal modal-bottom sm:modal-middle">
+      <div class="modal-box rounded-3xl p-8 text-center">
+        <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="fa-solid fa-wand-magic-sparkles text-3xl text-primary"></i>
+        </div>
+        <h3 class="font-bold text-2xl mb-2">Welcome to JobHub!</h3>
+        <p class="text-base-content/60 mb-6">Let's start by completing your professional profile. A complete profile helps us find the best job matches and opportunities for you.</p>
+        <div class="modal-action justify-center">
+          <form method="dialog">
+            <button class="btn btn-primary rounded-xl px-8">Let's Get Started</button>
+          </form>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+    {% endif %}
+
+    <form action="/profile" method="POST" enctype="multipart/form-data" class="space-y-6" id="profile-form">
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+      <input type="hidden" name="idempotencyKey" value="{{ idempotencyKey }}">
 
       <div class="card bg-base-100 shadow-lg rounded-2xl">
         <div class="card-body">
@@ -42,11 +61,12 @@
             </div>
             
             <div class="form-control">
-              <label class="label"><span class="label-text font-bold">Your Role</span></label>
-              <select name="role" class="select select-bordered rounded-xl" required>
-                <option value="candidate" {% if profile.role == 'candidate' %}selected{% endif %}>Job Seeker / Candidate</option>
-                <option value="employer" {% if profile.role == 'employer' %}selected{% endif %}>Employer / Recruiter</option>
-              </select>
+              <label class="label"><span class="label-text font-bold text-base-content/40">Your Account Role</span></label>
+              <div class="input input-bordered rounded-xl bg-base-200/50 flex items-center text-base-content/50">
+                <i class="fa-solid fa-shield-halved mr-2"></i>
+                {{ profile.role | title }}
+              </div>
+              <label class="label"><span class="label-text-alt">Contact an admin to change your account type.</span></label>
             </div>
           </div>
 
@@ -398,6 +418,10 @@
 <script>
 let expCount = {{ profile.experience | length }};
 let eduCount = {{ profile.education | length }};
+
+{% if showGuidance %}
+document.addEventListener('DOMContentLoaded', () => { welcome_modal.showModal(); });
+{% endif %}
 
 function addExperienceField() {
   const container = document.getElementById('experience-container');

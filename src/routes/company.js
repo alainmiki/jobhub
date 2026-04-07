@@ -7,7 +7,7 @@ import Application from '../models/Application.js';
 import UserProfile from '../models/UserProfile.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
-import { createAuthMiddleware, isAuthenticated, isEmployer } from '../middleware/auth.js';
+import { createAuthMiddleware, isAuthenticated, isEmployer, requireProfileComplete } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { upload } from '../config/multer.js';
 import { validate } from '../middleware/validation.js';
@@ -19,7 +19,11 @@ const router = express.Router();
 export const initCompanyRouter = (auth) => {
   router.use(createAuthMiddleware(auth));
 
-  router.get('/create', isAuthenticated(auth), isEmployer(auth), asyncHandler(async (req, res) => {
+  router.get('/create', 
+    isAuthenticated(auth), 
+    isEmployer(auth), 
+    requireProfileComplete(auth),
+    asyncHandler(async (req, res) => {
     const existing = await Company.findOne({ userId: req.userId });
     
     if (existing) {
@@ -33,6 +37,7 @@ export const initCompanyRouter = (auth) => {
   router.post('/',
     isAuthenticated(auth),
     isEmployer(auth),
+    requireProfileComplete(auth),
     upload.fields([
       { name: 'logo', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 }
@@ -175,6 +180,7 @@ export const initCompanyRouter = (auth) => {
   router.put('/:id',
     isAuthenticated(auth),
     isEmployer(auth),
+    requireProfileComplete(auth),
     upload.fields([
       { name: 'logo', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 }

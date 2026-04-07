@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 import Job from '../models/Job.js';
 import Company from '../models/Company.js';
 import Application from '../models/Application.js';
-import { createAuthMiddleware, isAuthenticated, isEmployer } from '../middleware/auth.js';
+import { createAuthMiddleware, isAuthenticated, isEmployer, requireProfileComplete } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validation.js';
@@ -74,7 +74,7 @@ export const initJobsRouter = (auth) => {
     try {
       const { q, type, location, category, experienceLevel } = req.query;
       const filter = { status: 'approved', isActive: true };
-      
+
       if (q) {
         const safeSearch = sanitizeRegex(q);
         filter.$or = [
@@ -87,18 +87,39 @@ export const initJobsRouter = (auth) => {
       if (location) filter.location = location;
       if (category) filter.category = category;
       if (experienceLevel) filter.experienceLevel = experienceLevel;
-      
+
       const jobs = await Job.find(filter)
         .populate('company', 'name logo industry size')
         .sort({ createdAt: -1 })
         .lean();
-      
+
       return res.render('jobs/search', { jobs: jobs || [], filters: req.query, searchQuery: q || '' });
     } catch (error) {
       logger.error('Search error:', error);
       return res.status(500).render('error', { message: 'Search failed' });
     }
   });
+
+  router.get('/create',
+    isAuthenticated(auth),
+    isEmployer(auth),
+    requireProfileComplete(auth),
+    async (req, res) => {
+      try {
+        const company = await Company.findOne({ userId: req.userId });
+
+        if (!company) {
+          req.flash('info', 'You need to create a company profile before posting jobs.');
+          return res.redirect('/company/create');
+        }
+
+        res.render('jobs/create', { company });
+      } catch (error) {
+        logger.error('Error loading job creation form:', error);
+        res.status(500).render('error', { message: 'Failed to load job creation form' });
+      }
+    }
+  );
 
   router.get('/:id', async (req, res) => {
     try {
@@ -144,6 +165,7 @@ export const initJobsRouter = (auth) => {
   router.post('/',
     isAuthenticated(auth),
     isEmployer(auth),
+    requireProfileComplete(auth),
     [
       body('title').trim().isLength({ min: 3, max: 200 }).withMessage('Title must be 3-200 characters'),
       body('description').trim().isLength({ min: 50, max: 5000 }).withMessage('Description must be 50-5000 characters'),

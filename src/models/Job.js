@@ -57,18 +57,20 @@ const jobSchema = new mongoose.Schema({
   views: { type: Number, default: 0 },
   applicationsCount: { type: Number, default: 0 },
   isActive: { type: Boolean, default: true },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+}, {
+  timestamps: true
 });
 
 jobSchema.index({ title: 'text', description: 'text', skills: 'text' });
+jobSchema.index({ status: 1, isActive: 1, createdAt: -1 });
 jobSchema.index({ status: 1, createdAt: -1 });
 jobSchema.index({ company: 1, status: 1 });
-
-jobSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
-});
+jobSchema.index({ postedBy: 1 });
+jobSchema.index({ type: 1 });
+jobSchema.index({ location: 1 });
+jobSchema.index({ category: 1 });
+jobSchema.index({ experienceLevel: 1 });
+jobSchema.index({ isActive: 1 });
 
 const Job = mongoose.models.Job || mongoose.model('Job', jobSchema);
 export default Job;

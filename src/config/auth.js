@@ -115,6 +115,18 @@ export const initAuth = async (db) => {
           required: false,
           defaultValue: false,
           inputable: false
+        },
+        isActive: {
+          type: "boolean",
+          required: false,
+          defaultValue: true,
+          inputable: false
+        },
+        deactivationReason: {
+          type: "string",
+          required: false,
+          defaultValue: "Violation of terms of service or safety guidelines.",
+          inputable: false
         }
       }
     },

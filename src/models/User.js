@@ -12,18 +12,17 @@ const userSchema = new mongoose.Schema({
     enum: ['candidate', 'employer', 'admin'], 
     default: 'candidate' 
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }
+  isActive: { type: Boolean, default: true },
 }, { 
   collection: 'user',
   strict: false,
   timestamps: true
 });
 
-userSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-  next();
-});
+// Performance indexes for admin filtering and sorting
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ createdAt: -1 });
 
 const User = mongoose.models.user || mongoose.model('user', userSchema);
 export default User;
