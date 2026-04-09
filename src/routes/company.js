@@ -60,7 +60,6 @@ export const initCompanyRouter = (auth) => {
     ],
     validate,
     asyncHandler(async (req, res) => {
-      // CSRF check for multipart forms
       if (!req.body._csrf) {
         return res.status(403).json({ error: 'CSRF token missing' });
       }
@@ -163,6 +162,7 @@ export const initCompanyRouter = (auth) => {
       ]);
 
       res.render('company/show', { 
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         company, 
         jobs, 
         isOwner,
@@ -211,6 +211,13 @@ export const initCompanyRouter = (auth) => {
     ],
     validate,
     asyncHandler(async (req, res) => {
+      if (!req.body._csrf) {
+        return res.status(403).json({ error: 'CSRF token missing' });
+      }
+      if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
+        return res.status(403).json({ error: 'CSRF token invalid' });
+      }
+
       const company = await Company.findOne({
         _id: req.params.id,
         userId: req.userId

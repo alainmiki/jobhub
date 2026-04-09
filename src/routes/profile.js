@@ -76,6 +76,7 @@ export const initProfileRouter = (auth) => {
     };
 
     res.render('profile/view', { 
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       profile, 
       stats, 
       recentApplications: applications,
@@ -112,13 +113,13 @@ export const initProfileRouter = (auth) => {
     ]),
     handleMulterError,
     asyncHandler(async (req, res) => {
-      // CSRF check for multipart forms
       if (!req.body._csrf) {
         return res.status(403).json({ error: 'CSRF token missing' });
       }
       if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
         return res.status(403).json({ error: 'CSRF token invalid' });
       }
+
       const {
         bio, headline, location, country, phone, website, linkedin, github, twitter,
         yearsOfExperience,
@@ -325,14 +326,13 @@ export const initProfileRouter = (auth) => {
       await profile.populate('userId', 'name email image createdAt');
     }
     
-    res.render('profile/settings', { profile });
+    res.render('profile/settings', { csrfToken: req.csrfToken ? req.csrfToken() : '', profile });
   }));
 
   router.post('/settings', asyncHandler(async (req, res) => {
     // CSRF check
     if (!req.body._csrf) {
       return res.status(403).json({ error: 'CSRF token missing' });
-    }
     if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
       return res.status(403).json({ error: 'CSRF token invalid' });
     }
@@ -357,7 +357,7 @@ export const initProfileRouter = (auth) => {
     
     req.flash('success', 'Settings updated successfully!');
     res.redirect('/profile/settings');
-  }));
+}}));
 
 
   // POST /profile/applications/:id/withdraw - Allow candidates to withdraw applications
@@ -367,13 +367,7 @@ export const initProfileRouter = (auth) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    // CSRF check
-    if (!req.body._csrf) {
-      return res.status(403).json({ error: 'CSRF token missing' });
-    }
-    if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
-      return res.status(403).json({ error: 'CSRF token invalid' });
-    }
+    // CSRF protection is handled by middleware
 
     const application = await Application.findOne({
       _id: req.params.id,
@@ -537,7 +531,7 @@ export const initProfileRouter = (auth) => {
     // Sort by match score descending
     jobsWithScores.sort((a, b) => b.matchScore - a.matchScore);
 
-    res.render('matches/index', { jobs: jobsWithScores, profile });
+    res.render('matches/index', { csrfToken: req.csrfToken ? req.csrfToken() : '', jobs: jobsWithScores, profile });
   }));
 
   router.post('/resume/:versionId/set-primary', asyncHandler(async (req, res) => {
@@ -635,6 +629,7 @@ export const initProfileRouter = (auth) => {
     };
 
     res.render('profile/applications', {
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       applications,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
       filters: { status, search }
@@ -689,7 +684,7 @@ export const initProfileRouter = (auth) => {
       logger.warn(`Error fetching interviews for profile ${profile._id}: ${interviewError.message}`);
     }
 
-    res.render('profile/interviews', { upcomingInterviews: upcomingInterviews || [], pastInterviews: pastInterviews || [] });
+    res.render('profile/interviews', { csrfToken: req.csrfToken ? req.csrfToken() : '', upcomingInterviews: upcomingInterviews || [], pastInterviews: pastInterviews || [] });
   }));
 
   router.post('/interviews/:id/confirm', asyncHandler(async (req, res) => {

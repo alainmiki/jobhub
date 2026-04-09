@@ -54,7 +54,12 @@ const createTestApp = async (auth) => {
     res.locals.errorMessage = req.flash('error');
     next();
   });
-  app.use(csrf({ cookie: { httpOnly: true, secure: false } }));
+  app.use((req, res, next) => {
+    if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
+      return next();
+    }
+    csrf({ cookie: { httpOnly: true, secure: false } })(req, res, next);
+  });
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 

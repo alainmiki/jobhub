@@ -9,7 +9,7 @@
         <p class="text-base-content/60 text-lg">{{ job.company.name }}</p>
       </div>
       <div class="flex gap-3">
-        <a href="/admin/jobs/{{ job._id }}/edit" class="btn btn-outline rounded-xl">
+        <a href="/dashboard/admin/jobs/{{ job._id }}/edit" class="btn btn-outline rounded-xl">
           <i class="fa-solid fa-edit mr-2"></i>Edit
         </a>
         <form method="POST" action="/dashboard/admin/jobs/{{ job._id }}?_method=DELETE" class="inline" onsubmit="return confirm('Are you sure you want to delete this job?')">

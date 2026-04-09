@@ -11,7 +11,7 @@ export const initAuthRouter = (auth) => {
   // Standard Auth UI Routes
   router.get('/sign-in', (req, res, next) => {
     const redirect = req.query.redirect || '/';
-    res.render('sign-in', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}` });
+    res.render('sign-in', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}`, csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   router.post('/sign-in', asyncHandler(async (req, res, next) => {
@@ -51,14 +51,15 @@ export const initAuthRouter = (auth) => {
         error: error.message, 
         email, 
         redirect, 
-        redirectQuery: `redirect=${encodeURIComponent(redirect)}` 
+        redirectQuery: `redirect=${encodeURIComponent(redirect)}`,
+        csrfToken: req.csrfToken ? req.csrfToken() : ''
       });
     }
   }));
 
   router.get('/sign-up', (req, res, next) => {
     const redirect = req.query.redirect || '/';
-    res.render('sign-up', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}` });
+    res.render('sign-up', { redirect, redirectQuery: `redirect=${encodeURIComponent(redirect)}`, csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   router.post('/sign-up', asyncHandler(async (req, res, next) => {
@@ -83,13 +84,14 @@ export const initAuthRouter = (auth) => {
         error: error.message, 
         formData: req.body,
         redirect, 
-        redirectQuery: `redirect=${encodeURIComponent(redirect)}` 
+        redirectQuery: `redirect=${encodeURIComponent(redirect)}`,
+        csrfToken: req.csrfToken ? req.csrfToken() : ''
       });
     }
   }));
 
   router.get('/forgot-password', (req, res, next) => {
-    res.render('forgot-password');
+    res.render('forgot-password', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   router.post('/forgot-password', asyncHandler(async (req, res, next) => {
@@ -99,9 +101,9 @@ export const initAuthRouter = (auth) => {
         body: { email, redirectTo: `${process.env.BETTER_AUTH_URL || 'http://localhost:3000'}/reset-password` },
         headers: req.headers
       });
-      return res.render('forgot-password', { success: 'If an account exists, a reset link has been sent.' });
+      return res.render('forgot-password', { success: 'If an account exists, a reset link has been sent.', csrfToken: req.csrfToken ? req.csrfToken() : '' });
     } catch (error) {
-      return res.render('forgot-password', { error: error.message });
+      return res.render('forgot-password', { error: error.message, csrfToken: req.csrfToken ? req.csrfToken() : '' });
     }
   }));
 
@@ -110,7 +112,7 @@ export const initAuthRouter = (auth) => {
     if (!token) {
       return res.redirect('/forgot-password');
     }
-    res.render('reset-password', { token });
+    res.render('reset-password', { token, csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   router.post('/reset-password', asyncHandler(async (req, res, next) => {
@@ -119,7 +121,7 @@ export const initAuthRouter = (auth) => {
     if (!token) return res.redirect('/forgot-password');
 
     if (password !== confirmPassword) {
-      return res.render('reset-password', { error: 'Passwords do not match', token });
+      return res.render('reset-password', { error: 'Passwords do not match', token, csrfToken: req.csrfToken ? req.csrfToken() : '' });
     }
 
     try {
@@ -138,10 +140,11 @@ export const initAuthRouter = (auth) => {
 
       return res.render('reset-password', { 
         success: 'Your password has been reset successfully. You can now sign in.', 
-        token 
+        token,
+        csrfToken: req.csrfToken ? req.csrfToken() : ''
       });
     } catch (error) {
-      return res.render('reset-password', { error: error.message, token });
+      return res.render('reset-password', { error: error.message, token, csrfToken: req.csrfToken ? req.csrfToken() : '' });
     }
   }));
 
@@ -186,7 +189,7 @@ export const initAuthRouter = (auth) => {
 
   router.get('/verify-email', asyncHandler(async (req, res, next) => {
     const { token } = req.query;
-    if (!token) return res.render('verify-email', { success: false });
+    if (!token) return res.render('verify-email', { success: false, csrfToken: req.csrfToken ? req.csrfToken() : '' });
 
     try {
       const response = await auth.api.verifyEmail({
@@ -197,28 +200,28 @@ export const initAuthRouter = (auth) => {
 
       if (response.ok) {
         response.headers.forEach((v, k) => res.append(k, v));
-        return res.render('verify-email', { success: true });
+        return res.render('verify-email', { success: true, csrfToken: req.csrfToken ? req.csrfToken() : '' });
       }
-      return res.render('verify-email', { success: false });
+      return res.render('verify-email', { success: false, csrfToken: req.csrfToken ? req.csrfToken() : '' });
     } catch (error) {
       logger.error('Email verification error:', error);
-      return res.render('verify-email', { success: false });
+      return res.render('verify-email', { success: false, csrfToken: req.csrfToken ? req.csrfToken() : '' });
     }
   }));
 
   // 2FA Flow UI Routes
   router.get('/2fa', (req, res, next) => {
     if (!req.user) return res.redirect('/sign-in');
-    res.render('2fa', { user: req.user });
+    res.render('2fa', { user: req.user, csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   router.get('/deactivated', (req, res) => {
-    res.render('deactivated');
+    res.render('deactivated', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   router.get('/enable-2fa', (req, res, next) => {
     if (!req.user) return res.redirect('/sign-in');
-    res.render('enable-2fa', { user: req.user });
+    res.render('enable-2fa', { user: req.user, csrfToken: req.csrfToken ? req.csrfToken() : '' });
   });
 
   // 2FA API Handlers
@@ -300,7 +303,8 @@ export const initAuthRouter = (auth) => {
             step: 'setup', 
             user: req.user,
             secret: totpResult.response?.secret,
-            totpUri: totpResult.response?.totpURI
+            totpUri: totpResult.response?.totpURI,
+            csrfToken: req.csrfToken ? req.csrfToken() : ''
           });
         }
       }
@@ -320,7 +324,8 @@ export const initAuthRouter = (auth) => {
           return res.render('enable-2fa', { 
             step: 'backup-codes', 
             user: req.user,
-            backupCodes: backupResult.response?.backupCodes
+            backupCodes: backupResult.response?.backupCodes,
+            csrfToken: req.csrfToken ? req.csrfToken() : ''
           });
         }
       }

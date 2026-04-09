@@ -18,7 +18,7 @@ export const initNotificationsRouter = (auth) => {
         isRead: false
       });
       
-      res.render('notifications/index', { notifications, unreadCount });
+      res.render('notifications/index', { csrfToken: req.csrfToken ? req.csrfToken() : '', notifications, unreadCount });
     } catch (error) {
       console.error('Error fetching notifications:', error);
       res.status(500).render('error', { message: 'Failed to load notifications' });

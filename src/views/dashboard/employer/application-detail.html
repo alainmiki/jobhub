@@ -75,9 +75,45 @@
             </button>
             </div>
           </div>
-        </div>
+        <!-- Interview Information -->
+        {% if application.interview %}
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">
+              <i class="fa-solid fa-calendar mr-2"></i>Interview Scheduled
+            </h2>
 
-        <!-- Candidate Profile -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <p class="text-sm font-medium text-base-content/60">Date & Time</p>
+                <p class="font-medium">{{ application.interview.scheduledAt | date('MMM d, YYYY h:mm A') }}</p>
+                <p class="text-sm text-base-content/60">{{ application.interview.timezone }}</p>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-base-content/60">Type & Duration</p>
+                <p class="font-medium">{{ application.interview.type | title }} ({{ application.interview.duration }} min)</p>
+              </div>
+              {% if application.interview.location %}
+              <div class="md:col-span-2">
+                <p class="text-sm font-medium text-base-content/60">Location/Link</p>
+                <p class="font-medium">{{ application.interview.location }}</p>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if application.interview.notes %}
+            <div class="mt-4">
+              <p class="text-sm font-medium text-base-content/60">Notes</p>
+              <p class="text-sm">{{ application.interview.notes }}</p>
+            </div>
+            {% endif %}
+
+            <div class="flex gap-3 mt-6">
+              <span class="badge badge-info badge-lg">{{ application.interview.status | title }}</span>
+            </div>
+          </div>
+        </div>
+        {% endif %}
         {% if application.candidate %}
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
@@ -169,6 +205,103 @@
   </div>
 </div>
 
+<!-- Message Modal -->
+<div id="messageModal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">Send Message to {{ application.applicantUserId.name }}</h3>
+    <form id="messageForm">
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Message</span>
+        </label>
+        <textarea id="messageText" name="message" class="textarea textarea-bordered" rows="4" placeholder="Type your message here..." required></textarea>
+      </div>
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeMessageModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Send Message</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Interview Modal -->
+<div id="interviewModal" class="modal">
+  <div class="modal-box">
+    <h3 class="font-bold text-lg mb-4">Schedule Interview with {{ application.applicantUserId.name }}</h3>
+    <form id="interviewForm">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Interview Type</span>
+          </label>
+          <select id="interviewType" name="type" class="select select-bordered" required>
+            <option value="video">Video Call</option>
+            <option value="phone">Phone Call</option>
+            <option value="onsite">On-site</option>
+            <option value="technical">Technical Assessment</option>
+            <option value="behavioral">Behavioral Interview</option>
+            <option value="panel">Panel Interview</option>
+          </select>
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Duration (minutes)</span>
+          </label>
+          <select id="interviewDuration" name="duration" class="select select-bordered" required>
+            <option value="30">30 minutes</option>
+            <option value="60" selected>60 minutes</option>
+            <option value="90">90 minutes</option>
+            <option value="120">120 minutes</option>
+          </select>
+        </div>
+
+        <div class="form-control md:col-span-2">
+          <label class="label">
+            <span class="label-text">Date & Time</span>
+          </label>
+          <input type="datetime-local" id="interviewDateTime" name="scheduledAt" class="input input-bordered" required>
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Timezone</span>
+          </label>
+          <select id="interviewTimezone" name="timezone" class="select select-bordered" required>
+            <option value="UTC">UTC</option>
+            <option value="America/New_York">Eastern Time</option>
+            <option value="America/Chicago">Central Time</option>
+            <option value="America/Denver">Mountain Time</option>
+            <option value="America/Los_Angeles">Pacific Time</option>
+            <option value="Europe/London">London</option>
+            <option value="Europe/Paris">Paris</option>
+            <option value="Asia/Tokyo">Tokyo</option>
+          </select>
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text">Location/Link</span>
+          </label>
+          <input type="text" id="interviewLocation" name="location" class="input input-bordered" placeholder="Meeting link or location">
+        </div>
+      </div>
+
+      <div class="form-control">
+        <label class="label">
+          <span class="label-text">Notes (optional)</span>
+        </label>
+        <textarea id="interviewNotes" name="notes" class="textarea textarea-bordered" rows="3" placeholder="Additional notes for the interview..."></textarea>
+      </div>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeInterviewModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Schedule Interview</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 function updateStatus(applicationId, status) {
   const notes = status === 'rejected' ? prompt('Add notes (optional):') : '';
@@ -197,13 +330,97 @@ function updateStatus(applicationId, status) {
 }
 
 function scheduleInterview(applicationId) {
-  // TODO: Implement interview scheduling modal
-  alert('Interview scheduling coming soon!');
+  document.getElementById('interviewModal').classList.add('modal-open');
+}
+
+function closeInterviewModal() {
+  document.getElementById('interviewModal').classList.remove('modal-open');
+  document.getElementById('interviewForm').reset();
+}
+
+function showMessageModal() {
+  document.getElementById('messageModal').classList.add('modal-open');
+}
+
+function closeMessageModal() {
+  document.getElementById('messageModal').classList.remove('modal-open');
+  document.getElementById('messageForm').reset();
 }
 
 function sendMessage(applicationId) {
   // TODO: Implement messaging modal
   alert('Messaging feature coming soon!');
 }
+
+// Handle message form submission
+document.getElementById('messageForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const message = document.getElementById('messageText').value.trim();
+
+  if (!message) {
+    alert('Please enter a message');
+    return;
+  }
+
+  fetch(`/dashboard/employer/applications/{{ application._id }}/message`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrfToken }}'
+    },
+    body: JSON.stringify({ message })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Message sent successfully!');
+      closeMessageModal();
+    } else {
+      alert('Error sending message');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error sending message');
+  });
+});
+
+// Handle interview form submission
+document.getElementById('interviewForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+
+  const formData = new FormData(e.target);
+  const interviewData = Object.fromEntries(formData);
+
+  // Validate date is in the future
+  const scheduledDate = new Date(interviewData.scheduledAt);
+  if (scheduledDate <= new Date()) {
+    alert('Please select a date and time in the future');
+    return;
+  }
+
+  fetch(`/dashboard/employer/applications/{{ application._id }}/interview`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrfToken }}'
+    },
+    body: JSON.stringify(interviewData)
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      alert('Interview scheduled successfully!');
+      closeInterviewModal();
+      location.reload(); // Refresh to show updated status
+    } else {
+      alert('Error scheduling interview: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error scheduling interview');
+  });
+});
 </script>
 {% endblock %}

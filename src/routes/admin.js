@@ -54,6 +54,7 @@ export const initAdminRouter = (auth) => {
       logger.info(`Admin dashboard stats: users=${totalUsers}, employers=${totalEmployers}, candidates=${totalCandidates}, companies=${totalCompanies}, jobs=${totalJobs}, pendingJobs=${pendingJobs}, pendingCompanies=${pendingCompanies}, applications=${totalApplications}`);
 
       res.render('admin/dashboard', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         stats: {
           totalUsers: totalUsers || 0,
           totalEmployers: totalEmployers || 0,
@@ -69,6 +70,7 @@ export const initAdminRouter = (auth) => {
     } catch (error) {
       logger.error('Error loading admin dashboard:', error);
       res.render('admin/dashboard', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         stats: {
           totalUsers: 0,
           totalEmployers: 0,
@@ -87,7 +89,7 @@ export const initAdminRouter = (auth) => {
 
   // GET /admin/users/create - Create user form
   router.get('/users/create', asyncHandler(async (req, res) => {
-    res.render('admin/user-create');
+    res.render('admin/user-create', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   }));
 
   // POST /admin/users - Create new user
@@ -201,6 +203,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/users', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         users,
         filters: { search, role },
         pagination: {
@@ -224,6 +227,7 @@ export const initAdminRouter = (auth) => {
     const profile = await UserProfile.findOne({ userId: targetUser.id });
 
     res.render('admin/user-edit', {
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       targetUser,
       profile
     });
@@ -283,6 +287,7 @@ export const initAdminRouter = (auth) => {
     const profile = await UserProfile.findOne({ userId: targetUser.id });
 
     res.render('admin/user-detail', {
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       targetUser,
       profile
     });
@@ -373,6 +378,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/jobs', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         jobs,
         filters: { status, search, company },
         pagination: {
@@ -410,6 +416,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/companies', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         companies,
         filters: { status, search },
         pagination: {
@@ -422,7 +429,7 @@ export const initAdminRouter = (auth) => {
 
   // GET /admin/companies/create - Create company form
   router.get('/companies/create', asyncHandler(async (req, res) => {
-    res.render('admin/company-create');
+    res.render('admin/company-create', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   }));
 
   // POST /admin/companies - Create new company
@@ -480,7 +487,7 @@ export const initAdminRouter = (auth) => {
   // GET /admin/jobs/create - Create job form
   router.get('/jobs/create', asyncHandler(async (req, res) => {
     const companies = await Company.find({ verified: true }).select('name _id');
-    res.render('admin/job-create', { companies });
+    res.render('admin/job-create', { csrfToken: req.csrfToken ? req.csrfToken() : '', companies });
   }));
 
   // POST /admin/jobs - Create new job
@@ -545,7 +552,7 @@ export const initAdminRouter = (auth) => {
     }
 
     const companies = await Company.find({ verified: true }).select('name _id');
-    res.render('admin/job-edit', { job, companies });
+    res.render('admin/job-edit', { csrfToken: req.csrfToken ? req.csrfToken() : '', job, companies });
   }));
 
   // PUT /admin/jobs/:id - Update job
@@ -622,7 +629,7 @@ export const initAdminRouter = (auth) => {
       return res.status(404).render('error', { message: 'Job not found' });
     }
 
-    res.render('admin/job-detail', { job });
+    res.render('admin/job-detail', { csrfToken: req.csrfToken ? req.csrfToken() : '', job });
   }));
 
   // GET /admin/jobs/pending - List pending jobs
@@ -640,6 +647,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/pending-jobs', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         jobs,
         pagination: {
           page: req.pagination.page,
@@ -664,6 +672,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/pending-companies', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         companies,
         pagination: {
           page: req.pagination.page,
@@ -792,6 +801,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/audit-logs', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         auditLogs,
         filters: { action, adminUser, targetType, dateFrom, dateTo, priority },
         pagination: {
@@ -823,6 +833,7 @@ export const initAdminRouter = (auth) => {
       ]);
 
       res.render('admin/notifications', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         notifications,
         filters: { type, recipient, isRead },
         pagination: {
@@ -835,7 +846,7 @@ export const initAdminRouter = (auth) => {
 
   // GET /admin/notifications/send - Send notification form
   router.get('/notifications/send', asyncHandler(async (req, res) => {
-    res.render('admin/notification-send');
+    res.render('admin/notification-send', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   }));
 
   // POST /admin/notifications/send - Send system notification

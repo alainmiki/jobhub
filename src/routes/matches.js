@@ -1,6 +1,7 @@
 import express from 'express';
 import Job from '../models/Job.js';
 import UserProfile from '../models/UserProfile.js';
+import Company from '../models/Company.js';
 import Application from '../models/Application.js';
 import Notification from '../models/Notification.js';
 import { createAuthMiddleware, isAuthenticated } from '../middleware/auth.js';
@@ -73,10 +74,100 @@ export const initMatchesRouter = (auth) => {
       .sort((a, b) => b.score - a.score)
       .slice(0, 20);
       
-      res.render('matches/index', { matches, profile: candidateProfile });
+      res.render('matches/index', { 
+        matches, 
+        profile: candidateProfile,
+        csrfToken: req.csrfToken ? req.csrfToken() : ''
+      });
     } catch (error) {
       logger.error(`Match loading error: ${error.message}`);
       res.status(500).render('error', { message: 'Failed to load matches' });
+    }
+  });
+
+  // GET /matches/candidates - Browse candidates for employers
+  router.get('/candidates', isAuthenticated(auth), async (req, res) => {
+    try {
+      const company = await Company.findOne({ userId: req.userId });
+
+      if (!company) {
+        req.flash('error', 'You need to create a company profile first');
+        return res.redirect('/company/create');
+      }
+
+      const { search, skills, location, experience, sort, page = 1 } = req.query;
+      const limit = 20;
+      const skip = (parseInt(page) - 1) * limit;
+
+      const query = {
+        role: 'candidate',
+        isActive: true,
+        isProfileComplete: true
+      };
+
+      if (search) {
+        const searchRegex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        query.$or = [
+          { headline: searchRegex },
+          { bio: searchRegex },
+          { skills: searchRegex }
+        ];
+      }
+
+      if (skills) {
+        const skillArray = skills.split(',').map(s => s.trim()).filter(s => s);
+        if (skillArray.length > 0) {
+          query.skills = { $in: skillArray };
+        }
+      }
+
+      if (location) {
+        const locationRegex = new RegExp(location.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        query.$or = query.$or || [];
+        query.$or.push(
+          { location: locationRegex },
+          { country: locationRegex }
+        );
+      }
+
+      if (experience) {
+        if (experience === '0-2') query.yearsOfExperience = { $lte: 2 };
+        else if (experience === '3-5') query.yearsOfExperience = { $gte: 3, $lte: 5 };
+        else if (experience === '6-10') query.yearsOfExperience = { $gte: 6, $lte: 10 };
+        else if (experience === '10+') query.yearsOfExperience = { $gte: 10 };
+      }
+
+      let sortOption = { profileCompletionScore: -1, updatedAt: -1 };
+      if (sort === 'experience_desc') {
+        sortOption = { yearsOfExperience: -1, ...sortOption };
+      } else if (sort === 'experience_asc') {
+        sortOption = { yearsOfExperience: 1, ...sortOption };
+      }
+
+      const [candidates, total] = await Promise.all([
+        UserProfile.find(query)
+          .populate('userId', 'name email image createdAt')
+          .sort(sortOption)
+          .skip(skip)
+          .limit(limit),
+        UserProfile.countDocuments(query)
+      ]);
+
+      res.render('matches/candidates', {
+        candidates,
+        company,
+        filters: { search, skills, location, experience, sort },
+        pagination: {
+          page: parseInt(page),
+          limit,
+          total,
+          pages: Math.ceil(total / limit)
+        },
+        csrfToken: req.csrfToken ? req.csrfToken() : ''
+      });
+    } catch (error) {
+      logger.error(`Candidate browsing error: ${error.message}`);
+      res.status(500).render('error', { message: 'Failed to load candidates' });
     }
   });
 
@@ -112,7 +203,7 @@ export const initMatchesRouter = (auth) => {
         m.hasApplied = appliedIds.includes(m.candidate._id.toString());
       });
       
-      res.render('matches/candidates', { job, matches });
+      res.render('matches/candidates', { job, matches, csrfToken: req.csrfToken ? req.csrfToken() : '' });
     } catch (error) {
       logger.error(`Candidate match loading error: ${error.message}`);
       res.status(500).render('error', { message: 'Failed to load candidates' });

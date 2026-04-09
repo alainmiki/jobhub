@@ -120,7 +120,7 @@ export const initDashboardRouter = (auth) => {
       const recentNotifications = await Notification.find(notifQuery).sort({ createdAt: -1 }).limit(5);
 
       logger.info(`Candidate dashboard loaded for user: ${req.userId}`);
-      res.render('dashboard/candidate', { stats, recommendedJobs, recentNotifications, recentApplications, upcomingInterviews, profile: req.userProfile, activeNotifCategory: notifCategory || 'All' });
+      res.render('dashboard/candidate', { csrfToken: req.csrfToken ? req.csrfToken() : '', stats, recommendedJobs, recentNotifications, recentApplications, upcomingInterviews, profile: req.userProfile, activeNotifCategory: notifCategory || 'All' });
     })
   );
 
@@ -170,7 +170,7 @@ export const initDashboardRouter = (auth) => {
       }
 
       logger.info(`Employer dashboard loaded for user: ${req.userId}`);
-      res.render('dashboard/employer', { stats, company, recentApplications, needsCompanySetup, profile: req.userProfile });
+      res.render('dashboard/employer', { csrfToken: req.csrfToken ? req.csrfToken() : '', stats, company, recentApplications, needsCompanySetup, profile: req.userProfile });
     })
   );
 
@@ -209,6 +209,7 @@ export const initDashboardRouter = (auth) => {
         logger.info(`Admin dashboard stats: users=${totalUsers}, employers=${totalEmployers}, candidates=${totalCandidates}, companies=${totalCompanies}, jobs=${totalJobs}, pendingJobs=${pendingJobs}, pendingCompanies=${pendingCompanies}, applications=${totalApplications}`);
 
         res.render('dashboard/admin', {
+          csrfToken: req.csrfToken ? req.csrfToken() : '',
           stats: {
             totalUsers: totalUsers || 0,
             totalEmployers: totalEmployers || 0,
@@ -224,6 +225,7 @@ export const initDashboardRouter = (auth) => {
       } catch (error) {
         logger.error('Error loading admin dashboard:', error);
         res.render('dashboard/admin', {
+          csrfToken: req.csrfToken ? req.csrfToken() : '',
           stats: {
             totalUsers: 0,
             totalEmployers: 0,
@@ -241,10 +243,12 @@ export const initDashboardRouter = (auth) => {
     })
   );
 
+  router.use('/admin', isAuthenticated(auth), isRole(auth, 'admin'));
+
   // Admin User Management Routes
   // GET /dashboard/admin/users/create - Create user form
   router.get('/admin/users/create', asyncHandler(async (req, res) => {
-    res.render('admin/user-create');
+    res.render('admin/user-create', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   }));
 
   // POST /dashboard/admin/users - Create new user
@@ -359,6 +363,7 @@ export const initDashboardRouter = (auth) => {
       ]);
 
       res.render('admin/users', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         users,
         filters: { search, role },
         pagination: {
@@ -382,6 +387,7 @@ export const initDashboardRouter = (auth) => {
     const profile = await UserProfile.findOne({ userId: targetUser.id });
 
     res.render('admin/user-detail', {
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       targetUser,
       profile
     });
@@ -400,6 +406,7 @@ export const initDashboardRouter = (auth) => {
     const profile = await UserProfile.findOne({ userId: targetUser.id });
 
     res.render('admin/user-edit', {
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       targetUser,
       profile
     });
@@ -533,6 +540,7 @@ export const initDashboardRouter = (auth) => {
       ]);
 
       res.render('admin/jobs', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         jobs,
         filters: { status, search, company },
         pagination: {
@@ -546,7 +554,7 @@ export const initDashboardRouter = (auth) => {
   // GET /dashboard/admin/jobs/create - Create job form
   router.get('/admin/jobs/create', asyncHandler(async (req, res) => {
     const companies = await Company.find({ verified: true }).select('name _id');
-    res.render('admin/job-create', { companies });
+    res.render('admin/job-create', { csrfToken: req.csrfToken ? req.csrfToken() : '', companies });
   }));
 
   // POST /dashboard/admin/jobs - Create new job
@@ -611,7 +619,7 @@ export const initDashboardRouter = (auth) => {
     }
 
     const companies = await Company.find({ verified: true }).select('name _id');
-    res.render('admin/job-edit', { job, companies });
+    res.render('admin/job-edit', { csrfToken: req.csrfToken ? req.csrfToken() : '', job, companies });
   }));
 
   // PUT /dashboard/admin/jobs/:id - Update job
@@ -688,7 +696,7 @@ export const initDashboardRouter = (auth) => {
       return res.status(404).render('error', { message: 'Job not found' });
     }
 
-    res.render('admin/job-detail', { job });
+    res.render('admin/job-detail', { csrfToken: req.csrfToken ? req.csrfToken() : '', job });
   }));
 
   // Admin Company Management Routes
@@ -719,6 +727,7 @@ export const initDashboardRouter = (auth) => {
       ]);
 
       res.render('admin/companies', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         companies,
         filters: { status, search },
         pagination: {
@@ -731,7 +740,7 @@ export const initDashboardRouter = (auth) => {
 
   // GET /dashboard/admin/companies/create - Create company form
   router.get('/admin/companies/create', asyncHandler(async (req, res) => {
-    res.render('admin/company-create');
+    res.render('admin/company-create', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   }));
 
   // POST /dashboard/admin/companies - Create new company
@@ -808,6 +817,7 @@ export const initDashboardRouter = (auth) => {
       ]);
 
       res.render('admin/notifications', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         notifications,
         filters: { type, recipient, isRead },
         pagination: {
@@ -820,7 +830,7 @@ export const initDashboardRouter = (auth) => {
 
   // GET /dashboard/admin/notifications/send - Send notification form
   router.get('/admin/notifications/send', asyncHandler(async (req, res) => {
-    res.render('admin/notification-send');
+    res.render('admin/notification-send', { csrfToken: req.csrfToken ? req.csrfToken() : '' });
   }));
 
   // POST /dashboard/admin/notifications/send - Send system notification
@@ -916,6 +926,7 @@ export const initDashboardRouter = (auth) => {
       ]);
 
       res.render('admin/audit-logs', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         auditLogs,
         filters: { action, adminUser, targetType, dateFrom, dateTo, priority },
         pagination: {
@@ -1044,8 +1055,14 @@ export const initDashboardRouter = (auth) => {
 
       if (search) {
         const safeSearch = sanitizeRegex(search);
-        // This will be complex - need to search in user profile
-        // For now, skip or implement later
+        // Search in candidate profile and user name/email
+        query.$or = [
+          { 'candidate.headline': { $regex: safeSearch, $options: 'i' } },
+          { 'candidate.bio': { $regex: safeSearch, $options: 'i' } },
+          { 'candidate.skills': { $regex: safeSearch, $options: 'i' } },
+          { 'applicantUserId.name': { $regex: safeSearch, $options: 'i' } },
+          { 'applicantUserId.email': { $regex: safeSearch, $options: 'i' } }
+        ];
       }
 
       let sortOption = { createdAt: -1 };
@@ -1063,6 +1080,7 @@ export const initDashboardRouter = (auth) => {
       const total = await Application.countDocuments(query);
 
       res.render('dashboard/employer/applications', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         applications,
         companyJobs,
         filters: { status, search, job, sort },
@@ -1091,7 +1109,13 @@ export const initDashboardRouter = (auth) => {
         .populate('job', 'title description requirements salary location')
         .populate('candidate')
         .populate('applicantUserId', 'name email image')
-        .populate('interview');
+        .populate({
+          path: 'interview',
+          populate: {
+            path: 'interviewer',
+            select: 'name email'
+          }
+        });
 
       if (!application) {
         req.flash('error', 'Application not found');
@@ -1106,6 +1130,7 @@ export const initDashboardRouter = (auth) => {
       }
 
       res.render('dashboard/employer/application-detail', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         application,
         job
       });
@@ -1204,6 +1229,81 @@ export const initDashboardRouter = (auth) => {
     })
   );
 
+  // POST /dashboard/employer/applications/:id/interview - Schedule interview
+  router.post('/employer/applications/:id/interview',
+    isAuthenticated(auth),
+    isRole(auth, 'employer'),
+    asyncHandler(async (req, res) => {
+      const { scheduledAt, type, duration, timezone, location, notes } = req.body;
+      const company = await Company.findOne({ userId: req.userId });
+
+      if (!company) {
+        return res.status(403).json({ error: 'Company not found' });
+      }
+
+      const application = await Application.findById(req.params.id);
+      if (!application) {
+        return res.status(404).json({ error: 'Application not found' });
+      }
+
+      // Check if the application is for one of company's jobs
+      const job = await Job.findById(application.job);
+      if (!job || job.company.toString() !== company._id.toString()) {
+        return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Check if interview already exists
+      const existingInterview = await Interview.findOne({ application: application._id });
+      if (existingInterview) {
+        return res.status(400).json({ error: 'Interview already scheduled for this application' });
+      }
+
+      const interview = new Interview({
+        application: application._id,
+        candidate: application.candidate,
+        interviewer: req.userId,
+        scheduledBy: req.userId,
+        type: type || 'video',
+        scheduledAt: new Date(scheduledAt),
+        duration: duration || 60,
+        timezone: timezone || 'UTC',
+        location,
+        notes
+      });
+
+      // Calculate end time
+      interview.endTime = new Date(interview.scheduledAt.getTime() + (interview.duration * 60000));
+
+      await interview.save();
+
+      // Update application status to shortlisted if not already
+      if (application.status === 'pending' || application.status === 'viewed') {
+        application.status = 'shortlisted';
+        await application.save();
+      }
+
+      // Send notification to candidate
+      const notification = new Notification({
+        recipient: application.applicantUserId,
+        type: 'interview_scheduled',
+        title: 'Interview Scheduled',
+        message: `You have an interview scheduled for ${job.title} on ${interview.scheduledAt.toLocaleDateString()}`,
+        link: `/profile/applications`
+      });
+      await notification.save();
+      emitNotification(req, application.applicantUserId, notification);
+
+      // Log the interview scheduling
+      await logAuditAction(req, 'interview_scheduled', 'interview', interview._id, {
+        applicationId: application._id,
+        jobTitle: job.title,
+        scheduledAt: interview.scheduledAt
+      });
+
+      res.json({ success: true, interview: interview._id });
+    })
+  );
+
   // GET /dashboard/employer/candidates - Search candidates (for employers)
   router.get('/employer/candidates',
     isAuthenticated(auth),
@@ -1277,6 +1377,7 @@ export const initDashboardRouter = (auth) => {
       ]);
 
       res.render('dashboard/candidates', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         candidates,
         company,
         filters: { search, skills, location, experience, sort },

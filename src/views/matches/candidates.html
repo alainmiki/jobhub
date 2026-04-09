@@ -1,69 +1,173 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen py-8 px-4">
-  <div class="max-w-4xl mx-auto">
-    <div class="mb-6">
-      <h1 class="text-3xl font-bold">Candidate Matches</h1>
-      <p class="text-base-content/70">Candidates matching {{ job.title }}</p>
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold">Find Candidates</h1>
+        <p class="text-base-content/60">Search and browse qualified candidates</p>
+      </div>
+      <a href="/dashboard/employer" class="btn btn-ghost rounded-xl">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+      </a>
     </div>
-    
-    {% if matches.length %}
+
+    <!-- Search & Filters -->
+    <div class="card bg-base-100 shadow-lg mb-6">
+      <div class="card-body">
+        <form method="GET" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Search</span>
+              </label>
+              <input type="text" name="search" value="{{ filters.search }}" placeholder="Name, headline, bio..." class="input input-bordered">
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Skills</span>
+              </label>
+              <input type="text" name="skills" value="{{ filters.skills }}" placeholder="e.g., JavaScript, React" class="input input-bordered">
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Location</span>
+              </label>
+              <input type="text" name="location" value="{{ filters.location }}" placeholder="City or country..." class="input input-bordered">
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Experience</span>
+              </label>
+              <select name="experience" class="select select-bordered">
+                <option value="">All Levels</option>
+                <option value="0-2" {% if filters.experience == '0-2' %}selected{% endif %}>0-2 years</option>
+                <option value="3-5" {% if filters.experience == '3-5' %}selected{% endif %}>3-5 years</option>
+                <option value="6-10" {% if filters.experience == '6-10' %}selected{% endif %}>6-10 years</option>
+                <option value="10+" {% if filters.experience == '10+' %}selected{% endif %}>10+ years</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label">
+                <span class="label-text">Sort By</span>
+              </label>
+              <select name="sort" class="select select-bordered">
+                <option value="">Most Relevant</option>
+                <option value="experience_desc" {% if filters.sort == 'experience_desc' %}selected{% endif %}>Most Experience</option>
+                <option value="experience_asc" {% if filters.sort == 'experience_asc' %}selected{% endif %}>Least Experience</option>
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full">
+            <i class="fa-solid fa-search mr-2"></i>Search Candidates
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Candidates List -->
+    {% if candidates and candidates.length > 0 %}
     <div class="space-y-4">
-      {% for match in matches %}
-      <div class="card bg-base-100 shadow">
+      {% for candidate in candidates %}
+      <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
         <div class="card-body">
-          <div class="flex justify-between items-start">
-            <div class="flex gap-4">
-              <div class="avatar placeholder">
-                {% if match.candidate.userId.image %}
-                <div class="w-12 rounded-full">
-                  <img src="{{ match.candidate.userId.image }}" alt="{{ match.candidate.userId.name }}" />
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-start gap-4 flex-1">
+              <div class="avatar">
+                <div class="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  {% if candidate.userId.image %}
+                  <img src="{{ candidate.userId.image }}" alt="{{ candidate.userId.name }}" class="rounded-full">
+                  {% else %}
+                  <i class="fa-solid fa-user text-primary text-xl"></i>
+                  {% endif %}
                 </div>
-                {% else %}
-                <div class="bg-neutral text-neutral-content rounded-full w-12">
-                  <span>{{ match.candidate.userId.name[0] }}</span>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-bold text-lg">{{ candidate.userId.name }}</h3>
+                <p class="text-base-content/60 text-sm">{{ candidate.userId.email }}</p>
+                
+                {% if candidate.headline %}
+                <p class="text-primary font-medium mt-1">{{ candidate.headline }}</p>
+                {% endif %}
+
+                {% if candidate.location or candidate.yearsOfExperience %}
+                <div class="flex flex-wrap gap-2 mt-2">
+                  {% if candidate.yearsOfExperience %}
+                  <span class="badge badge-info">{{ candidate.yearsOfExperience }} years exp</span>
+                  {% endif %}
+                  {% if candidate.location %}
+                  <span class="badge badge-neutral">{{ candidate.location }}</span>
+                  {% endif %}
                 </div>
                 {% endif %}
-              </div>
-              <div>
-                <h2 class="card-title">{{ match.candidate.userId.name }}</h2>
-                <p class="text-base-content/70">{{ match.candidate.userId.email }}</p>
+
+                {% if candidate.skills and candidate.skills.length > 0 %}
+                <div class="flex flex-wrap gap-2 mt-2">
+                  {% for skill in candidate.skills | slice(0, 5) %}
+                  <span class="badge badge-outline">{{ skill }}</span>
+                  {% endfor %}
+                  {% if candidate.skills.length > 5 %}
+                  <span class="badge badge-ghost">+{{ candidate.skills.length - 5 }} more</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                {% if candidate.bio %}
+                <p class="text-base-content/70 text-sm mt-2 line-clamp-2">{{ candidate.bio }}</p>
+                {% endif %}
               </div>
             </div>
-            <div class="text-right">
-              <div class="text-2xl font-bold text-primary">{{ match.score }}%</div>
-              <span class="text-sm text-base-content/50">match</span>
+
+            <div class="flex flex-col gap-2">
+              <a href="/profile/{{ candidate.userId._id }}" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-eye mr-1"></i>View Profile
+              </a>
+              <a href="/dashboard/employer/applications?search={{ candidate.userId.name }}" class="btn btn-ghost btn-sm" title="View applications from this candidate">
+                <i class="fa-solid fa-file-lines mr-1"></i>Applications
+              </a>
             </div>
-          </div>
-          
-          {% if match.candidate.skills and match.candidate.skills.length %}
-          <div class="flex flex-wrap gap-2 mt-3">
-            {% for skill in match.candidate.skills %}
-            <span class="badge badge-outline">{{ skill }}</span>
-            {% endfor %}
-          </div>
-          {% endif %}
-          
-          {% if match.candidate.bio %}
-          <p class="text-base-content/70 mt-3 line-clamp-2">{{ match.candidate.bio }}</p>
-          {% endif %}
-          
-          <div class="card-actions justify-end mt-4">
-            {% if match.hasApplied %}
-            <span class="badge badge-success">Applied</span>
-            {% else %}
-            <span class="badge badge-ghost">Not Applied</span>
-            {% endif %}
-            <a href="/profile/view/{{ match.candidate._id }}" class="btn btn-ghost btn-sm">View Profile</a>
           </div>
         </div>
       </div>
       {% endfor %}
     </div>
-    {% else %}
-    <p class="text-center text-base-content/60 py-8">No matching candidates found.</p>
+
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div class="flex justify-center mt-8">
+      <div class="join">
+        {% for p in range(1, pagination.pages + 1) %}
+        <a href="?page={{ p }}{% if filters.search %}&search={{ filters.search }}{% endif %}{% if filters.skills %}&skills={{ filters.skills }}{% endif %}{% if filters.location %}&location={{ filters.location }}{% endif %}{% if filters.experience %}&experience={{ filters.experience }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+           class="join-item btn {% if p == pagination.page %}btn-active{% endif %}">
+          {{ p }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
     {% endif %}
+
+    {% else %}
+    <div class="text-center py-12 card bg-base-100 shadow-lg">
+      <div class="card-body">
+        <i class="fa-solid fa-search text-6xl text-base-content/20 mb-4"></i>
+        <h3 class="text-xl font-bold mb-2">No candidates found</h3>
+        <p class="text-base-content/60 mb-4">Try adjusting your filters to find more candidates.</p>
+        <a href="/matches/candidates" class="btn btn-primary mx-auto">Clear Filters</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="mt-8 text-center text-base-content/60">
+      <p>Showing {% if candidates %}{{ candidates.length }}{% else %}0{% endif %} of {{ pagination.total }} candidates</p>
+    </div>
   </div>
 </div>
+
 {% endblock %}

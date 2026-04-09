@@ -136,6 +136,7 @@ export const initApplicationsRouter = (auth) => {
     };
 
     res.render('applications/index', { 
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       applications,
       stats,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
@@ -158,7 +159,13 @@ export const initApplicationsRouter = (auth) => {
     const jobIds = jobs.map(j => j._id);
     
     const query = { job: { $in: jobIds } };
-    if (jobFilter) query.job = jobFilter;
+    if (jobFilter && mongoose.Types.ObjectId.isValid(jobFilter)) {
+      if (jobIds.some(id => id.toString() === jobFilter)) {
+        query.job = mongoose.Types.ObjectId(jobFilter);
+      } else {
+        query.job = null;
+      }
+    }
     if (statusFilter && statusFilter !== 'all') query.status = statusFilter;
 
     const [applications, total] = await Promise.all([
@@ -194,6 +201,7 @@ export const initApplicationsRouter = (auth) => {
     };
 
     res.render('applications/employer', { 
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       applications,
       company,
       jobs,
@@ -239,6 +247,7 @@ export const initApplicationsRouter = (auth) => {
     }
 
     res.render('applications/show', { 
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
       application, 
       isEmployer, 
       isAdmin,
@@ -393,14 +402,8 @@ export const initApplicationsRouter = (auth) => {
   );
 
   router.post('/:id/withdraw', isAuthenticated(auth), asyncHandler(async (req, res) => {
-    // CSRF check
-    if (!req.body._csrf) {
-      return res.status(403).json({ error: 'CSRF token missing' });
-    }
-    if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
-      return res.status(403).json({ error: 'CSRF token invalid' });
-    }
-
+    // CSRF protection is handled by middleware
+    
     const application = await Application.findById(req.params.id);
     
     if (!application) {
@@ -529,7 +532,7 @@ export const initApplicationsRouter = (auth) => {
       .populate('fromUser', 'name image')
       .sort({ createdAt: -1 });
 
-    res.render('applications/feedback', { application, feedback });
+    res.render('applications/feedback', { csrfToken: req.csrfToken ? req.csrfToken() : '', application, feedback });
   }));
 
   router.post('/:id/feedback',

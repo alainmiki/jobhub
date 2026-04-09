@@ -19,6 +19,13 @@
         <form method="GET" class="flex flex-wrap gap-4">
           <div class="form-control">
             <label class="label">
+              <span class="label-text">Search Candidates</span>
+            </label>
+            <input type="text" name="search" value="{{ filters.search }}" placeholder="Name, skills, bio..." class="input input-bordered">
+          </div>
+
+          <div class="form-control">
+            <label class="label">
               <span class="label-text">Status</span>
             </label>
             <select name="status" class="select select-bordered">

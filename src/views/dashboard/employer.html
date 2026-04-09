@@ -140,14 +140,14 @@
         </div>
       </a>
       
-      <a href="/applications/employer" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-secondary/50 hover:shadow-lg transition-all group">
+      <a href="/dashboard/employer/applications" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-secondary/50 hover:shadow-lg transition-all group">
         <div class="card-body p-5 flex-row items-center gap-4">
           <div class="w-14 h-14 rounded-xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
-            <i class="fa-solid fa-file-lines text-2xl text-secondary"></i>
+            <i class="fa-solid fa-users text-2xl text-secondary"></i>
           </div>
           <div class="flex-1">
-            <h3 class="font-bold">Applications</h3>
-            <p class="text-sm text-base-content/60">Review incoming applications</p>
+            <h3 class="font-bold">Candidate Management</h3>
+            <p class="text-sm text-base-content/60">Review applications, send messages, schedule interviews</p>
           </div>
           <i class="fa-solid fa-arrow-right text-base-content/30 group-hover:text-secondary transition-colors"></i>
         </div>
@@ -174,7 +174,7 @@
           <h2 class="font-bold text-lg flex items-center gap-2">
             <i class="fa-solid fa-clock text-primary"></i>Recent Applications
           </h2>
-          <a href="/applications/employer" class="btn btn-ghost btn-sm rounded-xl">View All</a>
+          <a href="/dashboard/employer/applications" class="btn btn-ghost btn-sm rounded-xl">View All</a>
         </div>
         
         {% if recentApplications and recentApplications.length > 0 %}

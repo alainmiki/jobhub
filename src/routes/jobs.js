@@ -54,6 +54,7 @@ export const initJobsRouter = (auth) => {
         const total = await Job.countDocuments(filter);
         
         return res.render('jobs/index', { 
+          csrfToken: req.csrfToken ? req.csrfToken() : '',
           jobs: jobs || [], 
           filters: req.query,
           pagination: {
@@ -93,7 +94,7 @@ export const initJobsRouter = (auth) => {
         .sort({ createdAt: -1 })
         .lean();
 
-      return res.render('jobs/search', { jobs: jobs || [], filters: req.query, searchQuery: q || '' });
+      return res.render('jobs/search', { csrfToken: req.csrfToken ? req.csrfToken() : '', jobs: jobs || [], filters: req.query, searchQuery: q || '' });
     } catch (error) {
       logger.error('Search error:', error);
       return res.status(500).render('error', { message: 'Search failed' });
@@ -113,7 +114,7 @@ export const initJobsRouter = (auth) => {
           return res.redirect('/company/create');
         }
 
-        res.render('jobs/create', { company });
+        res.render('jobs/create', { csrfToken: req.csrfToken ? req.csrfToken() : '', company });
       } catch (error) {
         logger.error('Error loading job creation form:', error);
         res.status(500).render('error', { message: 'Failed to load job creation form' });
@@ -147,6 +148,7 @@ export const initJobsRouter = (auth) => {
       }
       
       return res.render('jobs/show', { 
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
         job, 
         hasApplied, 
         userProfile: req.userProfile || null,
@@ -230,7 +232,7 @@ export const initJobsRouter = (auth) => {
         return res.status(404).render('error', { message: 'Job not found' });
       }
       
-      return res.render('jobs/edit', { job });
+      return res.render('jobs/edit', { csrfToken: req.csrfToken ? req.csrfToken() : '', job });
     } catch (error) {
       logger.error('Error fetching job:', error);
       return res.status(500).render('error', { message: 'Failed to load job' });
