@@ -16,10 +16,28 @@
       </div>
     </div>
     
-    {% if error %}
+    {% if errorMessage and errorMessage.length > 0 %}
     <div class="alert alert-error mb-6 rounded-xl bg-error/10 border border-error/20">
       <i class="fa-solid fa-circle-exclamation text-error"></i>
-      <span>{{ error }}</span>
+      <div>
+        <h4 class="font-semibold">Please fix the following errors:</h4>
+        <ul class="list-disc list-inside mt-2">
+          {% for error in errorMessage %}
+          <li>{{ error }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if successMessage and successMessage.length > 0 %}
+    <div class="alert alert-success mb-6 rounded-xl bg-success/10 border border-success/20">
+      <i class="fa-solid fa-check-circle text-success"></i>
+      <div>
+        {% for message in successMessage %}
+        <p>{{ message }}</p>
+        {% endfor %}
+      </div>
     </div>
     {% endif %}
     

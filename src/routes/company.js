@@ -31,7 +31,10 @@ export const initCompanyRouter = (auth) => {
       return res.redirect(`/company/${existing._id}/edit`);
     }
     
-    res.render('company/create', { company: {} });
+    res.render('company/create', { 
+      company: {},
+      csrfToken: req.csrfToken ? req.csrfToken() : ''
+    });
   }));
 
   router.post('/',
@@ -174,7 +177,10 @@ export const initCompanyRouter = (auth) => {
       return res.redirect('/dashboard/employer');
     }
     
-    res.render('company/edit', { company });
+    res.render('company/edit', { 
+      company,
+      csrfToken: req.csrfToken ? req.csrfToken() : ''
+    });
   }));
 
   router.put('/:id',

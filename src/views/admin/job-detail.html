@@ -1,0 +1,129 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-start mb-8">
+      <div>
+        <h1 class="text-3xl font-bold">{{ job.title }}</h1>
+        <p class="text-base-content/60 text-lg">{{ job.company.name }}</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="/admin/jobs/{{ job._id }}/edit" class="btn btn-outline rounded-xl">
+          <i class="fa-solid fa-edit mr-2"></i>Edit
+        </a>
+        <form method="POST" action="/admin/jobs/{{ job._id }}?_method=DELETE" class="inline" onsubmit="return confirm('Are you sure you want to delete this job?')">
+          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+          <button type="submit" class="btn btn-error rounded-xl">
+            <i class="fa-solid fa-trash mr-2"></i>Delete
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Job Details -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Job Details</h2>
+
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div class="text-center">
+                <div class="text-2xl font-bold text-primary">{{ job.location }}</div>
+                <div class="text-sm text-base-content/60">Location</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-secondary">{{ job.type }}</div>
+                <div class="text-sm text-base-content/60">Type</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-accent">{{ job.category }}</div>
+                <div class="text-sm text-base-content/60">Category</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl font-bold text-info">{{ job.views || 0 }}</div>
+                <div class="text-sm text-base-content/60">Views</div>
+              </div>
+            </div>
+
+            <div class="prose max-w-none">
+              <h3>Description</h3>
+              <p>{{ job.description }}</p>
+
+              {% if job.skills and job.skills.length > 0 %}
+              <h3>Skills</h3>
+              <div class="flex flex-wrap gap-2">
+                {% for skill in job.skills %}
+                <span class="badge badge-primary">{{ skill }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+
+              {% if job.requirements and job.requirements.length > 0 %}
+              <h3>Requirements</h3>
+              <ul>
+                {% for req in job.requirements %}
+                <li>{{ req }}</li>
+                {% endfor %}
+              </ul>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Status</h2>
+            <div class="flex items-center gap-4">
+              <span class="badge {% if job.status == 'approved' %}badge-success{% elif job.status == 'pending' %}badge-warning{% elif job.status == 'rejected' %}badge-error{% endif %} badge-lg">
+                {{ job.status }}
+              </span>
+              <span class="text-sm text-base-content/60">
+                Created {{ job.createdAt | date('MMM d, YYYY') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Company Info -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title text-lg mb-4">Company</h3>
+            <div class="flex items-center gap-3 mb-4">
+              {% if job.company.logo %}
+              <img src="{{ job.company.logo }}" alt="{{ job.company.name }}" class="w-12 h-12 rounded-lg object-cover">
+              {% endif %}
+              <div>
+                <h4 class="font-semibold">{{ job.company.name }}</h4>
+                <p class="text-sm text-base-content/60">{{ job.company.industry }}</p>
+              </div>
+            </div>
+            <a href="/company/{{ job.company._id }}" class="btn btn-outline btn-sm w-full">View Company</a>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title text-lg mb-4">Actions</h3>
+            <div class="space-y-2">
+              <a href="/admin/jobs" class="btn btn-ghost btn-sm w-full justify-start">
+                <i class="fa-solid fa-arrow-left mr-2"></i>Back to Jobs
+              </a>
+              <a href="/jobs/{{ job._id }}" class="btn btn-primary btn-sm w-full justify-start">
+                <i class="fa-solid fa-external-link mr-2"></i>View Public Page
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

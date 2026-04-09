@@ -61,7 +61,7 @@ applicationSchema.index({ applicantUserId: 1, isArchived: 1, createdAt: -1 });
 applicationSchema.index({ job: 1, status: 1, createdAt: -1 });
 applicationSchema.index({ priority: 1 });
 
-applicationSchema.pre('save', function(next) {
+applicationSchema.pre('save', async function() {
   if (this.isModified('status')) {
     this.timeline.push({
       status: this.status,
@@ -76,7 +76,6 @@ applicationSchema.pre('save', function(next) {
       this.isArchived = true;
     }
   }
-  next();
 });
 
 export default mongoose.model('Application', applicationSchema);

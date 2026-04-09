@@ -12,6 +12,7 @@ import { validate, idParamValidator } from '../middleware/validation.js';
 import { paginate } from '../middleware/pagination.js';
 import { sanitizeRegex, logAuditAction, emitNotification } from '../utils/helpers.js';
 import logger from '../config/logger.js';
+import { JOB_TYPE, JOB_LOCATION, JOB_CATEGORY, EXPERIENCE_LEVEL } from '../config/constants.js';
 
 const router = express.Router();
 
@@ -19,6 +20,48 @@ export const initAdminRouter = (auth) => {
   const authInstance = auth;
   router.use(isAuthenticated(auth));
   router.use(isRole(auth, 'admin'));
+
+  // GET /admin - Admin dashboard
+  router.get('/', asyncHandler(async (req, res) => {
+    const [
+      totalUsers,
+      totalEmployers,
+      totalCandidates,
+      totalCompanies,
+      totalJobs,
+      pendingJobs,
+      pendingCompanies,
+      totalApplications,
+      recentAuditLogs
+    ] = await Promise.all([
+      User.countDocuments(),
+      User.countDocuments({ role: 'employer' }),
+      User.countDocuments({ role: 'candidate' }),
+      Company.countDocuments(),
+      Job.countDocuments(),
+      Job.countDocuments({ status: 'pending' }),
+      Company.countDocuments({ verified: false }),
+      require('../models/Application.js').countDocuments(),
+      AuditLog.find()
+        .populate('adminUserId', 'name email')
+        .sort({ createdAt: -1 })
+        .limit(10)
+    ]);
+
+    res.render('admin/dashboard', {
+      stats: {
+        totalUsers,
+        totalEmployers,
+        totalCandidates,
+        totalCompanies,
+        totalJobs,
+        pendingJobs,
+        pendingCompanies,
+        totalApplications
+      },
+      recentAuditLogs
+    });
+  }));
 
   // GET /admin/users/create - Create user form
   router.get('/users/create', asyncHandler(async (req, res) => {
@@ -146,6 +189,65 @@ export const initAdminRouter = (auth) => {
     })
   );
 
+  // GET /admin/users/:id/edit - Edit user form
+  router.get('/users/:id/edit', asyncHandler(async (req, res) => {
+    const targetUser = await User.findById(req.params.id);
+    if (!targetUser) {
+      return res.status(404).render('error', {
+        message: 'User not found',
+        title: '404 - Not Found'
+      });
+    }
+
+    const profile = await UserProfile.findOne({ userId: targetUser.id });
+
+    res.render('admin/user-edit', {
+      targetUser,
+      profile
+    });
+  }));
+
+  // PUT /admin/users/:id - Update user
+  router.put('/users/:id',
+    [
+      param('id').isMongoId().withMessage('Invalid user ID'),
+      body('name').optional().trim().notEmpty().withMessage('Name cannot be empty'),
+      body('email').optional().isEmail().withMessage('Please enter a valid email address'),
+      body('role').optional().isIn(['candidate', 'employer', 'admin']).withMessage('Invalid role selected')
+    ],
+    validate,
+    asyncHandler(async (req, res) => {
+      const { name, email, role } = req.body;
+      const updates = {};
+      if (name) updates.name = name;
+      if (email) updates.email = email;
+      if (role) updates.role = role;
+
+      const user = await User.findByIdAndUpdate(req.params.id, updates, { returnDocument: 'after' });
+      if (!user) {
+        req.flash('error', 'User not found');
+        return res.redirect('/admin/users');
+      }
+
+      if (role) {
+        await UserProfile.findOneAndUpdate(
+          { userId: user.id },
+          { role },
+          { upsert: true, setDefaultsOnInsert: true }
+        );
+      }
+
+      await logAuditAction(req, 'user_update', 'user', user._id, {
+        updates,
+        email: user.email
+      });
+
+      logger.info(`Admin ${req.userId} updated user ${user.email}`);
+      req.flash('success', 'User updated successfully');
+      res.redirect(`/admin/users/${req.params.id}`);
+    })
+  );
+
   // GET /admin/users/:id - User detail view
   router.get('/users/:id', asyncHandler(async (req, res) => {
     const targetUser = await User.findById(req.params.id);
@@ -198,28 +300,213 @@ export const initAdminRouter = (auth) => {
     res.json({ success: true, redirect: `/admin/users/${req.params.id}` });
   }));
 
-  // POST /admin/users/:id/disable - Toggle user account status
-  router.post('/users/:id/disable', idParamValidator, asyncHandler(async (req, res) => {
+  // POST /admin/users/:id/toggle-status - Toggle user account status
+  router.post('/users/:id/toggle-status', idParamValidator, asyncHandler(async (req, res) => {
     const user = await User.findById(req.params.id);
-    
+
     if (!user) {
       req.flash('error', 'User not found');
       return res.redirect('/admin/users');
     }
 
     const oldStatus = user.isActive;
-    user.isActive = !user.isActive; // Assuming an isActive field exists
+    user.isActive = !user.isActive;
     await user.save();
 
-    await logAuditAction(req, user.isActive ? 'user_enable' : 'user_disable', 'user', user._id, {
+    await logAuditAction(req, user.isActive ? 'user_activate' : 'user_deactivate', 'user', user._id, {
       oldStatus,
       newStatus: user.isActive,
       email: user.email
     });
 
     logger.info(`Admin ${req.userId} toggled status for user ${user._id} to ${user.isActive}`);
-    req.flash('success', `User account ${user.isActive ? 'enabled' : 'disabled'} successfully.`);
+    req.flash('success', `User account ${user.isActive ? 'activated' : 'deactivated'} successfully.`);
     res.redirect(`/admin/users/${req.params.id}`);
+  }));
+
+  // GET /admin/jobs - List all jobs
+  router.get('/jobs',
+    paginate(20),
+    asyncHandler(async (req, res) => {
+      const { status, search, company } = req.query;
+
+      const filter = {};
+      if (status && status !== 'all') filter.status = status;
+      if (company) filter['company.name'] = { $regex: sanitizeRegex(company), $options: 'i' };
+      if (search) {
+        const safeSearch = sanitizeRegex(search);
+        filter.$or = [
+          { title: { $regex: safeSearch, $options: 'i' } },
+          { description: { $regex: safeSearch, $options: 'i' } }
+        ];
+      }
+
+      const [jobs, total] = await Promise.all([
+        Job.find(filter)
+          .populate('company', 'name logo')
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        Job.countDocuments(filter)
+      ]);
+
+      res.render('admin/jobs', {
+        jobs,
+        filters: { status, search, company },
+        pagination: {
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
+      });
+    })
+  );
+
+  // GET /admin/jobs/create - Create job form
+  router.get('/jobs/create', asyncHandler(async (req, res) => {
+    const companies = await Company.find({ verified: true }).select('name _id');
+    res.render('admin/job-create', { companies });
+  }));
+
+  // POST /admin/jobs - Create new job
+  router.post('/jobs',
+    [
+      body('title').trim().isLength({ min: 3, max: 200 }).withMessage('Title must be 3-200 characters'),
+      body('description').trim().isLength({ min: 50, max: 5000 }).withMessage('Description must be 50-5000 characters'),
+      body('company').isMongoId().withMessage('Invalid company ID'),
+      body('location').isIn(JOB_LOCATION).withMessage('Invalid location'),
+      body('type').isIn(JOB_TYPE).withMessage('Invalid job type'),
+      body('category').optional().isIn(JOB_CATEGORY),
+      body('experienceLevel').optional().isIn(EXPERIENCE_LEVEL),
+      body('salary.min').optional().isInt({ min: 0 }),
+      body('salary.max').optional().isInt({ min: 0 })
+    ],
+    validate,
+    asyncHandler(async (req, res) => {
+      const company = await Company.findById(req.body.company);
+      if (!company) {
+        req.flash('error', 'Company not found');
+        return res.redirect('/admin/jobs/create');
+      }
+
+      const skills = req.body.skills ? (Array.isArray(req.body.skills) ? req.body.skills : req.body.skills.split(',')).map(s => s.trim()).filter(s => s) : [];
+      const requirements = req.body.requirements ? (Array.isArray(req.body.requirements) ? req.body.requirements : req.body.requirements.split('\n')).map(r => r.trim()).filter(r => r) : [];
+
+      const jobData = {
+        title: req.body.title,
+        description: req.body.description,
+        company: company._id,
+        location: req.body.location,
+        type: req.body.type,
+        category: req.body.category || 'Other',
+        experienceLevel: req.body.experienceLevel || 'Entry',
+        skills,
+        requirements,
+        salary: req.body.salary || {},
+        status: 'approved', // Admin created jobs are auto-approved
+        postedBy: req.userId,
+        isActive: true
+      };
+
+      const job = new Job(jobData);
+      await job.save();
+
+      await logAuditAction(req, 'job_create', 'job', job._id, {
+        title: job.title,
+        company: company.name
+      });
+
+      logger.info(`Admin ${req.userId} created job: ${job._id}`);
+      req.flash('success', 'Job created successfully');
+      res.redirect('/admin/jobs');
+    })
+  );
+
+  // GET /admin/jobs/:id/edit - Edit job form
+  router.get('/jobs/:id/edit', asyncHandler(async (req, res) => {
+    const job = await Job.findById(req.params.id).populate('company', 'name');
+    if (!job) {
+      return res.status(404).render('error', { message: 'Job not found' });
+    }
+
+    const companies = await Company.find({ verified: true }).select('name _id');
+    res.render('admin/job-edit', { job, companies });
+  }));
+
+  // PUT /admin/jobs/:id - Update job
+  router.put('/jobs/:id',
+    [
+      param('id').isMongoId().withMessage('Invalid job ID'),
+      body('title').optional().trim().isLength({ min: 3, max: 200 }).withMessage('Title must be 3-200 characters'),
+      body('description').optional().trim().isLength({ min: 50, max: 5000 }).withMessage('Description must be 50-5000 characters'),
+      body('company').optional().isMongoId().withMessage('Invalid company ID'),
+      body('location').optional().isIn(JOB_LOCATION).withMessage('Invalid location'),
+      body('type').optional().isIn(JOB_TYPE).withMessage('Invalid job type'),
+      body('category').optional().isIn(JOB_CATEGORY),
+      body('experienceLevel').optional().isIn(EXPERIENCE_LEVEL),
+      body('salary.min').optional().isInt({ min: 0 }),
+      body('salary.max').optional().isInt({ min: 0 })
+    ],
+    validate,
+    asyncHandler(async (req, res) => {
+      const job = await Job.findById(req.params.id);
+      if (!job) {
+        req.flash('error', 'Job not found');
+        return res.redirect('/admin/jobs');
+      }
+
+      const updates = {};
+      if (req.body.title) updates.title = req.body.title;
+      if (req.body.description) updates.description = req.body.description;
+      if (req.body.company) updates.company = req.body.company;
+      if (req.body.location) updates.location = req.body.location;
+      if (req.body.type) updates.type = req.body.type;
+      if (req.body.category) updates.category = req.body.category;
+      if (req.body.experienceLevel) updates.experienceLevel = req.body.experienceLevel;
+      if (req.body.skills) updates.skills = Array.isArray(req.body.skills) ? req.body.skills : req.body.skills.split(',').map(s => s.trim()).filter(s => s);
+      if (req.body.requirements) updates.requirements = Array.isArray(req.body.requirements) ? req.body.requirements : req.body.requirements.split('\n').map(r => r.trim()).filter(r => r);
+      if (req.body.salary) updates.salary = req.body.salary;
+      updates.updatedAt = new Date();
+
+      Object.assign(job, updates);
+      await job.save();
+
+      await logAuditAction(req, 'job_update', 'job', job._id, {
+        title: job.title,
+        updates: Object.keys(updates)
+      });
+
+      logger.info(`Admin ${req.userId} updated job: ${job._id}`);
+      req.flash('success', 'Job updated successfully');
+      res.redirect(`/admin/jobs/${req.params.id}`);
+    })
+  );
+
+  // DELETE /admin/jobs/:id - Delete job
+  router.delete('/jobs/:id', asyncHandler(async (req, res) => {
+    const job = await Job.findById(req.params.id);
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+
+    await Job.findByIdAndDelete(req.params.id);
+
+    await logAuditAction(req, 'job_delete', 'job', job._id, {
+      title: job.title
+    });
+
+    logger.info(`Admin ${req.userId} deleted job: ${req.params.id}`);
+    req.flash('success', 'Job deleted successfully');
+    res.json({ success: true, redirect: '/admin/jobs' });
+  }));
+
+  // GET /admin/jobs/:id - Job detail view
+  router.get('/jobs/:id', asyncHandler(async (req, res) => {
+    const job = await Job.findById(req.params.id).populate('company', 'name logo');
+    if (!job) {
+      return res.status(404).render('error', { message: 'Job not found' });
+    }
+
+    res.render('admin/job-detail', { job });
   }));
 
   // GET /admin/jobs/pending - List pending jobs
@@ -399,6 +686,37 @@ export const initAdminRouter = (auth) => {
     })
   );
 
+  // GET /admin/notifications - List notifications
+  router.get('/notifications',
+    paginate(20),
+    asyncHandler(async (req, res) => {
+      const { type, recipient, isRead } = req.query;
+
+      const filter = {};
+      if (type) filter.type = type;
+      if (recipient) filter.recipient = recipient;
+      if (isRead !== undefined) filter.isRead = isRead === 'true';
+
+      const [notifications, total] = await Promise.all([
+        Notification.find(filter)
+          .populate('recipient', 'name email')
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        Notification.countDocuments(filter)
+      ]);
+
+      res.render('admin/notifications', {
+        notifications,
+        filters: { type, recipient, isRead },
+        pagination: {
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
+      });
+    })
+  );
+
   // GET /admin/notifications/send - Send notification form
   router.get('/notifications/send', asyncHandler(async (req, res) => {
     res.render('admin/notification-send');
@@ -448,6 +766,25 @@ export const initAdminRouter = (auth) => {
     logger.info(`Admin ${req.userId} sent system notification to ${recipients.length} users`);
     req.flash('success', `Notification sent to ${recipients.length} users`);
     res.redirect('/admin/notifications/send');
+  }));
+
+  // POST /admin/notifications/:id/delete - Delete notification
+  router.post('/notifications/:id/delete', asyncHandler(async (req, res) => {
+    const notification = await Notification.findById(req.params.id);
+    if (!notification) {
+      req.flash('error', 'Notification not found');
+      return res.redirect('/admin/notifications');
+    }
+
+    await Notification.findByIdAndDelete(req.params.id);
+
+    await logAuditAction(req, 'notification_delete', 'notification', notification._id, {
+      title: notification.title
+    });
+
+    logger.info(`Admin ${req.userId} deleted notification: ${req.params.id}`);
+    req.flash('success', 'Notification deleted successfully');
+    res.redirect('/admin/notifications');
   }));
 
   return router;

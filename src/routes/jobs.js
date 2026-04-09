@@ -100,7 +100,7 @@ export const initJobsRouter = (auth) => {
     }
   });
 
-  router.get('/create',
+  router.get('/new',
     isAuthenticated(auth),
     isEmployer(auth),
     requireProfileComplete(auth),

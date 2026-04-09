@@ -196,8 +196,8 @@
           
           <div id="experience-container" class="space-y-4">
             {% for exp in profile.experience %}
-            <div class="experience-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group">
-              <button type="button" onclick="this.closest('.experience-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
+             <div class="experience-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group">
+               <button type="button" class="remove-btn btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-control">
                   <label class="label-text mb-1 font-semibold">Company</label>
@@ -252,8 +252,8 @@
           
           <div id="education-container" class="space-y-4">
             {% for edu in profile.education %}
-            <div class="education-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group">
-              <button type="button" onclick="this.closest('.education-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
+             <div class="education-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group">
+               <button type="button" class="remove-btn btn btn-circle btn-xs btn-error absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-xmark"></i></button>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="form-control">
                   <label class="label-text mb-1 font-semibold">Institution</label>
@@ -299,6 +299,7 @@
           </button>
         </div>
       </div>
+
 
       <div class="card bg-base-100 shadow-lg rounded-2xl" id="resume">
         <div class="card-body">
@@ -458,16 +459,22 @@
 let expCount = {{ profile.experience | length }};
 let eduCount = {{ profile.education | length }};
 
-{% if showGuidance %}
-document.addEventListener('DOMContentLoaded', () => { welcome_modal.showModal(); });
-{% endif %}
+document.addEventListener('DOMContentLoaded', () => {
+  attachRemoveHandlers();
+  {% if showGuidance %}
+  welcome_modal.showModal();
+  {% endif %}
+
+  document.getElementById('addExperienceBtn').addEventListener('click', addExperienceField);
+  document.getElementById('addEducationBtn').addEventListener('click', addEducationField);
+});
 
 function addExperienceField() {
   const container = document.getElementById('experience-container');
   const div = document.createElement('div');
   div.className = 'experience-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group';
   div.innerHTML = `
-    <button type="button" onclick="this.closest('.experience-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
+    <button type="button" class="remove-btn btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control">
         <label class="label-text mb-1 font-semibold">Company</label>
@@ -507,6 +514,64 @@ function addExperienceField() {
   `;
   container.appendChild(div);
   expCount++;
+  attachRemoveHandlers();
+}
+
+function attachRemoveHandlers() {
+  document.querySelectorAll('.remove-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const item = this.closest('.experience-item') || this.closest('.education-item');
+      if (item) item.remove();
+    });
+  });
+}
+
+function addExperienceField() {
+  const container = document.getElementById('experience-container');
+  const div = document.createElement('div');
+  div.className = 'experience-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group';
+  div.innerHTML = `
+    <button type="button" class="remove-btn btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Company</label>
+        <input type="text" name="experience[${expCount}][company]" class="input input-sm input-bordered rounded-lg" placeholder="Company name" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Job Title</label>
+        <input type="text" name="experience[${expCount}][title]" class="input input-sm input-bordered rounded-lg" placeholder="Your role" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Location</label>
+        <input type="text" name="experience[${expCount}][location]" class="input input-sm input-bordered rounded-lg" placeholder="City, Country" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Company Logo URL</label>
+        <input type="url" name="experience[${expCount}][companyLogo]" class="input input-sm input-bordered rounded-lg" placeholder="https://..." />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">Start Date</label>
+        <input type="month" name="experience[${expCount}][startDate]" class="input input-sm input-bordered rounded-lg" />
+      </div>
+      <div class="form-control">
+        <label class="label-text mb-1 font-semibold">End Date</label>
+        <input type="month" name="experience[${expCount}][endDate]" class="input input-sm input-bordered rounded-lg" />
+      </div>
+      <div class="form-control col-span-full">
+        <label class="label cursor-pointer justify-start gap-2">
+          <input type="checkbox" name="experience[${expCount}][current]" class="checkbox checkbox-sm" />
+          <span class="label-text">I currently work here</span>
+        </label>
+      </div>
+      <div class="form-control col-span-full">
+        <label class="label-text mb-1 font-semibold">Description</label>
+        <textarea name="experience[${expCount}][description]" class="textarea textarea-sm textarea-bordered rounded-lg" placeholder="Describe your responsibilities and achievements..."></textarea>
+      </div>
+    </div>
+  `;
+  container.appendChild(div);
+  expCount++;
+  attachRemoveHandlers();
 }
 
 function addEducationField() {
@@ -514,7 +579,7 @@ function addEducationField() {
   const div = document.createElement('div');
   div.className = 'education-item p-5 bg-base-200/50 rounded-2xl border border-base-300 relative group';
   div.innerHTML = `
-    <button type="button" onclick="this.closest('.education-item').remove()" class="btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
+    <button type="button" class="remove-btn btn btn-circle btn-xs btn-error absolute top-2 right-2"><i class="fa-solid fa-xmark"></i></button>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="form-control">
         <label class="label-text mb-1 font-semibold">Institution</label>
@@ -554,6 +619,7 @@ function addEducationField() {
   `;
   container.appendChild(div);
   eduCount++;
+  attachRemoveHandlers();
 }
 
 document.querySelectorAll('.add-skill-btn').forEach(btn => {

@@ -1,5 +1,5 @@
 import express from 'express';
-import UserProfile from '../models/UserProfile.js';
+import UserProfile, { calculateProfileCompletion } from '../models/UserProfile.js';
 import User from '../models/User.js';
 import Application from '../models/Application.js';
 import Interview from '../models/Interview.js';
@@ -26,6 +26,26 @@ export const initProfileRouter = (auth) => {
     } catch (err) {
       logger.warn(`Could not delete old file: ${filePath}`);
     }
+  };
+
+  const mergeProfileData = (existingProfile = {}, updates = {}) => {
+    return {
+      ...existingProfile,
+      ...updates,
+      availability: {
+        ...(existingProfile.availability || {}),
+        ...(updates.availability || {})
+      },
+      expectedSalary: {
+        ...(existingProfile.expectedSalary || {}),
+        ...(updates.expectedSalary || {})
+      },
+      resume: updates.resume || existingProfile.resume,
+      resumeVersions: updates.resumeVersions || existingProfile.resumeVersions,
+      skills: updates.skills || existingProfile.skills,
+      education: updates.education || existingProfile.education,
+      experience: updates.experience || existingProfile.experience
+    };
   };
 
   router.get('/', asyncHandler(async (req, res) => {
@@ -101,6 +121,7 @@ export const initProfileRouter = (auth) => {
       }
       const {
         bio, headline, location, country, phone, website, linkedin, github, twitter,
+        yearsOfExperience,
         // role removed from body to prevent privilege escalation
         skills, education, experience,
         preferredJobTypes, preferredLocations,
@@ -120,10 +141,10 @@ export const initProfileRouter = (auth) => {
       const sanitizedLocation = location ? validator.escape(location.trim().substring(0, 100)) : '';
       const sanitizedCountry = country ? validator.escape(country.trim().substring(0, 100)) : '';
       const sanitizedPhone = phone ? validator.trim(validator.escape(phone)) : '';
-      const sanitizedWebsite = website ? validator.trim(validator.escape(website)) : '';
-      const sanitizedLinkedin = linkedin ? validator.trim(validator.escape(linkedin)) : '';
-      const sanitizedGithub = github ? validator.trim(validator.escape(github)) : '';
-      const sanitizedTwitter = twitter ? validator.trim(validator.escape(twitter)) : '';
+      const sanitizedWebsite = website ? validator.trim(website) : '';
+      const sanitizedLinkedin = linkedin ? validator.trim(linkedin) : '';
+      const sanitizedGithub = github ? validator.trim(github) : '';
+      const sanitizedTwitter = twitter ? validator.trim(twitter) : '';
 
       if (website && !validator.isURL(website, { protocols: ['http', 'https'], require_protocol: true })) {
         req.flash('error', 'Please enter a valid website URL (include http:// or https://)');
@@ -186,6 +207,7 @@ export const initProfileRouter = (auth) => {
         linkedin: sanitizedLinkedin,
         twitter: sanitizedTwitter,
         github: sanitizedGithub,
+        yearsOfExperience: yearsOfExperience ? parseInt(yearsOfExperience) : undefined,
         lastUpdateIdempotencyKey: idempotencyKey || null,
         updatedAt: new Date()
       };
@@ -275,6 +297,11 @@ export const initProfileRouter = (auth) => {
         }
       }
 
+      const mergedProfile = mergeProfileData(existingProfile ? existingProfile.toObject() : {}, profileUpdates);
+      const completion = calculateProfileCompletion(mergedProfile);
+      profileUpdates.profileCompletionScore = completion.score;
+      profileUpdates.isProfileComplete = completion.isComplete;
+
       const profile = await UserProfile.findOneAndUpdate(
         { userId: req.userId },
         profileUpdates,
@@ -335,6 +362,11 @@ export const initProfileRouter = (auth) => {
 
   // POST /profile/applications/:id/withdraw - Allow candidates to withdraw applications
   router.post('/applications/:id/withdraw', asyncHandler(async (req, res) => {
+    // Only candidates can withdraw applications
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     // CSRF check
     if (!req.body._csrf) {
       return res.status(403).json({ error: 'CSRF token missing' });
@@ -367,6 +399,11 @@ export const initProfileRouter = (auth) => {
 
   // GET /profile/matches - Personalized job matches for candidates
   router.get('/matches', asyncHandler(async (req, res) => {
+    // Only candidates can view job matches
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).render('error', { message: 'Access denied', title: '403 - Forbidden' });
+    }
+
     const profile = await UserProfile.findOne({ userId: req.userId });
 
     if (!profile) return res.redirect('/profile/edit');
@@ -559,6 +596,11 @@ export const initProfileRouter = (auth) => {
   }));
 
   router.get('/applications', asyncHandler(async (req, res) => {
+    // Only candidates can view their applications
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).render('error', { message: 'Access denied', title: '403 - Forbidden' });
+    }
+
     const page = parseInt(req.query.page) || 1;
     const limit = 10;
     const skip = (page - 1) * limit;
@@ -600,6 +642,11 @@ export const initProfileRouter = (auth) => {
   }));
 
   router.get('/interviews', asyncHandler(async (req, res) => {
+    // Only candidates can view their interviews
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).render('error', { message: 'Access denied', title: '403 - Forbidden' });
+    }
+
     let profile = await UserProfile.findOne({ userId: req.userId });
     
     if (!profile) {
@@ -646,6 +693,11 @@ export const initProfileRouter = (auth) => {
   }));
 
   router.post('/interviews/:id/confirm', asyncHandler(async (req, res) => {
+    // Only candidates can confirm interviews
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const profile = await UserProfile.findOne({ userId: req.userId });
     
     if (!profile) {
@@ -677,6 +729,11 @@ export const initProfileRouter = (auth) => {
   }));
 
   router.post('/interviews/:id/reschedule', asyncHandler(async (req, res) => {
+    // Only candidates can reschedule interviews
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const { scheduledAt, reason } = req.body;
     const profile = await UserProfile.findOne({ userId: req.userId });
     
@@ -716,6 +773,11 @@ export const initProfileRouter = (auth) => {
   }));
 
   router.post('/interviews/:id/cancel', asyncHandler(async (req, res) => {
+    // Only candidates can cancel interviews
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const { reason } = req.body;
     const profile = await UserProfile.findOne({ userId: req.userId });
     

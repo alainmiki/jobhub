@@ -1,0 +1,128 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+        <i class="fa-solid fa-edit text-primary text-xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight mb-2">Edit Job</h1>
+      <p class="text-base-content/60">Update job details</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+      <div class="card-body p-6">
+        {% if errorMessage and errorMessage.length > 0 %}
+        <div class="alert alert-error mb-4 rounded-xl bg-error/10 border border-error/20">
+          <i class="fa-solid fa-circle-exclamation text-error"></i>
+          <div>
+            <h4 class="font-semibold">Please fix the following errors:</h4>
+            <ul class="list-disc list-inside mt-2">
+              {% for error in errorMessage %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        <form action="/admin/jobs/{{ job._id }}?_method=PUT" method="POST" class="space-y-5">
+          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Company</span>
+              </label>
+              <select name="company" required class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+                {% for company in companies %}
+                <option value="{{ company._id }}" {% if company._id.toString() == job.company._id.toString() %}selected{% endif %}>{{ company.name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Job Title</span>
+              </label>
+              <input type="text" name="title" required value="{{ job.title }}" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" />
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Description</span>
+            </label>
+            <textarea name="description" required class="textarea textarea-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" rows="6">{{ job.description }}</textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Location</span>
+              </label>
+              <select name="location" required class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+                <option value="Remote" {% if job.location == 'Remote' %}selected{% endif %}>Remote</option>
+                <option value="On-site" {% if job.location == 'On-site' %}selected{% endif %}>On-site</option>
+                <option value="Hybrid" {% if job.location == 'Hybrid' %}selected{% endif %}>Hybrid</option>
+                <option value="Flexible" {% if job.location == 'Flexible' %}selected{% endif %}>Flexible</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Job Type</span>
+              </label>
+              <select name="type" required class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+                <option value="Full-time" {% if job.type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                <option value="Part-time" {% if job.type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                <option value="Contract" {% if job.type == 'Contract' %}selected{% endif %}>Contract</option>
+                <option value="Internship" {% if job.type == 'Internship' %}selected{% endif %}>Internship</option>
+                <option value="Freelance" {% if job.type == 'Freelance' %}selected{% endif %}>Freelance</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Category</span>
+              </label>
+              <select name="category" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+                <option value="Engineering" {% if job.category == 'Engineering' %}selected{% endif %}>Engineering</option>
+                <option value="Design" {% if job.category == 'Design' %}selected{% endif %}>Design</option>
+                <option value="Marketing" {% if job.category == 'Marketing' %}selected{% endif %}>Marketing</option>
+                <option value="Sales" {% if job.category == 'Sales' %}selected{% endif %}>Sales</option>
+                <option value="Finance" {% if job.category == 'Finance' %}selected{% endif %}>Finance</option>
+                <option value="HR" {% if job.category == 'HR' %}selected{% endif %}>HR</option>
+                <option value="Operations" {% if job.category == 'Operations' %}selected{% endif %}>Operations</option>
+                <option value="Other" {% if job.category == 'Other' %}selected{% endif %}>Other</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Skills (comma-separated)</span>
+            </label>
+            <input type="text" name="skills" value="{{ job.skills | join(', ') }}" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" />
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Requirements (one per line)</span>
+            </label>
+            <textarea name="requirements" class="textarea textarea-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" rows="4">{{ job.requirements | join('\n') }}</textarea>
+          </div>
+
+          <div class="form-control mt-6">
+            <button type="submit" class="btn btn-primary-gradient btn-block rounded-xl h-12 font-semibold shadow-primary/30 hover:shadow-lg">
+              <span>Update Job</span>
+              <i class="fa-solid fa-save ml-2"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

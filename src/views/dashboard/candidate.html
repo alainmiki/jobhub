@@ -9,12 +9,24 @@
           <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">Welcome back, {{ user.name }}!</h1>
           <p class="text-base-content/60">Track your applications and discover new opportunities</p>
         </div>
-        <div class="flex gap-3">
+        <div class="flex flex-wrap gap-3">
           <a href="/jobs" class="btn btn-primary rounded-xl">
             <i class="fa-solid fa-magnifying-glass mr-2"></i>Find Jobs
           </a>
           <a href="/profile/edit" class="btn btn-outline rounded-xl">
             <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
+          </a>
+          <a href="/profile/applications" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-briefcase mr-2"></i>My Applications
+          </a>
+          <a href="/profile/matches" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-heart mr-2"></i>Job Matches
+          </a>
+          <a href="/profile/interviews" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-calendar mr-2"></i>My Interviews
+          </a>
+          <a href="/profile/settings" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-cog mr-2"></i>Settings
           </a>
         </div>
       </div>

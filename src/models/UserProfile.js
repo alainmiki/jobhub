@@ -78,24 +78,34 @@ const userProfileSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-userProfileSchema.pre('save', function(next) {
-  this.updatedAt = new Date();
-
+export const calculateProfileCompletion = (profile = {}) => {
   let score = 0;
   const totalFields = 10;
 
-  if (this.bio && this.bio.trim() !== '') score++;
-  if (this.headline && this.headline.trim() !== '') score++;
-  if (this.location && this.location.trim() !== '') score++;
-  if (this.phone && this.phone.trim() !== '') score++;
-  if (this.website && this.website.trim() !== '') score++;
-  if (this.skills && this.skills.length > 0) score++;
-  if (this.education && this.education.length > 0) score++;
-  if (this.experience && this.experience.length > 0) score++;
-  if (this.resume && this.resume.url) score++;
+  if (profile.bio && profile.bio.trim() !== '') score++;
+  if (profile.headline && profile.headline.trim() !== '') score++;
+  if (profile.location && profile.location.trim() !== '') score++;
+  if (profile.phone && profile.phone.trim() !== '') score++;
+  if (profile.website && profile.website.trim() !== '') score++;
+  if (profile.skills && profile.skills.length > 0) score++;
+  if (profile.education && profile.education.length > 0) score++;
+  if (profile.experience && profile.experience.length > 0) score++;
+  if (profile.resume && profile.resume.url) score++;
+  if (profile.availability && (profile.availability.available !== undefined || profile.availability.startDate)) score++;
 
-  this.profileCompletionScore = Math.round((score / totalFields) * 100);
-  this.isProfileComplete = this.profileCompletionScore >= 70;
+  const profileCompletionScore = Math.round((score / totalFields) * 100);
+  return {
+    score: profileCompletionScore,
+    isComplete: profileCompletionScore >= 70
+  };
+};
+
+userProfileSchema.pre('save', function(next) {
+  this.updatedAt = new Date();
+
+  const completion = calculateProfileCompletion(this);
+  this.profileCompletionScore = completion.score;
+  this.isProfileComplete = completion.isComplete;
   next();
 });
 

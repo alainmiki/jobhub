@@ -38,7 +38,7 @@ const fileFilter = (req, file, cb) => {
   const mimeType = file.mimetype.toLowerCase();
   const extension = path.extname(file.originalname).toLowerCase();
   
-  if (file.fieldname === 'image' || file.fieldname === 'coverImage') {
+  if (file.fieldname === 'image' || file.fieldname === 'coverImage' || file.fieldname === 'logo') {
     if (!FILE_TYPE_MAP[mimeType] || !['.jpeg', '.jpg', '.png', '.gif', '.webp'].includes(extension)) {
       return cb(new Error('Image file type not supported. Use JPEG, PNG, GIF, or WebP.'), false);
     }
