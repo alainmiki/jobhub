@@ -39,7 +39,7 @@ A comprehensive, production-ready job portal platform built with modern web tech
 - **Testing Suite**: Vitest for unit and integration tests
 - **Code Quality**: ESLint configuration and pre-commit hooks
 - **API Documentation**: RESTful API with comprehensive docs
-- **Docker Support**: Containerized development environment
+- **Docker Support**: Containerized development environment with Docker Compose and deployment documentation
 
 ## 🏗️ Architecture
 
@@ -331,6 +331,8 @@ npm run test:coverage
    docker-compose up -d
    ```
 
+   For full deployment and production Docker guidance, see `docs/DEPLOYMENT_GUIDE.md`.
+
 ### Manual Deployment
 
 1. **Build assets**
@@ -357,6 +359,8 @@ npm run test:coverage
 - Set up monitoring (optional)
 
 ## 📊 API Documentation
+
+See `docs/API_DOCUMENTATION.md` for the full API reference, request examples, and response formats.
 
 ### Authentication Endpoints
 

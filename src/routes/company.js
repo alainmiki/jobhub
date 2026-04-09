@@ -7,7 +7,7 @@ import Application from '../models/Application.js';
 import UserProfile from '../models/UserProfile.js';
 import User from '../models/User.js';
 import Notification from '../models/Notification.js';
-import { createAuthMiddleware, isAuthenticated, isEmployer, requireProfileComplete } from '../middleware/auth.js';
+import { createAuthMiddleware, isAuthenticated, isEmployer, requireProfileComplete, validateCsrfForMultipart } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { upload, handleMulterError } from '../config/multer.js';
 import { validate } from '../middleware/validation.js';
@@ -46,6 +46,7 @@ export const initCompanyRouter = (auth) => {
       { name: 'coverImage', maxCount: 1 }
     ]),
     handleMulterError,
+    validateCsrfForMultipart,
     [
       body('name').trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),
       body('description').trim().isLength({ min: 20, max: 5000 }).withMessage('Description must be 20-5000 characters'),
@@ -61,13 +62,6 @@ export const initCompanyRouter = (auth) => {
     ],
     validate,
     asyncHandler(async (req, res) => {
-      if (!req.body._csrf) {
-        return res.status(403).json({ error: 'CSRF token missing' });
-      }
-      if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
-        return res.status(403).json({ error: 'CSRF token invalid' });
-      }
-
       const existing = await Company.findOne({ userId: req.userId });
       
       if (existing) {
@@ -200,6 +194,7 @@ export const initCompanyRouter = (auth) => {
       { name: 'logo', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 }
     ]),
+    validateCsrfForMultipart,
     [
       param('id').isMongoId().withMessage('Invalid company ID'),
       body('name').optional().trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),
@@ -212,13 +207,6 @@ export const initCompanyRouter = (auth) => {
     ],
     validate,
     asyncHandler(async (req, res) => {
-      if (!req.body._csrf) {
-        return res.status(403).json({ error: 'CSRF token missing' });
-      }
-      if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
-        return res.status(403).json({ error: 'CSRF token invalid' });
-      }
-
       const company = await Company.findOne({
         _id: req.params.id,
         userId: req.userId

@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold">Company Management</h1>
         <p class="text-base-content/60">Manage all companies on the platform</p>
       </div>
-      <a href="/dashboard/admin/companies/create" class="btn btn-primary rounded-xl">
+      <a href="/admin/companies/create" class="btn btn-primary rounded-xl">
         <i class="fa-solid fa-plus mr-2"></i>Create Company
       </a>
     </div>
@@ -102,7 +102,7 @@
                   <div class="flex gap-2">
                     <a href="/company/{{ company._id }}" class="btn btn-sm btn-ghost">View</a>
                     {% if not company.verified %}
-                    <form method="POST" action="/dashboard/admin/companies/{{ company._id }}/approve" class="inline">
+                    <form method="POST" action="/admin/companies/{{ company._id }}/approve" class="inline">
                       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
                       <button type="submit" class="btn btn-sm btn-success">Approve</button>
                     </form>

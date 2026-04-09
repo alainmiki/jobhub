@@ -60,10 +60,10 @@
           <ul class="menu gap-1 text-sm">
             {% if user.role == 'admin' %}
               <li class="menu-title text-[10px] opacity-50 uppercase tracking-widest">Admin</li>
-              <li><a href="/dashboard/admin" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
-              <li><a href="/dashboard/admin/users" class="rounded-xl"><i class="fa-solid fa-users mr-2 text-primary"></i>User Management</a></li>
-              <li><a href="/dashboard/admin/jobs?status=pending" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2 text-primary"></i>Pending Jobs</a></li>
-              <li><a href="/dashboard/admin/companies?status=pending" class="rounded-xl"><i class="fa-solid fa-building mr-2 text-primary"></i>Pending Companies</a></li>
+              <li><a href="/admin" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
+              <li><a href="/admin/users" class="rounded-xl"><i class="fa-solid fa-users mr-2 text-primary"></i>User Management</a></li>
+              <li><a href="/admin/jobs?status=pending" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2 text-primary"></i>Pending Jobs</a></li>
+              <li><a href="/admin/companies?status=pending" class="rounded-xl"><i class="fa-solid fa-building mr-2 text-primary"></i>Pending Companies</a></li>
             {% elseif user.role == 'employer' %}
               <li class="menu-title text-[10px] opacity-50 uppercase tracking-widest">Employer</li>
               <li><a href="/dashboard/employer" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
@@ -139,10 +139,10 @@
             </li>
             
             {% if user.role == 'admin' %}
-              <li><a href="/dashboard/admin" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
-              <li><a href="/dashboard/admin/users" class="rounded-xl"><i class="fa-solid fa-users mr-2"></i>User Management</a></li>
-              <li><a href="/dashboard/admin/jobs?status=pending" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2"></i>Pending Jobs</a></li>
-              <li><a href="/dashboard/admin/companies?status=pending" class="rounded-xl"><i class="fa-solid fa-building mr-2"></i>Pending Companies</a></li>
+              <li><a href="/admin" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
+              <li><a href="/admin/users" class="rounded-xl"><i class="fa-solid fa-users mr-2"></i>User Management</a></li>
+              <li><a href="/admin/jobs?status=pending" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2"></i>Pending Jobs</a></li>
+              <li><a href="/admin/companies?status=pending" class="rounded-xl"><i class="fa-solid fa-building mr-2"></i>Pending Companies</a></li>
             {% elseif user.role == 'employer' %}
               <li><a href="/dashboard/employer" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
               <li><a href="/jobs" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2"></i>My Jobs</a></li>

@@ -43,7 +43,7 @@ export const initAuthRouter = (auth) => {
           }else if(req.user.role === 'candidate'){
             return res.redirect('/dashboard/candidate');
           }else{
-            return res.redirect('/dashboard/admin');
+            return res.redirect('/admin');
           }
         }}
     } catch (error) {

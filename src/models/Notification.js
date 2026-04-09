@@ -12,7 +12,8 @@ const notificationSchema = new mongoose.Schema({
       'application_received', 'application_shortlisted', 'application_rejected', 'application_accepted', 'application_viewed',
       'job_match', 'job_approved', 'job_rejected', 'new_job_posted',
       'profile_update', 'system', 'company_verified', 'company_approve', 'company_rejected',
-      'interview_scheduled', 'interview_confirmed', 'interview_cancelled', 'interview_rescheduled'
+      'interview_scheduled', 'interview_confirmed', 'interview_cancelled', 'interview_rescheduled',
+      'message', 'message_from_employer', 'message_from_candidate'
     ],
     required: true
   },

@@ -1,0 +1,169 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30">
+  <div class="bg-base-100 border-b border-base-200/50">
+    <div class="max-w-7xl mx-auto py-8 px-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">Messages</h1>
+          <p class="text-base-content/60">Communicate with employers about your applications</p>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a href="/profile" class="btn btn-outline rounded-xl">
+            <i class="fa-solid fa-arrow-left mr-2"></i>Back to Profile
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto py-8 px-4">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Message Threads -->
+      <div class="lg:col-span-1">
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body p-6">
+            <h3 class="font-bold text-lg mb-4">Conversations</h3>
+            {% if messageThreads and messageThreads.length > 0 %}
+            <div class="space-y-2">
+              {% for thread in messageThreads %}
+              <div class="p-3 rounded-xl border border-base-200/50 hover:bg-base-200/30 cursor-pointer transition-colors"
+                   onclick="loadMessages('{{ thread.applicationId }}')">
+                <div class="flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-sm truncate">{{ thread.companyName }}</p>
+                    <p class="text-xs text-base-content/60 truncate">{{ thread.jobTitle }}</p>
+                    <p class="text-xs text-base-content/50 mt-1">{{ thread.lastMessageAt | date('M/d/yyyy h:mm a') }}</p>
+                  </div>
+                  {% if thread.unreadCount > 0 %}
+                  <span class="badge badge-primary badge-sm">{{ thread.unreadCount }}</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+              <i class="fa-solid fa-envelope text-4xl text-base-content/30 mb-4"></i>
+              <p class="text-base-content/60">No messages yet</p>
+              <p class="text-sm text-base-content/50">Messages from employers will appear here</p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Message Content -->
+      <div class="lg:col-span-2">
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+          <div class="card-body p-6" id="messageContent">
+            <div class="text-center py-12">
+              <i class="fa-solid fa-comments text-5xl text-base-content/30 mb-4"></i>
+              <h3 class="font-bold text-lg mb-2">Select a conversation</h3>
+              <p class="text-base-content/60">Choose a conversation from the list to view messages</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentApplicationId = null;
+
+function loadMessages(applicationId) {
+  currentApplicationId = applicationId;
+  fetch(`/profile/messages/${applicationId}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        displayMessages(data.messages, data.application);
+      }
+    })
+    .catch(error => {
+      console.error('Error loading messages:', error);
+    });
+}
+
+function displayMessages(messages, application) {
+  const content = document.getElementById('messageContent');
+  content.innerHTML = `
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h3 class="font-bold text-xl">${application.company.name}</h3>
+        <p class="text-base-content/60">${application.job.title}</p>
+      </div>
+    </div>
+
+    <div class="space-y-4 mb-6 max-h-96 overflow-y-auto" id="messagesList">
+      ${messages.map(msg => `
+        <div class="flex ${msg.fromEmployer ? 'justify-start' : 'justify-end'}">
+          <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-2xl ${
+            msg.fromEmployer
+              ? 'bg-base-200 text-base-content rounded-bl-none'
+              : 'bg-primary text-primary-content rounded-br-none'
+          }">
+            <p class="text-sm">${msg.message}</p>
+            <p class="text-xs opacity-70 mt-1">${new Date(msg.createdAt).toLocaleString()}</p>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="border-t border-base-200/50 pt-4">
+      <form id="replyForm" class="space-y-4">
+        <div class="form-control">
+          <textarea
+            id="replyMessage"
+            class="textarea textarea-bordered rounded-xl"
+            placeholder="Type your reply..."
+            rows="3"
+            required
+          ></textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" class="btn btn-primary rounded-xl">
+            <i class="fa-solid fa-paper-plane mr-2"></i>Send Reply
+          </button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  // Scroll to bottom
+  const messagesList = document.getElementById('messagesList');
+  messagesList.scrollTop = messagesList.scrollHeight;
+
+  // Handle form submission
+  document.getElementById('replyForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const message = document.getElementById('replyMessage').value.trim();
+    if (!message) return;
+
+    fetch(`/profile/messages/${applicationId}/reply`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': '{{ csrfToken }}'
+      },
+      body: JSON.stringify({ message })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        document.getElementById('replyMessage').value = '';
+        loadMessages(applicationId); // Reload messages
+      } else {
+        alert('Failed to send message: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error sending message:', error);
+      alert('Failed to send message');
+    });
+  });
+}
+</script>
+{% endblock %}

@@ -71,7 +71,9 @@ export const initJobsRouter = (auth) => {
     }
   );
 
-  router.get('/search', async (req, res) => {
+  router.get('/search', 
+    paginate(PAGINATION.JOB_LIST_SIZE, PAGINATION.MAX_PAGE_SIZE),
+    async (req, res) => {
     try {
       const { q, type, location, category, experienceLevel } = req.query;
       const filter = { status: 'approved', isActive: true };
@@ -92,9 +94,24 @@ export const initJobsRouter = (auth) => {
       const jobs = await Job.find(filter)
         .populate('company', 'name logo industry size')
         .sort({ createdAt: -1 })
+        .skip(req.pagination?.skip || 0)
+        .limit(req.pagination?.limit || 20)
         .lean();
 
-      return res.render('jobs/search', { csrfToken: req.csrfToken ? req.csrfToken() : '', jobs: jobs || [], filters: req.query, searchQuery: q || '' });
+      const total = await Job.countDocuments(filter);
+
+      return res.render('jobs/search', { 
+        csrfToken: req.csrfToken ? req.csrfToken() : '', 
+        jobs: jobs || [], 
+        filters: req.query, 
+        searchQuery: q || '',
+        pagination: {
+          page: req.pagination?.page || 1,
+          limit: req.pagination?.limit || 20,
+          total: total || 0,
+          totalPages: Math.ceil((total || 0) / (req.pagination?.limit || 20))
+        }
+      });
     } catch (error) {
       logger.error('Search error:', error);
       return res.status(500).render('error', { message: 'Search failed' });

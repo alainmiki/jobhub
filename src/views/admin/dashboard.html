@@ -1,0 +1,140 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex flex-col lg:flex-row justify-between items-start gap-6 mb-8">
+      <div>
+        <h1 class="text-3xl font-bold">Admin Dashboard</h1>
+        <p class="text-base-content/60">Overview of platform activity and pending review items.</p>
+      </div>
+      <div class="flex flex-wrap gap-3">
+        <a href="/admin/jobs" class="btn btn-primary rounded-xl">Manage Jobs</a>
+        <a href="/admin/companies" class="btn btn-outline rounded-xl">Review Companies</a>
+        <a href="/admin/users" class="btn btn-secondary rounded-xl">Manage Users</a>
+      </div>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error mb-6 rounded-2xl border border-error/20 bg-error/10">
+      <div>
+        <span class="font-semibold">Dashboard load failed:</span>
+        <p class="mt-1 text-sm text-error/90">{{ error }}</p>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="grid gap-6 sm:grid-cols-2 xl:grid-cols-4 mb-8">
+      <div class="card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+        <div class="card-body">
+          <p class="text-sm uppercase tracking-[0.2em] text-base-content/50">Users</p>
+          <h2 class="text-3xl font-bold mt-4">{{ stats.totalUsers }}</h2>
+          <p class="text-sm text-base-content/60 mt-2">Total platform accounts</p>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+        <div class="card-body">
+          <p class="text-sm uppercase tracking-[0.2em] text-base-content/50">Employers</p>
+          <h2 class="text-3xl font-bold mt-4">{{ stats.totalEmployers }}</h2>
+          <p class="text-sm text-base-content/60 mt-2">Employer accounts</p>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+        <div class="card-body">
+          <p class="text-sm uppercase tracking-[0.2em] text-base-content/50">Candidates</p>
+          <h2 class="text-3xl font-bold mt-4">{{ stats.totalCandidates }}</h2>
+          <p class="text-sm text-base-content/60 mt-2">Candidate accounts</p>
+        </div>
+      </div>
+      <div class="card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+        <div class="card-body">
+          <p class="text-sm uppercase tracking-[0.2em] text-base-content/50">Companies</p>
+          <h2 class="text-3xl font-bold mt-4">{{ stats.totalCompanies }}</h2>
+          <p class="text-sm text-base-content/60 mt-2">Company profiles</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid gap-6 xl:grid-cols-3 mb-8">
+      <div class="xl:col-span-2 card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+        <div class="card-body">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h2 class="text-xl font-semibold">Review Queue</h2>
+              <p class="text-sm text-base-content/60">Pending content requiring admin approval.</p>
+            </div>
+            <a href="/admin/pending-jobs" class="btn btn-sm btn-outline">Pending Jobs</a>
+          </div>
+
+          <div class="grid gap-4 sm:grid-cols-3">
+            <div class="rounded-3xl bg-base-200/80 p-5">
+              <p class="text-xs uppercase tracking-[0.2em] text-base-content/50">Pending Jobs</p>
+              <p class="text-3xl font-bold mt-4">{{ stats.pendingJobs }}</p>
+            </div>
+            <div class="rounded-3xl bg-base-200/80 p-5">
+              <p class="text-xs uppercase tracking-[0.2em] text-base-content/50">Pending Companies</p>
+              <p class="text-3xl font-bold mt-4">{{ stats.pendingCompanies }}</p>
+            </div>
+            <div class="rounded-3xl bg-base-200/80 p-5">
+              <p class="text-xs uppercase tracking-[0.2em] text-base-content/50">Applications</p>
+              <p class="text-3xl font-bold mt-4">{{ stats.totalApplications }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+        <div class="card-body">
+          <h2 class="text-xl font-semibold mb-4">Quick Actions</h2>
+          <div class="space-y-3">
+            <a href="/admin/users" class="btn btn-block btn-primary rounded-xl">View Users</a>
+            <a href="/admin/companies" class="btn btn-block btn-outline rounded-xl">Review Companies</a>
+            <a href="/admin/jobs" class="btn btn-block btn-secondary rounded-xl">Manage Jobs</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card bg-base-100 shadow-lg rounded-3xl border border-base-200/50">
+      <div class="card-body">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-semibold">Recent Audit Logs</h2>
+            <p class="text-sm text-base-content/60">Latest admin actions and system events.</p>
+          </div>
+          <a href="/admin/audit-logs" class="btn btn-sm btn-ghost">View all</a>
+        </div>
+
+        {% if recentAuditLogs.length %}
+        <div class="overflow-x-auto">
+          <table class="table table-zebra w-full">
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Admin</th>
+                <th>Target</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for log in recentAuditLogs %}
+              <tr>
+                <td>{{ log.action }}</td>
+                <td>{{ log.adminUserId?.name or 'System' }}</td>
+                <td>{{ log.targetType }}{% if log.targetId %} #{{ log.targetId }}{% endif %}</td>
+                <td>{{ log.createdAt | date('MMM d, YYYY') }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-12 text-base-content/70">
+          No recent audit logs available.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

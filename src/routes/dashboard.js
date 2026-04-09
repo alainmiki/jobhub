@@ -1209,18 +1209,20 @@ export const initDashboardRouter = (auth) => {
         return res.status(403).json({ error: 'Access denied' });
       }
 
-      // Store message in application notes
-      const note = `Message from employer (${new Date().toLocaleString()}): ${message}`;
-      application.employerNotes = application.employerNotes ? `${application.employerNotes}\n\n${note}` : note;
+      // Store message in application messages
+      application.messages.push({
+        fromEmployer: true,
+        message: message
+      });
       await application.save();
 
       // Send notification to candidate
       const notification = new Notification({
         recipient: application.applicantUserId,
         type: 'message_from_employer',
-        title: 'Message from Employer',
+        title: 'New message from employer',
         message: `You have a new message regarding your application for ${job.title}`,
-        link: `/profile/applications`
+        link: `/profile/messages`
       });
       await notification.save();
       emitNotification(req, application.applicantUserId, notification);

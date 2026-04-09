@@ -19,13 +19,13 @@
               </div>
             </div>
             <div class="flex gap-3">
-              <a href="/dashboard/admin/jobs/create" class="btn btn-primary btn-sm">
-                <i class="fa-solid fa-plus mr-2"></i>New Job
+              <a href="/admin/jobs/create" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus mr-1"></i>Create Job
               </a>
-              <a href="/dashboard/admin/users/create" class="btn btn-outline btn-sm">
-                <i class="fa-solid fa-user-plus mr-2"></i>New User
+              <a href="/admin/users/create" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-user-plus mr-1"></i>Create User
               </a>
-              <a href="/dashboard/admin/notifications/send" class="btn btn-outline btn-sm">
+              <a href="/admin/notifications/send" class="btn btn-outline btn-sm">
                 <i class="fa-solid fa-bell mr-2"></i>Send Notification
               </a>
             </div>
@@ -184,7 +184,7 @@
               </table>
             </div>
             <div class="mt-4">
-              <a href="/dashboard/admin/audit-logs" class="btn btn-outline">View All Logs</a>
+              <a href="/admin/audit-logs" class="btn btn-outline">View All Logs</a>
             </div>
           </div>
         </div>
@@ -201,26 +201,26 @@
           </h2>
 
           <nav class="space-y-2">
-            <a href="/dashboard/admin" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors bg-primary/10 text-primary">
+            <a href="/admin" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors bg-primary/10 text-primary">
               <i class="fa-solid fa-tachometer-alt mr-3 w-5"></i>Dashboard
             </a>
 
             <div class="divider text-xs text-base-content/50">USER MANAGEMENT</div>
-            <a href="/dashboard/admin/users" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/users" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-users mr-3 w-5"></i>All Users
             </a>
-            <a href="/dashboard/admin/users/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/users/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-user-plus mr-3 w-5"></i>Create User
             </a>
 
             <div class="divider text-xs text-base-content/50">JOB MANAGEMENT</div>
-            <a href="/dashboard/admin/jobs" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/jobs" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-briefcase mr-3 w-5"></i>All Jobs
             </a>
-            <a href="/dashboard/admin/jobs/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/jobs/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-plus-circle mr-3 w-5"></i>Create Job
             </a>
-            <a href="/dashboard/admin/jobs?status=pending" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/jobs?status=pending" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-clock mr-3 w-5"></i>Pending Jobs
               {% if stats.pendingJobs > 0 %}
               <span class="badge badge-warning badge-sm ml-auto">{{ stats.pendingJobs }}</span>
@@ -228,13 +228,13 @@
             </a>
 
             <div class="divider text-xs text-base-content/50">COMPANY MANAGEMENT</div>
-            <a href="/dashboard/admin/companies" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/companies" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-building mr-3 w-5"></i>All Companies
             </a>
-            <a href="/dashboard/admin/companies/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/companies/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-plus-circle mr-3 w-5"></i>Create Company
             </a>
-            <a href="/dashboard/admin/companies?status=pending" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/companies?status=pending" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-clock mr-3 w-5"></i>Pending Companies
               {% if stats.pendingCompanies > 0 %}
               <span class="badge badge-error badge-sm ml-auto">{{ stats.pendingCompanies }}</span>
@@ -242,15 +242,15 @@
             </a>
 
             <div class="divider text-xs text-base-content/50">COMMUNICATION</div>
-            <a href="/dashboard/admin/notifications" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/notifications" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-bell mr-3 w-5"></i>Notifications
             </a>
-            <a href="/dashboard/admin/notifications/send" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/notifications/send" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-paper-plane mr-3 w-5"></i>Send Notification
             </a>
 
             <div class="divider text-xs text-base-content/50">SYSTEM</div>
-            <a href="/dashboard/admin/audit-logs" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+            <a href="/admin/audit-logs" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
               <i class="fa-solid fa-history mr-3 w-5"></i>Audit Logs
             </a>
           </nav>

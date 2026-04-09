@@ -4,7 +4,7 @@ import User from '../models/User.js';
 import Application from '../models/Application.js';
 import Interview from '../models/Interview.js';
 import Job from '../models/Job.js';
-import { isAuthenticated } from '../middleware/auth.js';
+import { isAuthenticated, validateCsrfForMultipart } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { upload, handleMulterError } from '../config/multer.js';
 import fs from 'fs/promises';
@@ -112,13 +112,8 @@ export const initProfileRouter = (auth) => {
       { name: 'resume', maxCount: 1 }
     ]),
     handleMulterError,
+    validateCsrfForMultipart,
     asyncHandler(async (req, res) => {
-      if (!req.body._csrf) {
-        return res.status(403).json({ error: 'CSRF token missing' });
-      }
-      if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
-        return res.status(403).json({ error: 'CSRF token invalid' });
-      }
 
       const {
         bio, headline, location, country, phone, website, linkedin, github, twitter,
@@ -803,6 +798,137 @@ export const initProfileRouter = (auth) => {
     logger.info(`Interview cancelled: ${interview._id}`);
     req.flash('success', 'Interview cancelled successfully!');
     res.redirect('/profile/interviews');
+  }));
+
+  // GET /profile/messages - View message threads
+  router.get('/messages', asyncHandler(async (req, res) => {
+    // Only candidates can view messages
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).render('error', { message: 'Access denied', title: '403 - Forbidden' });
+    }
+
+    // Get applications with messages
+    const applications = await Application.find({
+      applicantUserId: req.userId,
+      messages: { $exists: true, $ne: [] }
+    })
+    .populate('job', 'title')
+    .populate({
+      path: 'job',
+      populate: { path: 'company', select: 'name' }
+    })
+    .sort({ 'messages.0.createdAt': -1 });
+
+    const messageThreads = applications.map(app => {
+      const messages = app.messages || [];
+      const lastMessage = messages[messages.length - 1];
+      const unreadCount = messages.filter(msg => !msg.fromEmployer && !msg.read).length;
+
+      return {
+        applicationId: app._id,
+        companyName: app.job.company.name,
+        jobTitle: app.job.title,
+        lastMessageAt: lastMessage ? lastMessage.createdAt : app.createdAt,
+        unreadCount
+      };
+    });
+
+    res.render('profile/messages', {
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
+      messageThreads
+    });
+  }));
+
+  // GET /profile/messages/:applicationId - Get messages for specific application
+  router.get('/messages/:applicationId', asyncHandler(async (req, res) => {
+    // Only candidates can view messages
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const application = await Application.findOne({
+      _id: req.params.applicationId,
+      applicantUserId: req.userId
+    })
+    .populate('job', 'title')
+    .populate({
+      path: 'job',
+      populate: { path: 'company', select: 'name logo' }
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Mark candidate messages as read
+    application.messages = application.messages.map(msg => ({
+      ...msg,
+      read: msg.read || !msg.fromEmployer
+    }));
+    await application.save();
+
+    res.json({
+      success: true,
+      messages: application.messages,
+      application: {
+        _id: application._id,
+        job: {
+          title: application.job.title,
+          company: application.job.company
+        }
+      }
+    });
+  }));
+
+  // POST /profile/messages/:applicationId/reply - Send reply message
+  router.post('/messages/:applicationId/reply', asyncHandler(async (req, res) => {
+    // Only candidates can send messages
+    if (req.user?.role !== 'candidate') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const { message } = req.body;
+    if (!message || !message.trim()) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    const application = await Application.findOne({
+      _id: req.params.applicationId,
+      applicantUserId: req.userId
+    })
+    .populate('job', 'title')
+    .populate({
+      path: 'job',
+      populate: { path: 'company', select: 'name userId' }
+    });
+
+    if (!application) {
+      return res.status(404).json({ error: 'Application not found' });
+    }
+
+    // Add candidate message
+    application.messages.push({
+      fromEmployer: false,
+      message: message.trim(),
+      read: true
+    });
+    await application.save();
+
+    // Send notification to employer (company owner)
+    const employerUserId = application.job.company.userId;
+
+    if (employerUserId) {
+      const notification = new Notification({
+        recipient: employerUserId,
+        type: 'message_from_candidate',
+        title: 'New message from candidate',
+        message: `You have a new message regarding the application for "${application.job.title}"`,
+        link: `/dashboard/employer/applications/${application._id}`
+      });
+      await notification.save();
+    }
+
+    res.json({ success: true });
   }));
 
 

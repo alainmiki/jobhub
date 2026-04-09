@@ -28,6 +28,11 @@ const applicationSchema = new mongoose.Schema({
   },
   notes: { type: String },
   employerNotes: { type: String },
+  messages: [{
+    fromEmployer: { type: Boolean, default: false },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+  }],
   internalRating: { type: Number, min: 1, max: 5 },
   priority: {
     type: String,
