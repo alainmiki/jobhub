@@ -28,6 +28,21 @@ export const errorHandler = (err, req, res, next) => {
     userMessage = 'Server error. Our team has been notified and is working to fix this.';
   }
 
+  if (err.code === 'EBADCSRFTOKEN') {
+    status = 403;
+    userMessage = 'Security token validation failed. Please refresh the page and try again.';
+  }
+
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    status = 400;
+    userMessage = 'The uploaded file is too large. Please upload a smaller file.';
+  }
+
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    status = 400;
+    userMessage = 'Too many files uploaded. Please reduce the number of files.';
+  }
+
   // Log additional details for debugging
   if (status >= 500) {
     logger.error('Server Error:', {

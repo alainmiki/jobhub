@@ -1,4 +1,5 @@
 import { fromNodeHeaders } from "better-auth/node";
+import csrf from 'csurf';
 import UserProfile from '../models/UserProfile.js';
 import mongoose from 'mongoose';
 import validator from 'validator';
@@ -204,4 +205,23 @@ export const isOwner = (auth, resourceOwnerField = 'userId') => {
 
     next();
   };
+};
+
+/**
+ * CSRF token validation for multipart form submissions
+ * Checks for CSRF token in request body or headers
+ */
+export const validateCsrfForMultipart = (req, res, next) => {
+  const token = req.body._csrf || req.headers['x-csrf-token'];
+  
+  if (!token) {
+    return res.status(403).json({ error: 'CSRF token missing from form submission' });
+  }
+  
+  // Verify token using csurf internal check if available
+  if (req.csrfToken && req.csrfToken() !== token) {
+    return res.status(403).json({ error: 'CSRF token invalid or expired' });
+  }
+  
+  next();
 };

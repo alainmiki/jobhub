@@ -9,7 +9,7 @@ import User from '../models/User.js';
 import Notification from '../models/Notification.js';
 import { createAuthMiddleware, isAuthenticated, isEmployer, requireProfileComplete } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
-import { upload } from '../config/multer.js';
+import { upload, handleMulterError } from '../config/multer.js';
 import { validate } from '../middleware/validation.js';
 import logger from '../config/logger.js';
 import { COMPANY_SIZE } from '../config/constants.js';
@@ -45,6 +45,7 @@ export const initCompanyRouter = (auth) => {
       { name: 'logo', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 }
     ]),
+    handleMulterError,
     [
       body('name').trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),
       body('description').trim().isLength({ min: 20, max: 5000 }).withMessage('Description must be 20-5000 characters'),

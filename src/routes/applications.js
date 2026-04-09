@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import Application from '../models/Application.js';
 import ApplicationFeedback from '../models/ApplicationFeedback.js';
 import Job from '../models/Job.js';
+import User from '../models/User.js';
 import UserProfile from '../models/UserProfile.js';
 import Notification from '../models/Notification.js';
 import Company from '../models/Company.js';
@@ -11,6 +12,8 @@ import Interview from '../models/Interview.js';
 import { createAuthMiddleware, isAuthenticated, isRole, isEmployer, requireProfileComplete } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate } from '../middleware/validation.js';
+import { logAuditAction, emitNotification } from '../utils/helpers.js';
+import { sendApplicationNotification, sendInterviewScheduledEmail } from '../config/email.js';
 import logger from '../config/logger.js';
 import { APPLICATION_STATUS } from '../config/constants.js';
 
@@ -91,6 +94,15 @@ export const initApplicationsRouter = (auth) => {
       await notification.save();
       
       emitNotification(req, job.postedBy, notification);
+
+      try {
+        const employerUser = await User.findById(job.postedBy).select('name email');
+        if (employerUser?.email) {
+          await sendApplicationNotification(employerUser.email, employerUser.name, job.title, job.company.name || 'your company', 'pending');
+        }
+      } catch (emailError) {
+        logger.warn(`Application notification email failed: ${emailError.message}`);
+      }
       
       logger.info(`Application submitted: ${application._id} for job: ${job._id}`);
       req.flash('success', 'Application submitted successfully!');
@@ -267,7 +279,8 @@ export const initApplicationsRouter = (auth) => {
     asyncHandler(async (req, res) => {
       const { status, notes, priority } = req.body;
       const application = await Application.findById(req.params.id)
-        .populate('job');
+        .populate('job')
+        .populate('applicantUserId', 'name email');
       
       if (!application) {
         return res.status(404).json({ error: 'Application not found' });
@@ -311,6 +324,20 @@ export const initApplicationsRouter = (auth) => {
           link: `/applications/${application._id}`
         });
         await notification.save();
+
+        if (application.applicantUserId?.email) {
+          try {
+            await sendApplicationNotification(
+              application.applicantUserId.email,
+              application.applicantUserId.name,
+              application.job.title,
+              application.job.company?.name || 'JobHub',
+              status
+            );
+          } catch (emailError) {
+            logger.warn(`Status update email failed: ${emailError.message}`);
+          }
+        }
       }
       
       logger.info(`Application status updated: ${application._id} from ${previousStatus} to ${status}`);
@@ -508,6 +535,18 @@ export const initApplicationsRouter = (auth) => {
         link: `/applications/${application._id}`
       });
       await notification.save();
+
+      try {
+        await application.populate('applicantUserId', 'name email');
+        if (application.applicantUserId?.email) {
+          await sendInterviewScheduledEmail({
+            candidate: { email: application.applicantUserId.email, name: application.applicantUserId.name },
+            interview: interview.toObject()
+          });
+        }
+      } catch (emailError) {
+        logger.warn(`Interview scheduled email failed: ${emailError.message}`);
+      }
       
       logger.info(`Interview scheduled: ${interview._id} for application: ${application._id}`);
       res.json({ success: true, interview });

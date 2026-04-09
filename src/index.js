@@ -32,6 +32,7 @@ import { initProfileRouter } from './routes/profile.js';
 import { initDashboardRouter } from './routes/dashboard.js';
 import { initNotificationsRouter } from './routes/notifications.js';
 import { initMatchesRouter } from './routes/matches.js';
+import { initAdminRouter } from './routes/admin.js';
 import { initAuthRouter } from './routes/auth.js';
 
 import Job from './models/Job.js';
@@ -41,7 +42,6 @@ dotenv.config();
 validateEnv();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-console.log("the dir:",path.join(__dirname, 'public'));
 
 const app = express();
 const httpServer = createServer(app);
@@ -66,6 +66,14 @@ const apiLimiter = rateLimit({
   windowMs: RATE_LIMIT.API_WINDOW,
   max: RATE_LIMIT.API_MAX,
   message: 'Too many API requests, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: 'Too many authentication attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false
 });
@@ -118,22 +126,21 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token']
 }));
 
-// app.use(helmet({
-//   contentSecurityPolicy: {
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'", "'unsafe-eval'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-//       scriptSrcAttr: ["'self'"],
-//       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-//       fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-//       imgSrc: ["'self'", "data:", "https:"],
-//       connectSrc: ["'self'", "https:"],
-//       frameSrc: ["'self'"]
-//     }
-//   },
-//   crossOriginEmbedderPolicy: false
-// }));
-
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      scriptSrcAttr: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "https:"],
+      frameSrc: ["'self'"]
+    }
+  },
+  crossOriginEmbedderPolicy: false
+}));
 
 app.use((req, res, next) => {
   if (req.path.startsWith('/uploads')) {
@@ -240,6 +247,7 @@ app.use((req, res, next) => {
 
 app.use(createAuthMiddleware(auth));
 
+app.use('/api/auth', authLimiter);
 app.use('/api', apiLimiter);
 app.use('/jobs/search', searchLimiter);
 
@@ -258,6 +266,7 @@ app.use('/applications', initApplicationsRouter(auth));
 app.use('/company', initCompanyRouter(auth));
 app.use('/profile', initProfileRouter(auth));
 app.use('/dashboard', initDashboardRouter(auth));
+app.use('/admin', initAdminRouter(auth));
 app.use('/notifications', initNotificationsRouter(auth));
 app.use('/matches', initMatchesRouter(auth));
 

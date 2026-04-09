@@ -156,3 +156,29 @@ export const sendApplicationNotification = async (userEmail, userName, jobTitle,
 
   return sendEmail(userEmail, `Application Status Update - ${jobTitle}`, html);
 };
+
+export const sendInterviewScheduledEmail = async ({ candidate, interview }) => {
+  const html = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <h2 style="color: #333;">Interview Scheduled</h2>
+      <p>Hi ${candidate.name || 'there'},</p>
+      <p>We're pleased to inform you that your interview has been scheduled.</p>
+      <div style="background: #f5f5f5; padding: 15px; border-radius: 6px; margin: 20px 0;">
+        <p><strong>Interview Details:</strong></p>
+        <p><strong>Type:</strong> ${interview.type || 'TBD'}</p>
+        <p><strong>Date & Time:</strong> ${new Date(interview.scheduledAt).toLocaleString()}</p>
+        <p><strong>Duration:</strong> ${interview.duration || 60} minutes</p>
+        ${interview.location ? `<p><strong>Location:</strong> ${interview.location}</p>` : ''}
+        ${interview.meetingLink ? `<p><strong>Meeting Link:</strong> <a href="${interview.meetingLink}">${interview.meetingLink}</a></p>` : ''}
+        ${interview.notes ? `<p><strong>Notes:</strong> ${interview.notes}</p>` : ''}
+      </div>
+      <p style="color: #666; font-size: 14px;">
+        Log in to your JobHub account to confirm or reschedule your interview.
+      </p>
+      <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+      <p style="color: #999; font-size: 12px;">JobHub - Connecting candidates with opportunities</p>
+    </div>
+  `;
+
+  return sendEmail(candidate.email, 'Interview Scheduled - JobHub', html);
+};
