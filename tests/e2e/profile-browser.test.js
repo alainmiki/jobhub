@@ -17,11 +17,9 @@ describe('Profile Edit Browser Automation', () => {
         const container = document.getElementById('experience-container');
         const item = document.createElement('div');
         item.className = 'experience-item';
-        item.innerHTML = `
-          <button type="button" class="remove-btn">Remove</button>
-          <input type="text" name="experience[\${expCount}][company]" value="" />
-          <input type="text" name="experience[\${expCount}][title]" value="" />
-        `;
+        item.innerHTML = '<button type="button" class="remove-btn">Remove</button>' +
+          '<input type="text" name="experience[' + expCount + '][company]" value="" />' +
+          '<input type="text" name="experience[' + expCount + '][title]" value="" />';
 
         const removeBtn = item.querySelector('.remove-btn');
         removeBtn.addEventListener('click', (event) => {
@@ -37,11 +35,9 @@ describe('Profile Edit Browser Automation', () => {
         const container = document.getElementById('education-container');
         const item = document.createElement('div');
         item.className = 'education-item';
-        item.innerHTML = `
-          <button type="button" class="remove-btn">Remove</button>
-          <input type="text" name="education[\${eduCount}][institution]" value="" />
-          <input type="text" name="education[\${eduCount}][degree]" value="" />
-        `;
+        item.innerHTML = '<button type="button" class="remove-btn">Remove</button>' +
+          '<input type="text" name="education[' + eduCount + '][institution]" value="" />' +
+          '<input type="text" name="education[' + eduCount + '][degree]" value="" />';
 
         const removeBtn = item.querySelector('.remove-btn');
         removeBtn.addEventListener('click', (event) => {

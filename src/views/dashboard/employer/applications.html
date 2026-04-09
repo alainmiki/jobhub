@@ -1,0 +1,185 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+      <div>
+        <h1 class="text-3xl font-bold">Candidate Applications</h1>
+        <p class="text-base-content/60">Manage applications to your job postings</p>
+      </div>
+      <a href="/dashboard/employer" class="btn btn-ghost rounded-xl">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+      </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card bg-base-100 shadow-lg mb-6">
+      <div class="card-body">
+        <form method="GET" class="flex flex-wrap gap-4">
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Status</span>
+            </label>
+            <select name="status" class="select select-bordered">
+              <option value="all" {% if filters.status == 'all' or not filters.status %}selected{% endif %}>All Status</option>
+              <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="viewed" {% if filters.status == 'viewed' %}selected{% endif %}>Viewed</option>
+              <option value="shortlisted" {% if filters.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+              <option value="rejected" {% if filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+              <option value="accepted" {% if filters.status == 'accepted' %}selected{% endif %}>Accepted</option>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Job</span>
+            </label>
+            <select name="job" class="select select-bordered">
+              <option value="all" {% if filters.job == 'all' or not filters.job %}selected{% endif %}>All Jobs</option>
+              {% for job in companyJobs %}
+              <option value="{{ job._id }}" {% if filters.job == job._id.toString() %}selected{% endif %}>{{ job.title }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label">
+              <span class="label-text">Sort By</span>
+            </label>
+            <select name="sort" class="select select-bordered">
+              <option value="date" {% if filters.sort == 'date' or not filters.sort %}selected{% endif %}>Application Date</option>
+              <option value="status" {% if filters.sort == 'status' %}selected{% endif %}>Status</option>
+              <option value="job" {% if filters.sort == 'job' %}selected{% endif %}>Job Title</option>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <button type="submit" class="btn btn-primary mt-8">Filter</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Applications List -->
+    <div class="space-y-4">
+      {% for application in applications %}
+      <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+        <div class="card-body">
+          <div class="flex items-start justify-between">
+            <div class="flex items-start gap-4">
+              <div class="avatar">
+                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                  {% if application.applicantUserId.image %}
+                  <img src="{{ application.applicantUserId.image }}" alt="{{ application.applicantUserId.name }}" class="rounded-full">
+                  {% else %}
+                  <i class="fa-solid fa-user text-primary text-xl"></i>
+                  {% endif %}
+                </div>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-bold text-lg">{{ application.applicantUserId.name }}</h3>
+                <p class="text-base-content/60">{{ application.applicantUserId.email }}</p>
+                <p class="text-sm text-primary font-medium mt-1">{{ application.job.title }}</p>
+
+                {% if application.candidate %}
+                <div class="flex flex-wrap gap-2 mt-2">
+                  {% if application.candidate.headline %}
+                  <span class="badge badge-ghost">{{ application.candidate.headline }}</span>
+                  {% endif %}
+                  {% if application.candidate.yearsOfExperience %}
+                  <span class="badge badge-info">{{ application.candidate.yearsOfExperience }} years exp</span>
+                  {% endif %}
+                  {% if application.candidate.location %}
+                  <span class="badge badge-neutral">{{ application.candidate.location }}</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-2">
+              <span class="badge {% if application.status == 'accepted' %}badge-success{% elif application.status == 'rejected' %}badge-error{% elif application.status == 'shortlisted' %}badge-info{% elif application.status == 'viewed' %}badge-warning{% else %}badge-ghost{% endif %}">
+                {{ application.status | title }}
+              </span>
+              <p class="text-xs text-base-content/50">{{ application.createdAt | date('MMM d, YYYY') }}</p>
+            </div>
+          </div>
+
+          {% if application.coverLetter %}
+          <div class="mt-4 p-3 bg-base-200/50 rounded-lg">
+            <h4 class="font-semibold text-sm mb-2">Cover Letter</h4>
+            <p class="text-sm text-base-content/70">{{ application.coverLetter | truncate(200) }}</p>
+          </div>
+          {% endif %}
+
+          <div class="card-actions justify-end mt-4">
+            <a href="/dashboard/employer/applications/{{ application._id }}" class="btn btn-outline btn-sm">
+              <i class="fa-solid fa-eye mr-2"></i>View Details
+            </a>
+            <button onclick="updateStatus('{{ application._id }}', 'viewed')" class="btn btn-warning btn-sm">
+              <i class="fa-solid fa-eye mr-2"></i>Mark Viewed
+            </button>
+            <button onclick="updateStatus('{{ application._id }}', 'shortlisted')" class="btn btn-info btn-sm">
+              <i class="fa-solid fa-star mr-2"></i>Shortlist
+            </button>
+            <button onclick="updateStatus('{{ application._id }}', 'rejected')" class="btn btn-error btn-sm">
+              <i class="fa-solid fa-xmark mr-2"></i>Reject
+            </button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if pagination.totalPages > 1 %}
+    <div class="flex justify-center mt-8">
+      <div class="join">
+        {% for page in range(1, pagination.totalPages + 1) %}
+        <a href="?page={{ page }}{% if filters.status %}&status={{ filters.status }}{% endif %}{% if filters.job %}&job={{ filters.job }}{% endif %}{% if filters.sort %}&sort={{ filters.sort }}{% endif %}"
+           class="join-item btn {% if page == pagination.page %}btn-active{% endif %}">
+          {{ page }}
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+
+    {% if applications.length == 0 %}
+    <div class="text-center py-12">
+      <i class="fa-solid fa-inbox text-6xl text-base-content/20 mb-4"></i>
+      <h3 class="text-xl font-bold mb-2">No Applications Yet</h3>
+      <p class="text-base-content/60">Applications to your job postings will appear here.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function updateStatus(applicationId, status) {
+  if (!confirm(`Are you sure you want to ${status} this application?`)) return;
+
+  fetch(`/dashboard/employer/applications/${applicationId}/status`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrfToken }}'
+    },
+    body: JSON.stringify({ status })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert('Error updating status');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error updating status');
+  });
+}
+</script>
+{% endblock %}

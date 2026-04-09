@@ -63,16 +63,17 @@
                <a href="/company/{{ company._id }}" class="btn btn-ghost btn-sm">
                  <i class="fa-solid fa-eye"></i>
                </a>
-               <form method="POST" action="/admin/companies/{{ company._id }}/approve" class="inline">
-                 <button type="submit" class="btn btn-success btn-sm">
-                   <i class="fa-solid fa-check"></i> Approve
-                 </button>
-               </form>
-               <form method="POST" action="/admin/companies/{{ company._id }}/reject" class="inline">
-                 <button type="submit" class="btn btn-error btn-sm" onclick="return confirm('Are you sure you want to reject this company?')">
-                   <i class="fa-solid fa-xmark"></i> Reject
-                 </button>
-               </form>
+                <form method="POST" action="/dashboard/admin/companies/{{ company._id }}/approve" class="inline">
+                  <button type="submit" class="btn btn-success btn-sm">
+                    <i class="fa-solid fa-check"></i> Approve
+                  </button>
+                </form>
+                <form method="POST" action="/dashboard/admin/companies/{{ company._id }}/reject" class="inline">
+                  <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+                  <button type="submit" class="btn btn-error btn-sm" onclick="return confirm('Are you sure you want to reject this company?')">
+                    <i class="fa-solid fa-xmark"></i> Reject
+                  </button>
+                </form>
              </div>
            </td>
         </tr>

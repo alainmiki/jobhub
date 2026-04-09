@@ -1,0 +1,105 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+        <i class="fa-solid fa-building text-primary text-xl"></i>
+      </div>
+      <h1 class="text-3xl font-bold tracking-tight mb-2">Create Company</h1>
+      <p class="text-base-content/60">Add a new company to the platform</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
+      <div class="card-body p-6">
+        {% if errorMessage and errorMessage.length > 0 %}
+        <div class="alert alert-error mb-4 rounded-xl bg-error/10 border border-error/20">
+          <i class="fa-solid fa-circle-exclamation text-error"></i>
+          <div>
+            <h4 class="font-semibold">Please fix the following errors:</h4>
+            <ul class="list-disc list-inside mt-2">
+              {% for error in errorMessage %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          </div>
+        </div>
+        {% endif %}
+
+        <form action="/dashboard/admin/companies" method="POST" class="space-y-5">
+          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Company Name</span>
+              </label>
+              <input type="text" name="name" required class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="e.g. TechCorp Inc." />
+            </div>
+
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Industry</span>
+              </label>
+              <input type="text" name="industry" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="e.g. Technology, Healthcare" />
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Description</span>
+            </label>
+            <textarea name="description" required class="textarea textarea-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" rows="4" placeholder="Describe the company, its mission, and what it does..."></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Company Size</span>
+              </label>
+              <select name="size" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+                <option value="">Select size</option>
+                <option value="1-10">1-10 employees</option>
+                <option value="11-50">11-50 employees</option>
+                <option value="51-200">51-200 employees</option>
+                <option value="201-500">201-500 employees</option>
+                <option value="501-1000">501-1000 employees</option>
+                <option value="1000+">1000+ employees</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Headquarters</span>
+              </label>
+              <input type="text" name="headquarters" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="City, Country" />
+            </div>
+
+            <div class="form-control">
+              <label class="label py-2">
+                <span class="label-text font-medium text-sm">Founded Year</span>
+              </label>
+              <input type="number" name="foundedYear" min="1800" max="{{ new Date().getFullYear() }}" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="2020" />
+            </div>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium text-sm">Website</span>
+            </label>
+            <input type="url" name="website" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="https://example.com" />
+          </div>
+
+          <div class="form-control mt-6">
+            <button type="submit" class="btn btn-primary-gradient btn-block rounded-xl h-12 font-semibold shadow-primary/30 hover:shadow-lg">
+              <span>Create Company</span>
+              <i class="fa-solid fa-plus ml-2"></i>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

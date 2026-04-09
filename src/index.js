@@ -32,7 +32,6 @@ import { initProfileRouter } from './routes/profile.js';
 import { initDashboardRouter } from './routes/dashboard.js';
 import { initNotificationsRouter } from './routes/notifications.js';
 import { initMatchesRouter } from './routes/matches.js';
-import { initAdminRouter } from './routes/admin.js';
 import { initAuthRouter } from './routes/auth.js';
 
 import Job from './models/Job.js';
@@ -261,7 +260,6 @@ app.use('/profile', initProfileRouter(auth));
 app.use('/dashboard', initDashboardRouter(auth));
 app.use('/notifications', initNotificationsRouter(auth));
 app.use('/matches', initMatchesRouter(auth));
-app.use('/admin', initAdminRouter(auth));
 
 // Make io accessible to routers via req
 app.use((req, res, next) => {

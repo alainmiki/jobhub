@@ -7,6 +7,7 @@ import Job from '../models/Job.js';
 import Company from '../models/Company.js';
 import AuditLog from '../models/AuditLog.js';
 import Notification from '../models/Notification.js';
+import Application from '../models/Application.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate, idParamValidator } from '../middleware/validation.js';
 import { paginate } from '../middleware/pagination.js';
@@ -23,33 +24,8 @@ export const initAdminRouter = (auth) => {
 
   // GET /admin - Admin dashboard
   router.get('/', asyncHandler(async (req, res) => {
-    const [
-      totalUsers,
-      totalEmployers,
-      totalCandidates,
-      totalCompanies,
-      totalJobs,
-      pendingJobs,
-      pendingCompanies,
-      totalApplications,
-      recentAuditLogs
-    ] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ role: 'employer' }),
-      User.countDocuments({ role: 'candidate' }),
-      Company.countDocuments(),
-      Job.countDocuments(),
-      Job.countDocuments({ status: 'pending' }),
-      Company.countDocuments({ verified: false }),
-      require('../models/Application.js').countDocuments(),
-      AuditLog.find()
-        .populate('adminUserId', 'name email')
-        .sort({ createdAt: -1 })
-        .limit(10)
-    ]);
-
-    res.render('admin/dashboard', {
-      stats: {
+    try {
+      const [
         totalUsers,
         totalEmployers,
         totalCandidates,
@@ -57,10 +33,56 @@ export const initAdminRouter = (auth) => {
         totalJobs,
         pendingJobs,
         pendingCompanies,
-        totalApplications
-      },
-      recentAuditLogs
-    });
+        totalApplications,
+        recentAuditLogs
+      ] = await Promise.all([
+        User.countDocuments().catch(err => { logger.error('Error counting users:', err); return 0; }),
+        User.countDocuments({ role: 'employer' }).catch(err => { logger.error('Error counting employers:', err); return 0; }),
+        User.countDocuments({ role: 'candidate' }).catch(err => { logger.error('Error counting candidates:', err); return 0; }),
+        Company.countDocuments().catch(err => { logger.error('Error counting companies:', err); return 0; }),
+        Job.countDocuments().catch(err => { logger.error('Error counting jobs:', err); return 0; }),
+        Job.countDocuments({ status: 'pending' }).catch(err => { logger.error('Error counting pending jobs:', err); return 0; }),
+        Company.countDocuments({ verified: false }).catch(err => { logger.error('Error counting pending companies:', err); return 0; }),
+        Application.countDocuments().catch(err => { logger.error('Error counting applications:', err); return 0; }),
+        AuditLog.find()
+          .populate('adminUserId', 'name email')
+          .sort({ createdAt: -1 })
+          .limit(10)
+          .catch(err => { logger.error('Error fetching audit logs:', err); return []; })
+      ]);
+
+      logger.info(`Admin dashboard stats: users=${totalUsers}, employers=${totalEmployers}, candidates=${totalCandidates}, companies=${totalCompanies}, jobs=${totalJobs}, pendingJobs=${pendingJobs}, pendingCompanies=${pendingCompanies}, applications=${totalApplications}`);
+
+      res.render('admin/dashboard', {
+        stats: {
+          totalUsers: totalUsers || 0,
+          totalEmployers: totalEmployers || 0,
+          totalCandidates: totalCandidates || 0,
+          totalCompanies: totalCompanies || 0,
+          totalJobs: totalJobs || 0,
+          pendingJobs: pendingJobs || 0,
+          pendingCompanies: pendingCompanies || 0,
+          totalApplications: totalApplications || 0
+        },
+        recentAuditLogs: recentAuditLogs || []
+      });
+    } catch (error) {
+      logger.error('Error loading admin dashboard:', error);
+      res.render('admin/dashboard', {
+        stats: {
+          totalUsers: 0,
+          totalEmployers: 0,
+          totalCandidates: 0,
+          totalCompanies: 0,
+          totalJobs: 0,
+          pendingJobs: 0,
+          pendingCompanies: 0,
+          totalApplications: 0
+        },
+        recentAuditLogs: [],
+        error: 'Failed to load dashboard statistics'
+      });
+    }
   }));
 
   // GET /admin/users/create - Create user form
@@ -358,6 +380,100 @@ export const initAdminRouter = (auth) => {
           totalPages: Math.ceil(total / req.pagination.limit)
         }
       });
+    })
+  );
+
+  // GET /admin/companies - List all companies
+  router.get('/companies',
+    paginate(20),
+    asyncHandler(async (req, res) => {
+      const { status, search } = req.query;
+
+      const filter = {};
+      if (status === 'verified') filter.verified = true;
+      else if (status === 'pending') filter.verified = false;
+      if (search) {
+        const safeSearch = sanitizeRegex(search);
+        filter.$or = [
+          { name: { $regex: safeSearch, $options: 'i' } },
+          { industry: { $regex: safeSearch, $options: 'i' } }
+        ];
+      }
+
+      const [companies, total] = await Promise.all([
+        Company.find(filter)
+          .populate('userId', 'name email')
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        Company.countDocuments(filter)
+      ]);
+
+      res.render('admin/companies', {
+        companies,
+        filters: { status, search },
+        pagination: {
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
+      });
+    })
+  );
+
+  // GET /admin/companies/create - Create company form
+  router.get('/companies/create', asyncHandler(async (req, res) => {
+    res.render('admin/company-create');
+  }));
+
+  // POST /admin/companies - Create new company
+  router.post('/companies',
+    [
+      body('name').trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),
+      body('description').trim().isLength({ min: 20, max: 5000 }).withMessage('Description must be 20-5000 characters'),
+      body('industry').trim().isLength({ max: 100 }).withMessage('Industry must be under 100 characters'),
+      body('size').isIn(['1-10', '11-50', '51-200', '201-500', '501-1000', '1000+']).withMessage('Please select a valid company size'),
+      body('website').optional({ checkFalsy: true }).trim().isURL({ protocols: ['http', 'https'], require_protocol: false }).withMessage('Invalid website URL'),
+      body('headquarters').optional().trim().isLength({ max: 100 }),
+      body('foundedYear').optional().isInt({ min: 1800, max: new Date().getFullYear() })
+    ],
+    validate,
+    asyncHandler(async (req, res) => {
+      const { name, description, industry, size, website, headquarters, foundedYear } = req.body;
+
+      // Create a temporary user for the company (admin-created companies)
+      const tempUser = new User({
+        name: `${name} Admin`,
+        email: `admin@${name.toLowerCase().replace(/\s+/g, '')}.com`,
+        role: 'employer',
+        isActive: true
+      });
+      await tempUser.save();
+
+      const companyData = {
+        name,
+        description,
+        industry,
+        size,
+        website,
+        headquarters,
+        foundedYear: foundedYear ? parseInt(foundedYear) : undefined,
+        userId: tempUser._id,
+        verified: true, // Admin-created companies are auto-verified
+        socialLinks: {},
+        specializations: [],
+        status: 'approved'
+      };
+
+      const company = new Company(companyData);
+      await company.save();
+
+      await logAuditAction(req, 'company_create', 'company', company._id, {
+        name: company.name
+      });
+
+      logger.info(`Admin ${req.userId} created company: ${company._id}`);
+      req.flash('success', 'Company created successfully');
+      res.redirect('/admin/companies');
     })
   );
 

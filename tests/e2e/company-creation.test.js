@@ -4,6 +4,10 @@ import request from 'supertest';
 import cookieParser from 'cookie-parser';
 import session from 'express-session';
 import csrf from 'csurf';
+import flash from 'connect-flash';
+import nunjucks from 'nunjucks';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const mockSave = vi.fn().mockResolvedValue();
 const mockFindOne = vi.fn();
@@ -35,6 +39,7 @@ vi.mock('../../src/models/Notification.js', () => ({
 
 const createTestApp = async (auth) => {
   const { initCompanyRouter } = await import('../../src/routes/company.js');
+  const __dirname = path.dirname(fileURLToPath(import.meta.url));
   const app = express();
   app.use(cookieParser());
   app.use(session({
@@ -43,16 +48,29 @@ const createTestApp = async (auth) => {
     saveUninitialized: true,
     cookie: { httpOnly: true, secure: false }
   }));
+  app.use(flash());
+  app.use((req, res, next) => {
+    res.locals.successMessage = req.flash('success');
+    res.locals.errorMessage = req.flash('error');
+    next();
+  });
   app.use(csrf({ cookie: { httpOnly: true, secure: false } }));
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
+
+  nunjucks.configure(path.join(__dirname, '../../src/views'), {
+    autoescape: true,
+    express: app,
+    noCache: true
+  });
+  app.set('view engine', 'html');
 
   app.use((req, res, next) => {
     res.locals.csrfToken = req.csrfToken ? req.csrfToken() : '';
     next();
   });
 
-  app.use(initCompanyRouter(auth));
+  app.use('/company', initCompanyRouter(auth));
 
   app.use((err, req, res, next) => {
     if (err && err.code === 'EBADCSRFTOKEN') {
@@ -103,13 +121,11 @@ describe('Company Creation E2E', () => {
 
   it('should create a new company and redirect to the edit page', async () => {
     const getRes = await agent.get('/company/create').expect(200);
-    const cookie = getRes.headers['set-cookie'];
     const match = getRes.text.match(/name="_csrf" value="([^"]+)"/);
     const csrfToken = match ? match[1] : '';
 
     const response = await agent
       .post('/company')
-      .set('Cookie', cookie)
       .field('_csrf', csrfToken)
       .field('name', 'Acme Corporation')
       .field('description', 'An innovative company building automated workflows.')

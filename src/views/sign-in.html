@@ -1,91 +1,121 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 hero-pattern">
-  <div class="w-full max-w-md">
-    <div class="text-center mb-8 gsap-reveal">
-      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-secondary shadow-lg shadow-primary/30 mb-4">
-        <i class="fa-solid fa-right-to-bracket text-white text-xl"></i>
+<!-- Sign In Page -->
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-base-100 via-base-200 to-base-100 px-4 py-12">
+  <!-- Background Elements -->
+  <div class="absolute inset-0 overflow-hidden">
+    <div class="absolute top-20 left-10 w-96 h-96 bg-primary/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-20 right-10 w-80 h-80 bg-secondary/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 w-full max-w-md">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30 mb-6">
+        <i class="fa-solid fa-right-to-bracket  text-2xl"></i>
       </div>
-      <h1 class="text-3xl font-bold tracking-tight mb-2">Welcome Back</h1>
-      <p class="text-base-content/60">Sign in to continue your job search journey</p>
+      <h1 class="text-3xl md:text-4xl font-bold  mb-2">Welcome Back</h1>
+      <p class="">Sign in to continue your professional journey</p>
     </div>
-    
-    <div class="card bg-base-100 shadow-xl rounded-2xl border border-base-200/50 card-border-glow gsap-reveal stagger-1">
-      <div class="card-body p-6 sm:p-8">
-        {% if error %}
-        <div class="alert alert-error mb-4 rounded-xl bg-error/10 border border-error/20">
+
+    <!-- Sign In Card -->
+    <div class="bg-base-100 rounded-3xl shadow-2xl border border-base-200/50 p-8 md:p-10">
+      {% if error %}
+      <div class="mb-6 p-4 bg-error/10 border border-error/20 rounded-xl">
+        <div class="flex items-center gap-3">
           <i class="fa-solid fa-circle-exclamation text-error"></i>
-          <span class="text-sm">{{ error }}</span>
+          <span class="text-red-700 text-sm font-medium">{{ error }}</span>
         </div>
-        {% endif %}
+      </div>
+      {% endif %}
 
-        <form id="signinForm" action="/sign-in" method="POST" class="space-y-5">
-          <input type="hidden" name="_gotcha" style="display:none">
-          <input type="hidden" name="redirect" value="{{ redirect or '/' }}">
-          <input type="hidden" name="_csrf" value="{{ csrfToken }}">
-          
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Email Address</span>
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <i class="fa-regular fa-envelope text-base-content/40"></i>
-              </div>
-              <input type="email" name="email" required 
-                class="input input-bordered w-full pl-12 rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary focus:bg-base-100" 
-                placeholder="you@example.com" />
-            </div>
-          </div>
-          
-          <div class="form-control">
-            <label class="label py-2">
-              <span class="label-text font-medium text-sm">Password</span>
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-                <i class="fa-solid fa-lock text-base-content/40"></i>
-              </div>
-              <input type="password" name="password" required 
-                class="input input-bordered w-full pl-12 rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary focus:bg-base-100" 
-                placeholder="Enter your password" />
-              <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-4 toggle-password" aria-label="Toggle password visibility">
-                <i class="fa-regular fa-eye text-base-content/40 hover:text-base-content"></i>
-              </button>
-            </div>
-            <label class="label py-2">
-              <a href="/forgot-password" class="label-text-alt link link-primary text-sm font-medium hover:underline">Forgot password?</a>
-            </label>
-          </div>
-          
-          <div class="error-message text-error text-sm mt-2"></div>
+      <form action="/sign-in" method="POST" class="space-y-6">
+        <input type="hidden" name="_gotcha" style="display:none">
+        <input type="hidden" name="redirect" value="{{ redirect or '/' }}">
+        <input type="hidden" name="_csrf" value="{{ csrfToken }}">
 
-          <div class="form-control mt-6">
-            <button type="submit" class="btn btn-primary-gradient btn-block rounded-xl h-12 font-semibold shadow-primary/30 hover:shadow-lg">
-              <span>Sign In</span>
-              <i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
+        <!-- Email Field -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <i class="fa-regular fa-envelope text-gray-400"></i>
+            </div>
+            <input type="email" name="email" required
+              class="w-full pl-12 pr-4 py-3 border border-base-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-base-200 focus:bg-base-100"
+              placeholder="you@example.com" />
+          </div>
+        </div>
+
+        <!-- Password Field -->
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <i class="fa-solid fa-lock text-gray-400"></i>
+            </div>
+            <input type="password" name="password" required
+              class="w-full pl-12 pr-12 py-3 border border-base-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary transition-all duration-200 bg-base-200 focus:bg-base-100"
+              placeholder="Enter your password" />
+            <button type="button" class="absolute inset-y-0 right-0 flex items-center pr-4 toggle-password" aria-label="Toggle password visibility">
+              <i class="fa-regular fa-eye text-gray-400 hover:text-gray-600"></i>
             </button>
           </div>
-        </form>
-        
-        <div class="divider my-6 text-base-content/40 text-sm">or continue with</div>
-        
-        <div class="text-center">
-          <p class="text-base-content/60 text-sm">Don't have an account? <a href="/sign-up?{{ redirectQuery }}" class="link link-primary font-semibold hover:underline">Create one</a></p>
+          <div class="mt-2 text-right">
+            <a href="/forgot-password" class="text-sm text-blue-600 hover:text-blue-700 font-medium hover:underline">Forgot password?</a>
+          </div>
         </div>
-        
-        <div class="mt-6 p-4 bg-base-200/30 rounded-xl">
-          <p class="text-xs text-base-content/60 text-center">
-            <i class="fa-solid fa-circle-question mr-1"></i>
-            Need help? <a href="#" class="link link-primary text-xs">View FAQ</a> or <a href="#" class="link link-primary text-xs">Contact Support</a>
-          </p>
+
+        <!-- Submit Button -->
+        <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]">
+          <span>Sign In</span>
+          <i class="fa-solid fa-arrow-right ml-2 text-sm"></i>
+        </button>
+      </form>
+
+      <!-- Divider -->
+      <div class="relative my-8">
+        <div class="absolute inset-0 flex items-center">
+          <div class="w-full border-t border-gray-300"></div>
+        </div>
+        <div class="relative flex justify-center text-sm">
+          <span class="px-4 bg-white text-gray-500">or continue with</span>
         </div>
       </div>
+
+      <!-- Social Login Placeholder -->
+      <div class="space-y-3">
+        <button class="w-full flex items-center justify-center gap-3 px-4 py-3 border border-base-300 rounded-xl hover:bg-base-200 transition-colors">
+          <i class="fa-brands fa-google text-red-500"></i>
+          <span class="text-base-content font-medium">Continue with Google</span>
+        </button>
+        <button class="w-full flex items-center justify-center gap-3 px-4 py-3 border border-base-300 rounded-xl hover:bg-base-200 transition-colors">
+          <i class="fa-brands fa-linkedin text-blue-600"></i>
+          <span class="text-base-content font-medium">Continue with LinkedIn</span>
+        </button>
+      </div>
+
+      <!-- Sign Up Link -->
+      <div class="text-center mt-8">
+        <p class="">
+          Don't have an account?
+          <a href="/sign-up?{{ redirectQuery }}" class="text-blue-600 hover:text-blue-700 font-semibold hover:underline">Create one</a>
+        </p>
+      </div>
+
+      <!-- Help Links -->
+      <div class="mt-6 p-4 bg-base-200 rounded-xl">
+        <p class="text-xs text-base-content/70 text-center">
+          <i class="fa-solid fa-circle-question mr-1"></i>
+          Need help? <a href="#" class="text-primary hover:underline">View FAQ</a> or <a href="#" class="text-primary hover:underline">Contact Support</a>
+        </p>
+      </div>
     </div>
-    
-    <p class="text-center text-xs text-base-content/40 mt-6">
-      By signing in, you agree to our <a href="#" class="link link-primary">Terms of Service</a> and <a href="#" class="link link-primary">Privacy Policy</a>
+
+    <!-- Terms -->
+    <p class="text-center text-xs text-gray-400 mt-6">
+      By signing in, you agree to our <a href="#" class="text-blue-600 hover:underline">Terms of Service</a> and <a href="#" class="text-blue-600 hover:underline">Privacy Policy</a>
     </p>
   </div>
 </div>

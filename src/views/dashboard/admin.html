@@ -1,147 +1,267 @@
 {% extends "layout.html" %}
+
 {% block content %}
-<div class="min-h-screen bg-base-200/30 py-8 px-4">
-  <div class="max-w-7xl mx-auto">
-    <div class="mb-8 gsap-reveal">
-      <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">Admin Dashboard</h1>
-      <p class="text-base-content/60">System overview and pending tasks</p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-1">
-        <div class="card-body p-5">
+<div class="min-h-screen bg-base-200/30">
+  <div class="drawer drawer-mobile">
+    <input id="admin-drawer" type="checkbox" class="drawer-toggle" />
+    <div class="drawer-content">
+      <!-- Header -->
+      <div class="bg-base-100 border-b border-base-200/50 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 py-4">
           <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-base-content/50 font-medium">Total Jobs</p>
-              <p class="text-3xl font-bold tracking-tight">{{ stats.totalJobs }}</p>
-              <p class="text-xs text-base-content/40 mt-1">{{ stats.approvedJobs }} approved</p>
+            <div class="flex items-center gap-4">
+              <label for="admin-drawer" class="btn btn-ghost btn-circle">
+                <i class="fa-solid fa-bars"></i>
+              </label>
+              <div>
+                <h1 class="text-2xl font-bold">Admin Dashboard</h1>
+                <p class="text-sm text-base-content/60">Platform Management</p>
+              </div>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <i class="fa-solid fa-briefcase text-xl text-primary"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-2">
-        <div class="card-body p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-base-content/50 font-medium">Pending Jobs</p>
-              <p class="text-3xl font-bold tracking-tight text-warning">{{ stats.pendingJobs }}</p>
-              <a href="/admin/jobs/pending" class="text-xs text-primary hover:underline mt-1 inline-block">Review all</a>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-warning/10 flex items-center justify-center">
-              <i class="fa-solid fa-clock text-xl text-warning"></i>
+            <div class="flex gap-3">
+              <a href="/dashboard/admin/jobs/create" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus mr-2"></i>New Job
+              </a>
+              <a href="/dashboard/admin/users/create" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-user-plus mr-2"></i>New User
+              </a>
+              <a href="/dashboard/admin/notifications/send" class="btn btn-outline btn-sm">
+                <i class="fa-solid fa-bell mr-2"></i>Send Notification
+              </a>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-3">
-        <div class="card-body p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-base-content/50 font-medium">Companies</p>
-              <p class="text-3xl font-bold tracking-tight">{{ stats.totalCompanies }}</p>
-              <p class="text-xs text-base-content/40 mt-1">
-                {% if stats.pendingCompanies > 0 %}{{ stats.pendingCompanies }} pending{% else %}All verified{% endif %}
-              </p>
+      <!-- Main Content -->
+      <div class="max-w-7xl mx-auto py-8 px-4">
+        <div class="mb-8">
+          <h2 class="text-xl font-semibold mb-2">Platform Overview</h2>
+          <p class="text-base-content/60">Monitor and manage all platform entities</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-users text-primary text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.totalUsers }}</h3>
+                  <p class="text-base-content/60">Total Users</p>
+                </div>
+              </div>
             </div>
-            <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-              <i class="fa-solid fa-building text-xl text-secondary"></i>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-building text-secondary text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.totalEmployers }}</h3>
+                  <p class="text-base-content/60">Employers</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-user-graduate text-accent text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.totalCandidates }}</h3>
+                  <p class="text-base-content/60">Candidates</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-briefcase text-info text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.totalJobs }}</h3>
+                  <p class="text-base-content/60">Total Jobs</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-clock text-warning text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.pendingJobs }}</h3>
+                  <p class="text-base-content/60">Pending Jobs</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-error/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-building-circle-exclamation text-error text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.pendingCompanies }}</h3>
+                  <p class="text-base-content/60">Pending Companies</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-file-alt text-success text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.totalApplications }}</h3>
+                  <p class="text-base-content/60">Applications</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card bg-base-100 shadow-lg">
+            <div class="card-body">
+              <div class="flex items-center">
+                <div class="w-12 h-12 bg-neutral/10 rounded-lg flex items-center justify-center">
+                  <i class="fa-solid fa-shield-alt text-neutral text-xl"></i>
+                </div>
+                <div class="ml-4">
+                  <h3 class="text-2xl font-bold">{{ stats.totalCompanies }}</h3>
+                  <p class="text-base-content/60">Companies</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl card-hover-lift gsap-reveal stagger-4">
-        <div class="card-body p-5">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm text-base-content/50 font-medium">Applications</p>
-              <p class="text-3xl font-bold tracking-tight">{{ stats.totalApplications }}</p>
-              <p class="text-xs text-base-content/40 mt-1">Across all listings</p>
-            </div>
-            <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-              <i class="fa-solid fa-file-lines text-xl text-accent"></i>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-1 space-y-6">
-        <h3 class="text-xl font-bold flex items-center gap-2">
-          <i class="fa-solid fa-bolt text-warning"></i>Quick Actions
-        </h3>
-        <div class="flex flex-col gap-3">
-          <a href="/admin/users" class="btn btn-outline justify-between rounded-xl group">
-            <span><i class="fa-solid fa-users mr-2"></i>User Management</span>
-            <i class="fa-solid fa-chevron-right transition-transform group-hover:translate-x-1"></i>
-          </a>
-          <a href="/admin/jobs/pending" class="btn btn-outline justify-between rounded-xl group">
-            <span><i class="fa-solid fa-check-to-square mr-2"></i>Approve Jobs</span>
-            {% if stats.pendingJobs > 0 %}
-            <span class="badge badge-warning badge-sm">{{ stats.pendingJobs }}</span>
-            {% endif %}
-          </a>
-          <a href="/admin/companies/pending" class="btn btn-outline justify-between rounded-xl group">
-            <span><i class="fa-solid fa-building-columns mr-2"></i>Verify Companies</span>
-            {% if stats.pendingCompanies > 0 %}
-            <span class="badge badge-warning badge-sm">{{ stats.pendingCompanies }}</span>
-            {% endif %}
-          </a>
-          <a href="/admin/audit-logs" class="btn btn-outline justify-between rounded-xl group">
-            <span><i class="fa-solid fa-book mr-2"></i>Audit Logs</span>
-            <i class="fa-solid fa-chevron-right transition-transform group-hover:translate-x-1"></i>
-          </a>
-          <a href="/admin/notifications/send" class="btn btn-outline justify-between rounded-xl group">
-            <span><i class="fa-solid fa-bell mr-2"></i>Send Notification</span>
-            <i class="fa-solid fa-chevron-right transition-transform group-hover:translate-x-1"></i>
-          </a>
-        </div>
-      </div>
-
-      <div class="lg:col-span-2">
-        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">
-          <div class="card-body p-6">
-            <h3 class="font-bold text-lg mb-4 flex items-center gap-2">
-              <i class="fa-solid fa-clock text-primary"></i>Recent Job Postings
-            </h3>
+        <!-- Recent Audit Logs -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Recent Activity</h2>
             <div class="overflow-x-auto">
-              <table class="table table-sm">
+              <table class="table table-zebra w-full">
                 <thead>
-                  <tr class="border-base-200/50">
-                    <th class="text-xs uppercase tracking-wider text-base-content/50">Title</th>
-                    <th class="text-xs uppercase tracking-wider text-base-content/50">Company</th>
-                    <th class="text-xs uppercase tracking-wider text-base-content/50">Status</th>
-                    <th class="text-xs uppercase tracking-wider text-base-content/50">Date</th>
+                  <tr>
+                    <th>Action</th>
+                    <th>Admin</th>
+                    <th>Target</th>
+                    <th>Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for job in recentJobs %}
-                  <tr class="border-base-200/30 hover:bg-base-200/30 transition-colors">
-                    <td class="font-medium">{{ job.title }}</td>
-                    <td>{{ job.company.name }}</td>
+                  {% for log in recentAuditLogs %}
+                  <tr>
                     <td>
-                      <span class="badge badge-sm badge-outline 
-                        {% if job.status == 'approved' %}badge-success
-                        {% elseif job.status == 'pending' %}badge-warning
-                        {% else %}badge-error{% endif %}">
-                        {{ job.status }}
-                      </span>
+                      <span class="badge badge-primary">{{ log.action }}</span>
                     </td>
-                    <td class="text-base-content/60 text-sm">{{ job.createdAt.toLocaleDateString() }}</td>
+                    <td>{{ log.adminUserId.name }}</td>
+                    <td>{{ log.targetType }}: {{ log.details.title or log.details.email or log.details.name or log._id }}</td>
+                    <td>{{ log.createdAt | date('MMM d, YYYY HH:mm') }}</td>
                   </tr>
                   {% endfor %}
                 </tbody>
               </table>
             </div>
+            <div class="mt-4">
+              <a href="/dashboard/admin/audit-logs" class="btn btn-outline">View All Logs</a>
+            </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="drawer-side  z-50">
+      <label for="admin-drawer" class="drawer-overlay"></label>
+      <aside class="bg-base-100 min-h-full w-80 border-r border-base-200/50">
+        <div class="p-6">
+          <h2 class="text-lg font-bold mb-6 flex items-center">
+            <i class="fa-solid fa-cog mr-2"></i>Admin Panel
+          </h2>
+
+          <nav class="space-y-2">
+            <a href="/dashboard/admin" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors bg-primary/10 text-primary">
+              <i class="fa-solid fa-tachometer-alt mr-3 w-5"></i>Dashboard
+            </a>
+
+            <div class="divider text-xs text-base-content/50">USER MANAGEMENT</div>
+            <a href="/dashboard/admin/users" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-users mr-3 w-5"></i>All Users
+            </a>
+            <a href="/dashboard/admin/users/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-user-plus mr-3 w-5"></i>Create User
+            </a>
+
+            <div class="divider text-xs text-base-content/50">JOB MANAGEMENT</div>
+            <a href="/dashboard/admin/jobs" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-briefcase mr-3 w-5"></i>All Jobs
+            </a>
+            <a href="/dashboard/admin/jobs/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-plus-circle mr-3 w-5"></i>Create Job
+            </a>
+            <a href="/dashboard/admin/jobs?status=pending" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-clock mr-3 w-5"></i>Pending Jobs
+              {% if stats.pendingJobs > 0 %}
+              <span class="badge badge-warning badge-sm ml-auto">{{ stats.pendingJobs }}</span>
+              {% endif %}
+            </a>
+
+            <div class="divider text-xs text-base-content/50">COMPANY MANAGEMENT</div>
+            <a href="/dashboard/admin/companies" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-building mr-3 w-5"></i>All Companies
+            </a>
+            <a href="/dashboard/admin/companies/create" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-plus-circle mr-3 w-5"></i>Create Company
+            </a>
+            <a href="/dashboard/admin/companies?status=pending" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-clock mr-3 w-5"></i>Pending Companies
+              {% if stats.pendingCompanies > 0 %}
+              <span class="badge badge-error badge-sm ml-auto">{{ stats.pendingCompanies }}</span>
+              {% endif %}
+            </a>
+
+            <div class="divider text-xs text-base-content/50">COMMUNICATION</div>
+            <a href="/dashboard/admin/notifications" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-bell mr-3 w-5"></i>Notifications
+            </a>
+            <a href="/dashboard/admin/notifications/send" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-paper-plane mr-3 w-5"></i>Send Notification
+            </a>
+
+            <div class="divider text-xs text-base-content/50">SYSTEM</div>
+            <a href="/dashboard/admin/audit-logs" class="nav-link flex items-center p-3 rounded-xl hover:bg-base-200 transition-colors">
+              <i class="fa-solid fa-history mr-3 w-5"></i>Audit Logs
+            </a>
+          </nav>
+
+          <div class="mt-8 pt-6 border-t border-base-200/50">
+            <a href="/" class="btn btn-ghost btn-sm w-full justify-start">
+              <i class="fa-solid fa-home mr-3"></i>Back to Site
+            </a>
+          </div>
+        </div>
+      </aside>
     </div>
   </div>
 </div>

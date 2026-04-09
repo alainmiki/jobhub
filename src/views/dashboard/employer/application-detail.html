@@ -1,0 +1,209 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-8 px-4">
+  <div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-start mb-8">
+      <div>
+        <h1 class="text-3xl font-bold">{{ application.applicantUserId.name }}</h1>
+        <p class="text-base-content/60">{{ application.applicantUserId.email }}</p>
+        <p class="text-sm text-primary font-medium mt-1">Applied for: {{ job.title }}</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="/dashboard/employer/applications" class="btn btn-ghost rounded-xl">
+          <i class="fa-solid fa-arrow-left mr-2"></i>Back to Applications
+        </a>
+        <select onchange="updateStatus('{{ application._id }}', this.value)" class="select select-bordered">
+          <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+          <option value="viewed" {% if application.status == 'viewed' %}selected{% endif %}>Viewed</option>
+          <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+          <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+          <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Application Details -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Application Details</h2>
+
+            <div class="grid grid-cols-2 gap-4 mb-6">
+              <div>
+                <p class="text-sm font-medium text-base-content/60">Status</p>
+                <span class="badge {% if application.status == 'accepted' %}badge-success{% elif application.status == 'rejected' %}badge-error{% elif application.status == 'shortlisted' %}badge-info{% elif application.status == 'viewed' %}badge-warning{% else %}badge-ghost{% endif %} badge-lg">
+                  {{ application.status | title }}
+                </span>
+              </div>
+              <div>
+                <p class="text-sm font-medium text-base-content/60">Applied Date</p>
+                <p class="font-medium">{{ application.createdAt | date('MMM d, YYYY') }}</p>
+              </div>
+            </div>
+
+            {% if application.coverLetter %}
+            <div class="mb-6">
+              <h3 class="font-bold text-lg mb-3">Cover Letter</h3>
+              <div class="p-4 bg-base-200/50 rounded-xl">
+                <p class="whitespace-pre-line">{{ application.coverLetter }}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            {% if application.employerNotes %}
+            <div class="mb-6">
+              <h3 class="font-bold text-lg mb-3">Your Notes</h3>
+              <div class="p-4 bg-info/10 rounded-xl border border-info/20">
+                <p class="whitespace-pre-line">{{ application.employerNotes }}</p>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="flex gap-3 mt-6">
+              <button onclick="updateStatus('{{ application._id }}', 'shortlisted')" class="btn btn-info">
+                <i class="fa-solid fa-star mr-2"></i>Shortlist
+              </button>
+              <button onclick="scheduleInterview('{{ application._id }}')" class="btn btn-primary">
+                <i class="fa-solid fa-calendar mr-2"></i>Schedule Interview
+              </button>
+            <button onclick="showMessageModal()" class="btn btn-outline">
+              <i class="fa-solid fa-envelope mr-2"></i>Send Message
+            </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Candidate Profile -->
+        {% if application.candidate %}
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Candidate Profile</h2>
+
+            {% if application.candidate.bio %}
+            <div class="mb-4">
+              <h3 class="font-bold mb-2">About</h3>
+              <p class="text-base-content/70">{{ application.candidate.bio }}</p>
+            </div>
+            {% endif %}
+
+            {% if application.candidate.skills and application.candidate.skills.length > 0 %}
+            <div class="mb-4">
+              <h3 class="font-bold mb-2">Skills</h3>
+              <div class="flex flex-wrap gap-2">
+                {% for skill in application.candidate.skills %}
+                <span class="badge badge-primary">{{ skill }}</span>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            {% if application.candidate.experience and application.candidate.experience.length > 0 %}
+            <div class="mb-4">
+              <h3 class="font-bold mb-2">Experience</h3>
+              <div class="space-y-3">
+                {% for exp in application.candidate.experience %}
+                <div class="p-3 bg-base-200/50 rounded-lg">
+                  <h4 class="font-semibold">{{ exp.title }}</h4>
+                  <p class="text-sm text-base-content/60">{{ exp.company }}{% if exp.location %} · {{ exp.location }}{% endif %}</p>
+                  <p class="text-xs text-base-content/50">
+                    {% if exp.startDate %}{{ exp.startDate | date('MMM YYYY') }}{% endif %} - {% if exp.current %}Present{% else %}{{ exp.endDate | date('MMM YYYY') }}{% endif %}
+                  </p>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+        <!-- Job Details -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title text-lg mb-4">Job Details</h3>
+            <div class="space-y-2 text-sm">
+              <div>
+                <span class="font-medium">Title:</span> {{ job.title }}
+              </div>
+              <div>
+                <span class="font-medium">Location:</span> {{ job.location }}
+              </div>
+              <div>
+                <span class="font-medium">Type:</span> {{ job.type }}
+              </div>
+              {% if job.salary %}
+              <div>
+                <span class="font-medium">Salary:</span> ${{ job.salary.min }} - ${{ job.salary.max }}
+              </div>
+              {% endif %}
+            </div>
+            <a href="/jobs/{{ job._id }}" class="btn btn-outline btn-sm w-full mt-4">
+              View Job Posting
+            </a>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title text-lg mb-4">Quick Actions</h3>
+            <div class="space-y-2">
+              <button onclick="updateStatus('{{ application._id }}', 'accepted')" class="btn btn-success btn-sm w-full">
+                <i class="fa-solid fa-check mr-2"></i>Accept Application
+              </button>
+              <button onclick="updateStatus('{{ application._id }}', 'rejected')" class="btn btn-error btn-sm w-full">
+                <i class="fa-solid fa-times mr-2"></i>Reject Application
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateStatus(applicationId, status) {
+  const notes = status === 'rejected' ? prompt('Add notes (optional):') : '';
+  if (status === 'rejected' && notes === null) return;
+
+  fetch(`/dashboard/employer/applications/${applicationId}/status`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': '{{ csrfToken }}'
+    },
+    body: JSON.stringify({ status, notes })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      location.reload();
+    } else {
+      alert('Error updating status');
+    }
+  })
+  .catch(error => {
+    console.error('Error:', error);
+    alert('Error updating status');
+  });
+}
+
+function scheduleInterview(applicationId) {
+  // TODO: Implement interview scheduling modal
+  alert('Interview scheduling coming soon!');
+}
+
+function sendMessage(applicationId) {
+  // TODO: Implement messaging modal
+  alert('Messaging feature coming soon!');
+}
+</script>
+{% endblock %}

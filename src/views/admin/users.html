@@ -63,7 +63,7 @@
                     <i class="fa-solid fa-ellipsis-vertical"></i>
                   </button>
                   <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-xl bg-base-100 rounded-xl w-44 border border-base-200/50">
-                    <li><a href="/admin/users/{{ user._id }}" class="rounded-lg"><i class="fa-solid fa-eye mr-2"></i>View Details</a></li>
+                    <li><a href="/dashboard/admin/users/{{ user._id }}" class="rounded-lg"><i class="fa-solid fa-eye mr-2"></i>View Details</a></li>
                     <li>
                       <button onclick="openRoleModal('{{ user._id }}', '{{ user.role }}')" class="rounded-lg"><i class="fa-solid fa-user-pen mr-2"></i>Change Role</button>
                     </li>
