@@ -72,13 +72,14 @@ export const initProfileRouter = (auth) => {
       await profile.save();
       await profile.populate('userId', 'name email image');
     }
-    res.render('profile/edit', { 
+    res.render('profile/edit', {
       profile,
-      showGuidance: req.query.complete === 'true'
+      showGuidance: req.query.complete === 'true',
+      csrfToken: req.csrfToken ? req.csrfToken() : ''
     });
   }));
 
-  router.post('/', 
+  router.post('/',
     upload.fields([
       { name: 'image', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 },
@@ -86,7 +87,14 @@ export const initProfileRouter = (auth) => {
     ]),
     handleMulterError,
     asyncHandler(async (req, res) => {
-      const { 
+      // CSRF check for multipart forms
+      if (!req.body._csrf) {
+        return res.status(403).json({ error: 'CSRF token missing' });
+      }
+      if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
+        return res.status(403).json({ error: 'CSRF token invalid' });
+      }
+      const {
         bio, headline, location, country, phone, website, linkedin, github, twitter,
         // role removed from body to prevent privilege escalation
         skills, education, experience,
@@ -95,10 +103,6 @@ export const initProfileRouter = (auth) => {
         availabilityAvailable, noticePeriod, availabilityStartDate,
         idempotencyKey
       } = req.body;
-
-      if (!req.csrfToken && req.headers['x-csrf-token']) {
-        req.csrfToken = () => req.headers['x-csrf-token'];
-      }
 
       const existingProfile = await UserProfile.findOne({ userId: req.userId });
       if (existingProfile && existingProfile.lastUpdateIdempotencyKey === idempotencyKey && idempotencyKey) {

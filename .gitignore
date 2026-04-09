@@ -3,6 +3,7 @@ node_modules/
 
 # Environment variables
 .env
+.agent/
 
 # Uploads (Keep the directory but ignore files)
 src/public/uploads/*

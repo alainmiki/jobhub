@@ -146,10 +146,6 @@ export const initJobsRouter = (auth) => {
         hasApplied = !!application;
       }
       
-      console.log('[DEBUG] req.user:', req.user);
-      console.log('[DEBUG] req.userId:', req.userId);
-      console.log('[DEBUG] hasApplied:', hasApplied);
-      
       return res.render('jobs/show', { 
         job, 
         hasApplied, 

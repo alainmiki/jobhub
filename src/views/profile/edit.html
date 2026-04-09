@@ -97,6 +97,19 @@
             <textarea name="bio" class="textarea textarea-bordered rounded-xl h-40" placeholder="Tell us about your background, goals, and expertise...">{{ profile.bio }}</textarea>
             <label class="label"><span class="label-text-alt text-base-content/50">Max 500 characters</span></label>
           </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Profile Image</span></label>
+              <input type="file" name="image" accept="image/*" class="file-input file-input-bordered rounded-xl" />
+              <label class="label"><span class="label-text-alt text-base-content/50">Upload a profile picture (JPEG, PNG, GIF, WebP)</span></label>
+            </div>
+            <div class="form-control">
+              <label class="label"><span class="label-text font-bold">Cover Image</span></label>
+              <input type="file" name="coverImage" accept="image/*" class="file-input file-input-bordered rounded-xl" />
+              <label class="label"><span class="label-text-alt text-base-content/50">Upload a cover/banner image (JPEG, PNG, GIF, WebP)</span></label>
+            </div>
+          </div>
         </div>
       </div>
 

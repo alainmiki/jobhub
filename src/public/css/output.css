@@ -54,6 +54,7 @@
     --radius-3xl: 1.5rem;
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --animate-ping: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
     --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     --blur-lg: 16px;
     --blur-3xl: 64px;
@@ -922,6 +923,27 @@
         }
         > * {
           grid-row-start: 1;
+        }
+      }
+    }
+  }
+  .toast {
+    @layer daisyui.l1.l2.l3 {
+      position: fixed;
+      inset-inline-start: auto;
+      inset-inline-end: calc(0.25rem * 4);
+      top: auto;
+      bottom: calc(0.25rem * 4);
+      display: flex;
+      flex-direction: column;
+      gap: calc(0.25rem * 2);
+      background-color: transparent;
+      translate: var(--toast-x, 0) var(--toast-y, 0);
+      width: max-content;
+      max-width: calc(100vw - 2rem);
+      & > * {
+        @media (prefers-reduced-motion: no-preference) {
+          animation: toast 0.25s ease-out;
         }
       }
     }
@@ -1986,6 +2008,13 @@
   .inset-y-0 {
     inset-block: calc(var(--spacing) * 0);
   }
+  .toast-end {
+    @layer daisyui.l1.l2 {
+      inset-inline-start: auto;
+      inset-inline-end: calc(0.25rem * 4);
+      --toast-x: 0;
+    }
+  }
   .start {
     inset-inline-start: var(--spacing);
   }
@@ -2054,6 +2083,9 @@
   .right-2 {
     right: calc(var(--spacing) * 2);
   }
+  .right-4 {
+    right: calc(var(--spacing) * 4);
+  }
   .right-6 {
     right: calc(var(--spacing) * 6);
   }
@@ -2083,6 +2115,9 @@
   }
   .left-4 {
     left: calc(var(--spacing) * 4);
+  }
+  .left-6 {
+    left: calc(var(--spacing) * 6);
   }
   .left-10 {
     left: calc(var(--spacing) * 10);
@@ -2464,6 +2499,9 @@
   }
   .z-\[60\] {
     z-index: 60;
+  }
+  .z-\[9999\] {
+    z-index: 9999;
   }
   .col-span-full {
     grid-column: 1 / -1;
@@ -3120,6 +3158,9 @@
       height: var(--size);
     }
   }
+  .h-1 {
+    height: calc(var(--spacing) * 1);
+  }
   .h-2 {
     height: calc(var(--spacing) * 2);
   }
@@ -3306,6 +3347,9 @@
   .transform {
     transform: var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,);
   }
+  .animate-ping {
+    animation: var(--animate-ping);
+  }
   .animate-pulse {
     animation: var(--animate-pulse);
   }
@@ -3490,6 +3534,10 @@
     border-top-left-radius: var(--radius-xl);
     border-top-right-radius: var(--radius-xl);
   }
+  .rounded-b-xl {
+    border-bottom-right-radius: var(--radius-xl);
+    border-bottom-left-radius: var(--radius-xl);
+  }
   .border {
     border-style: var(--tw-border-style);
     border-width: 1px;
@@ -3664,6 +3712,9 @@
     @supports (color: color-mix(in lab, red, red)) {
       background-color: color-mix(in oklab, var(--color-base-content) 30%, transparent);
     }
+  }
+  .bg-current {
+    background-color: currentcolor;
   }
   .bg-error {
     background-color: var(--color-error);
@@ -3914,6 +3965,9 @@
   .py-1 {
     padding-block: calc(var(--spacing) * 1);
   }
+  .py-1\.5 {
+    padding-block: calc(var(--spacing) * 1.5);
+  }
   .py-2 {
     padding-block: calc(var(--spacing) * 2);
   }
@@ -3946,6 +4000,9 @@
   }
   .pr-4 {
     padding-right: calc(var(--spacing) * 4);
+  }
+  .pb-2 {
+    padding-bottom: calc(var(--spacing) * 2);
   }
   .pl-4 {
     padding-left: calc(var(--spacing) * 4);
@@ -4212,12 +4269,18 @@
   .uppercase {
     text-transform: uppercase;
   }
+  .italic {
+    font-style: italic;
+  }
   .antialiased {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   .opacity-0 {
     opacity: 0%;
+  }
+  .opacity-20 {
+    opacity: 20%;
   }
   .opacity-30 {
     opacity: 30%;
@@ -4227,6 +4290,12 @@
   }
   .opacity-60 {
     opacity: 60%;
+  }
+  .opacity-70 {
+    opacity: 70%;
+  }
+  .opacity-75 {
+    opacity: 75%;
   }
   .opacity-80 {
     opacity: 80%;
@@ -4487,6 +4556,13 @@
       --btn-fg: var(--color-warning-content);
     }
   }
+  .input-error {
+    @layer daisyui.l1.l2 {
+      &, &:focus, &:focus-within {
+        --input-color: var(--color-error);
+      }
+    }
+  }
   .radio-primary {
     @layer daisyui.l1.l2 {
       --input-color: var(--color-primary);
@@ -4684,6 +4760,13 @@
       }
     }
   }
+  .hover\:bg-base-200 {
+    &:hover {
+      @media (hover: hover) {
+        background-color: var(--color-base-200);
+      }
+    }
+  }
   .hover\:bg-base-200\/30 {
     &:hover {
       @media (hover: hover) {
@@ -4730,26 +4813,6 @@
         background-color: color-mix(in srgb, #4F46E5 10%, transparent);
         @supports (color: color-mix(in lab, red, red)) {
           background-color: color-mix(in oklab, var(--color-primary) 10%, transparent);
-        }
-      }
-    }
-  }
-  .hover\:bg-success\/10 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-success);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--color-success) 10%, transparent);
-        }
-      }
-    }
-  }
-  .hover\:bg-warning\/10 {
-    &:hover {
-      @media (hover: hover) {
-        background-color: var(--color-warning);
-        @supports (color: color-mix(in lab, red, red)) {
-          background-color: color-mix(in oklab, var(--color-warning) 10%, transparent);
         }
       }
     }
@@ -6020,6 +6083,12 @@ input, select, textarea {
   syntax: "*";
   inherits: false;
   initial-value: 1;
+}
+@keyframes ping {
+  75%, 100% {
+    transform: scale(2);
+    opacity: 0;
+  }
 }
 @keyframes pulse {
   50% {
