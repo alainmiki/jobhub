@@ -7,12 +7,15 @@ import methodOverride from 'method-override';
 import csrf from 'csurf';
 import flash from 'connect-flash';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { Server } from 'socket.io';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import { toNodeHandler } from 'better-auth/node';
 import MongoStore from 'connect-mongo'; // Import MongoStore
 import rateLimit from 'express-rate-limit';
+import cookie from 'cookie';
 
 import { connectDB } from './config/db.js';
 import { initAuth } from './config/auth.js';
@@ -42,6 +45,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 console.log("the dir:",path.join(__dirname, 'public'));
 
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -118,7 +123,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdn.jsdelivr.net"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://unpkg.com", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
       scriptSrcAttr: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
       fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
@@ -144,7 +149,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(session({
+const sessionMiddleware = session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
@@ -158,7 +163,34 @@ app.use(session({
     mongoUrl: process.env.MONGODB_URI, // Use your existing MongoDB connection string
     ttl: 7 * 24 * 60 * 60 // Session TTL in seconds (7 days)
   })
-}) );
+});
+
+app.use(sessionMiddleware);
+
+// Socket.io Authentication Middleware
+io.use(async (socket, next) => {
+  try {
+    // Use Better-Auth API to get the session from handshake headers
+    const session = await auth.api.getSession({
+      headers: socket.handshake.headers
+    });
+
+    if (!session || !session.user) {
+      return next(new Error('unauthorized'));
+    }
+
+    socket.userId = session.user.id;
+    return next();
+  } catch (err) {
+    logger.error('Socket authentication error:', err);
+    next(new Error('unauthorized'));
+  }
+});
+
+io.on('connection', (socket) => {
+  if (socket.userId) socket.join(socket.userId.toString());
+  logger.info(`User connected to socket: ${socket.userId}`);
+});
 
 app.use(csrf());
 app.use(flash());
@@ -225,6 +257,12 @@ app.use('/notifications', initNotificationsRouter(auth));
 app.use('/matches', initMatchesRouter(auth));
 app.use('/admin', initAdminRouter(auth));
 
+// Make io accessible to routers via req
+app.use((req, res, next) => {
+  req.io = io;
+  next();
+});
+
 app.get('/', async (req, res) => {
   const featuredJobs = await Job.find({ status: 'approved', isActive: true })
     .populate('company', 'name logo')
@@ -260,7 +298,7 @@ app.use((err, req, res, next) => {
 
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   logger.info(`Server running on http://localhost:${PORT}`);
   logger.info(`Better Auth API: http://localhost:${PORT}/api/auth`);
 });

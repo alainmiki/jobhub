@@ -8,8 +8,23 @@ const notificationSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['application_received', 'application_shortlisted', 'application_rejected', 'application_accepted', 'job_match', 'job_approved', 'job_rejected', 'new_job_posted', 'profile_update', 'system'],
+    enum: [
+      'application_received', 'application_shortlisted', 'application_rejected', 'application_accepted', 'application_viewed',
+      'job_match', 'job_approved', 'job_rejected', 'new_job_posted',
+      'profile_update', 'system', 'company_verified', 'company_approve', 'company_rejected',
+      'interview_scheduled', 'interview_confirmed', 'interview_cancelled', 'interview_rescheduled'
+    ],
     required: true
+  },
+  category: {
+    type: String,
+    enum: ['Application', 'Job', 'Company', 'Profile', 'System', 'Interview'],
+    required: true
+  },
+  priority: {
+    type: String,
+    enum: ['low', 'medium', 'high'],
+    default: 'medium'
   },
   title: { type: String, required: true },
   message: { type: String, required: true },
@@ -21,6 +36,8 @@ const notificationSchema = new mongoose.Schema({
 });
 
 notificationSchema.index({ recipient: 1, isRead: 1, createdAt: -1 });
-notificationSchema.index({ link: 1 });
+notificationSchema.index({ link: 1 }); // Keep existing index
+notificationSchema.index({ category: 1, createdAt: -1 }); // New index for category filtering
+notificationSchema.index({ priority: 1, createdAt: -1 }); // New index for priority filtering
 
 export default mongoose.model('Notification', notificationSchema);

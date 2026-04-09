@@ -5,15 +5,18 @@ import User from '../models/User.js';
 import { isAuthenticated, isRole } from '../middleware/auth.js';
 import Job from '../models/Job.js';
 import Company from '../models/Company.js';
+import AuditLog from '../models/AuditLog.js';
+import Notification from '../models/Notification.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate, idParamValidator } from '../middleware/validation.js';
 import { paginate } from '../middleware/pagination.js';
-import { sanitizeRegex, logAuditAction } from '../utils/helpers.js';
+import { sanitizeRegex, logAuditAction, emitNotification } from '../utils/helpers.js';
 import logger from '../config/logger.js';
 
 const router = express.Router();
 
 export const initAdminRouter = (auth) => {
+  const authInstance = auth;
   router.use(isAuthenticated(auth));
   router.use(isRole(auth, 'admin'));
 
@@ -34,42 +37,49 @@ export const initAdminRouter = (auth) => {
     asyncHandler(async (req, res) => {
       const { name, email, role, password } = req.body;
 
-    // Check if user already exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      req.flash('error', 'User with this email already exists');
-      return res.redirect('/admin/users/create');
-    }
+      // Check if user already exists
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        req.flash('error', 'User with this email already exists');
+        return res.redirect('/admin/users/create');
+      }
 
-    const user = new User({
-      name,
-      email,
-      role,
-      isActive: true
-    });
+      // Use better-auth signUp to create the user
+      const signUpResult = await authInstance.api.signUp({
+        email,
+        password,
+        name
+      });
 
-    // Hash password (assuming auth handles it, but for now set directly if needed)
-    // Since using better-auth, perhaps create via auth
-    // For simplicity, assume User model has password field
-    user.password = password; // In real app, hash it
+      if (signUpResult.error) {
+        req.flash('error', signUpResult.error.message || 'Failed to create user');
+        return res.redirect('/admin/users/create');
+      }
 
-    await user.save();
+      const createdUser = signUpResult.data?.user;
+      if (!createdUser) {
+        req.flash('error', 'Failed to create user');
+        return res.redirect('/admin/users/create');
+      }
 
-    // Create UserProfile
-    await UserProfile.create({
-      userId: user._id,
-      role,
-      isActive: true
-    });
+      // Update the User model with role
+      await User.findByIdAndUpdate(createdUser.id, { role, isActive: true }, { upsert: true });
 
-    await logAuditAction(req, 'user_create', 'user', user._id, {
-      email: user.email,
-      role: user.role
-    });
+      // Create UserProfile
+      await UserProfile.create({
+        userId: createdUser.id,
+        role,
+        isActive: true
+      });
 
-    logger.info(`Admin ${req.userId} created user ${user.email}`);
-    req.flash('success', 'User created successfully');
-    res.redirect('/admin/users');
+      await logAuditAction(req, 'user_create', 'user', createdUser.id, {
+        email: createdUser.email,
+        role
+      });
+
+      logger.info(`Admin ${req.userId} created user ${createdUser.email}`);
+      req.flash('success', 'User created successfully');
+      res.redirect('/admin/users');
   }));
 
   // POST /admin/users/:id/delete - Delete user
@@ -350,6 +360,94 @@ export const initAdminRouter = (auth) => {
     logger.info(`Admin ${req.userId} rejected job: ${req.params.id}`);
     req.flash('success', 'Job rejected');
     res.redirect('/admin/jobs/pending');
+  }));
+
+  // GET /admin/audit-logs - View audit logs with filters
+  router.get('/audit-logs',
+    paginate(50),
+    asyncHandler(async (req, res) => {
+      const { action, adminUser, targetType, dateFrom, dateTo, priority } = req.query;
+
+      const query = {};
+      if (action) query.action = action;
+      if (adminUser) query.adminUserId = adminUser;
+      if (targetType) query.targetType = targetType;
+      if (priority) query.priority = priority;
+      if (dateFrom || dateTo) {
+        query.createdAt = {};
+        if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+        if (dateTo) query.createdAt.$lte = new Date(dateTo);
+      }
+
+      const [auditLogs, total] = await Promise.all([
+        AuditLog.find(query)
+          .populate('adminUserId', 'name email')
+          .sort({ createdAt: -1 })
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
+        AuditLog.countDocuments(query)
+      ]);
+
+      res.render('admin/audit-logs', {
+        auditLogs,
+        filters: { action, adminUser, targetType, dateFrom, dateTo, priority },
+        pagination: {
+          page: req.pagination.page,
+          totalPages: Math.ceil(total / req.pagination.limit)
+        }
+      });
+    })
+  );
+
+  // GET /admin/notifications/send - Send notification form
+  router.get('/notifications/send', asyncHandler(async (req, res) => {
+    res.render('admin/notification-send');
+  }));
+
+  // POST /admin/notifications/send - Send system notification
+  router.post('/notifications/send', asyncHandler(async (req, res) => {
+    const { title, message, recipientType, recipientIds, link, priority } = req.body;
+
+    if (!title || !message) {
+      req.flash('error', 'Title and message are required');
+      return res.redirect('/admin/notifications/send');
+    }
+
+    let recipients = [];
+    if (recipientType === 'all') {
+      recipients = await User.find({ isActive: true }).select('_id');
+    } else if (recipientType === 'role' && req.body.role) {
+      recipients = await User.find({ role: req.body.role, isActive: true }).select('_id');
+    } else if (recipientType === 'specific' && recipientIds) {
+      recipients = recipientIds.split(',').map(id => id.trim());
+    }
+
+    const notifications = recipients.map(user => ({
+      recipient: user._id,
+      type: 'system_notification',
+      title,
+      priority: priority || 'medium',
+      message,
+      link: link || null,
+      isRead: false
+    }));
+    const insertedNotifications = await Notification.insertMany(notifications);
+
+    // Emit real-time updates for all recipients
+    insertedNotifications.forEach(notification => {
+      emitNotification(req, notification.recipient, notification);
+    });
+
+    await logAuditAction(req, 'notification_send', 'system', null, {
+      category: 'System',
+      title,
+      recipientCount: recipients.length,
+      recipientType
+    }, priority || 'medium');
+
+    logger.info(`Admin ${req.userId} sent system notification to ${recipients.length} users`);
+    req.flash('success', `Notification sent to ${recipients.length} users`);
+    res.redirect('/admin/notifications/send');
   }));
 
   return router;

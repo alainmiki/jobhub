@@ -1,0 +1,113 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-8 gsap-reveal">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight mb-1">Audit Logs</h1>
+      <p class="text-base-content/60">Review system activity and admin actions</p>
+    </div>
+    <a href="/dashboard/admin" class="btn btn-ghost btn-sm rounded-xl">
+      <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+    </a>
+  </div>
+
+  <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
+    <div class="card-body p-6">
+      <form method="GET" class="flex flex-wrap gap-4 mb-6">
+        <div class="flex-1 min-w-[150px]">
+          <select name="action" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+            <option value="">All Actions</option>
+            <option value="user_create" {% if filters.action == 'user_create' %}selected{% endif %}>User Create</option>
+            <option value="user_delete" {% if filters.action == 'user_delete' %}selected{% endif %}>User Delete</option>
+            <option value="user_role_update" {% if filters.action == 'user_role_update' %}selected{% endif %}>Role Update</option>
+            <option value="user_disable" {% if filters.action == 'user_disable' %}selected{% endif %}>User Disable</option>
+            <option value="user_enable" {% if filters.action == 'user_enable' %}selected{% endif %}>User Enable</option>
+            <option value="job_approve" {% if filters.action == 'job_approve' %}selected{% endif %}>Job Approve</option>
+            <option value="job_reject" {% if filters.action == 'job_reject' %}selected{% endif %}>Job Reject</option>
+            <option value="company_verify" {% if filters.action == 'company_verify' %}selected{% endif %}>Company Verify</option>
+            <option value="company_approve" {% if filters.action == 'company_approve' %}selected{% endif %}>Company Approve</option>
+            <option value="company_reject" {% if filters.action == 'company_reject' %}selected{% endif %}>Company Reject</option>
+            <option value="notification_send" {% if filters.action == 'notification_send' %}selected{% endif %}>Notification Send</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[150px]">
+          <select name="targetType" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary">
+            <option value="">All Types</option>
+            <option value="user" {% if filters.targetType == 'user' %}selected{% endif %}>User</option>
+            <option value="job" {% if filters.targetType == 'job' %}selected{% endif %}>Job</option>
+            <option value="company" {% if filters.targetType == 'company' %}selected{% endif %}>Company</option>
+            <option value="system" {% if filters.targetType == 'system' %}selected{% endif %}>System</option>
+          </select>
+        </div>
+        <div class="flex-1 min-w-[150px]">
+          <input type="date" name="dateFrom" value="{{ filters.dateFrom }}" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="From Date">
+        </div>
+        <div class="flex-1 min-w-[150px]">
+          <input type="date" name="dateTo" value="{{ filters.dateTo }}" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="To Date">
+        </div>
+        <button type="submit" class="btn btn-primary-gradient rounded-xl">
+          <i class="fa-solid fa-filter mr-2"></i>Filter
+        </button>
+      </form>
+
+      <div class="overflow-x-auto">
+        <table class="table">
+          <thead>
+            <tr class="border-base-200/50">
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Admin</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Action</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Target</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Details</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">Date</th>
+              <th class="text-xs uppercase tracking-wider text-base-content/50">IP</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in auditLogs %}
+            <tr class="border-base-200/30 hover:bg-base-200/30 transition-colors">
+              <td class="font-medium">{{ log.adminUserId.name }}</td>
+              <td>
+                <span class="badge badge-sm badge-outline
+                  {% if log.action.includes('create') %}badge-success
+                  {% elseif log.action.includes('delete') or log.action.includes('reject') %}badge-error
+                  {% elseif log.action.includes('approve') or log.action.includes('enable') %}badge-success
+                  {% elseif log.action.includes('disable') %}badge-warning
+                  {% else %}badge-info{% endif %}">
+                  {{ log.action | replace('_', ' ') | title }}
+                </span>
+              </td>
+              <td class="text-sm text-base-content/60">{{ log.targetType }}: {{ log.targetId }}</td>
+              <td class="text-sm">
+                {% if log.details %}
+                  {% for key, value in log.details %}
+                    <span class="text-xs">{{ key }}: {{ value }}</span><br>
+                  {% endfor %}
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td class="text-base-content/60 text-sm">{{ log.createdAt | date('MMM D, YYYY h:mm A') }}</td>
+              <td class="text-base-content/60 text-xs font-mono">{{ log.ipAddress }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination.totalPages > 1 %}
+      <div class="flex justify-center mt-6">
+        <div class="join rounded-xl overflow-hidden">
+          {% for i in range(1, pagination.totalPages + 1) %}
+          <a href="?{% for key, value in filters %}{% if value %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ i }}" 
+            class="join-item btn btn-sm {% if pagination.page == i %}btn-primary{% else %}btn-ghost{% endif %} rounded-lg">
+            {{ i }}
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% macro render(pagination, filters, baseUrl) %}
+{% set totalPages = pagination.totalPages or pagination.pages %}
+{% if totalPages > 1 %}
+<div class="flex justify-center mt-6">
+  <div class="join rounded-xl overflow-hidden shadow-sm">
+    {% set queryParams = "" %}
+    {% for key, value in filters %}
+      {% if value and key != 'page' %}
+        {% set queryParams = queryParams + "&" + key + "=" + value %}
+      {% endif %}
+    {% endfor %}
+    
+    {% for i in range(1, totalPages + 1) %}
+    <a href="{{ baseUrl }}?page={{ i }}{{ queryParams }}" 
+       class="join-item btn btn-sm {% if pagination.page == i %}btn-primary{% else %}btn-ghost bg-base-100{% endif %}">
+      {{ i }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+{% endmacro %}

@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+  <div class="flex items-center justify-between mb-8 gsap-reveal">
+    <div>
+      <h1 class="text-3xl font-bold tracking-tight mb-1">Send System Notification</h1>
+      <p class="text-base-content/60">Broadcast messages to users across the platform</p>
+    </div>
+    <a href="/dashboard/admin" class="btn btn-ghost btn-sm rounded-xl">
+      <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
+    </a>
+  </div>
+
+  <div class="max-w-2xl mx-auto">
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
+      <div class="card-body p-6">
+        <form method="POST" class="space-y-6">
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Notification Title *</span>
+            </label>
+            <input type="text" name="title" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Message *</span>
+            </label>
+            <textarea name="message" class="textarea textarea-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary h-24" required></textarea>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Link (Optional)</span>
+            </label>
+            <input type="url" name="link" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="https://...">
+            <label class="label">
+              <span class="label-text-alt text-base-content/60">Users can click to navigate to this URL</span>
+            </label>
+          </div>
+
+          <div class="form-control">
+            <label class="label py-2">
+              <span class="label-text font-medium">Recipients *</span>
+            </label>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3">
+                <input type="radio" name="recipientType" value="all" class="radio radio-primary" checked>
+                <span>All Active Users</span>
+              </label>
+              <label class="flex items-center gap-3">
+                <input type="radio" name="recipientType" value="role" class="radio radio-primary">
+                <span>Specific Role:</span>
+                <select name="role" class="select select-bordered select-sm rounded-lg bg-base-200/50 border-base-200/50" disabled>
+                  <option value="candidate">Candidates</option>
+                  <option value="employer">Employers</option>
+                  <option value="admin">Admins</option>
+                </select>
+              </label>
+              <label class="flex items-center gap-3">
+                <input type="radio" name="recipientType" value="specific" class="radio radio-primary">
+                <span>Specific Users (comma-separated IDs)</span>
+              </label>
+              <input type="text" name="recipientIds" class="input input-bordered input-sm rounded-lg bg-base-200/50 border-base-200/50 focus:border-primary" placeholder="user_id1,user_id2" disabled>
+            </div>
+          </div>
+
+          <div class="card-actions justify-end pt-4">
+            <button type="submit" class="btn btn-primary-gradient rounded-xl">
+              <i class="fa-solid fa-paper-plane mr-2"></i>Send Notification
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.querySelectorAll('input[name="recipientType"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    document.querySelector('select[name="role"]').disabled = this.value !== 'role';
+    document.querySelector('input[name="recipientIds"]').disabled = this.value !== 'specific';
+  });
+});
+</script>
+{% endblock %}

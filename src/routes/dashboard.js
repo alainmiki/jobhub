@@ -8,6 +8,7 @@ import Notification from '../models/Notification.js';
 import Interview from '../models/Interview.js';
 import { createAuthMiddleware, isAuthenticated, isRole } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
+import { paginate } from '../middleware/pagination.js';
 import { validate } from '../middleware/validation.js';
 import { sanitizeRegex, logAuditAction } from '../utils/helpers.js';
 import logger from '../config/logger.js';
@@ -25,6 +26,19 @@ export const initDashboardRouter = (auth) => {
     next();
   });
 
+  // POST /notifications/read-all - Mark all notifications as read
+  router.post('/notifications/read-all',
+    isAuthenticated(auth),
+    asyncHandler(async (req, res) => {
+      await Notification.updateMany(
+        { recipient: req.userId, isRead: false },
+        { $set: { isRead: true, readAt: new Date() } }
+      );
+      req.flash('success', 'All notifications marked as read.');
+      res.redirect(req.get('Referrer') || '/dashboard/candidate');
+    })
+  );
+
   router.get('/',
     isAuthenticated(auth),
     asyncHandler(async (req, res) => {
@@ -36,9 +50,13 @@ export const initDashboardRouter = (auth) => {
   router.get('/candidate',
     isAuthenticated(auth),
     asyncHandler(async (req, res) => {
+      const { notifCategory } = req.query;
+
       const appliedJobs = await Application.find({
         applicantUserId: req.userId
-      }).populate('job');
+      })
+        .populate('job')
+        .sort({ createdAt: -1 });
 
       const stats = {
         total: appliedJobs.length,
@@ -49,9 +67,7 @@ export const initDashboardRouter = (auth) => {
         rejected: appliedJobs.filter(a => a.status === 'rejected').length
       };
 
-      const recentApplications = appliedJobs
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .slice(0, 5);
+      const recentApplications = appliedJobs.slice(0, 5);
 
       const upcomingInterviews = await Interview.find({
         candidate: req.userProfile._id,
@@ -75,13 +91,15 @@ export const initDashboardRouter = (auth) => {
         .sort({ createdAt: -1 })
         .limit(5);
 
-      const recentNotifications = await Notification.find({
-        recipient: req.userId,
-        isRead: false
-      }).sort({ createdAt: -1 }).limit(3);
+      const notifQuery = { recipient: req.userId, isRead: false };
+      if (notifCategory && notifCategory !== 'All') {
+        notifQuery.category = notifCategory;
+      }
+
+      const recentNotifications = await Notification.find(notifQuery).sort({ createdAt: -1 }).limit(5);
 
       logger.info(`Candidate dashboard loaded for user: ${req.userId}`);
-      res.render('dashboard/candidate', { stats, recommendedJobs, recentNotifications, recentApplications, upcomingInterviews, profile: req.userProfile });
+      res.render('dashboard/candidate', { stats, recommendedJobs, recentNotifications, recentApplications, upcomingInterviews, profile: req.userProfile, activeNotifCategory: notifCategory || 'All' });
     })
   );
 
@@ -106,7 +124,9 @@ export const initDashboardRouter = (auth) => {
       let jobs = [];
 
       if (company) {
-        jobs = await Job.find({ company: company._id }).lean();
+        jobs = await Job.find({ company: company._id })
+          .sort({ createdAt: -1 })
+          .lean();
 
         stats.totalJobs = jobs.length;
         stats.totalViews = jobs.reduce((sum, job) => sum + (job.views || 0), 0);
@@ -264,6 +284,7 @@ export const initDashboardRouter = (auth) => {
   router.get('/employer/candidates',
     isAuthenticated(auth),
     isRole(auth, 'employer'),
+    paginate(20), // Apply pagination middleware
     asyncHandler(async (req, res) => {
       const company = await Company.findOne({ userId: req.userId });
 
@@ -271,9 +292,8 @@ export const initDashboardRouter = (auth) => {
         req.flash('error', 'You need to create a company profile first');
         return res.redirect('/company/create');
       }
-
-      const { search, skills, location, experience, page = 1, limit = 20 } = req.query;
-      const skip = (parseInt(page) - 1) * parseInt(limit);
+      const { search, skills, location, experience, sort } = req.query;
+      const { skip, limit, page } = req.pagination;
 
       const query = {
         role: 'candidate',
@@ -316,24 +336,31 @@ export const initDashboardRouter = (auth) => {
         }
       }
 
+      let sortOption = { profileCompletionScore: -1, updatedAt: -1 }; // Default sort
+      if (sort === 'experience_desc') {
+        sortOption = { 'yearsOfExperience': -1, ...sortOption };
+      } else if (sort === 'experience_asc') {
+        sortOption = { 'yearsOfExperience': 1, ...sortOption };
+      }
+
       const [candidates, total] = await Promise.all([
         UserProfile.find(query)
           .populate('userId', 'name email image createdAt')
-          .sort({ profileCompletionScore: -1, updatedAt: -1 })
-          .skip(skip)
-          .limit(parseInt(limit)),
+          .sort(sortOption)
+          .skip(req.pagination.skip)
+          .limit(req.pagination.limit),
         UserProfile.countDocuments(query)
       ]);
 
       res.render('dashboard/candidates', {
         candidates,
         company,
-        filters: { search, skills, location, experience },
+        filters: { search, skills, location, experience, sort },
         pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
+          page: req.pagination.page,
+          limit: req.pagination.limit,
           total,
-          pages: Math.ceil(total / parseInt(limit))
+          pages: Math.ceil(total / req.pagination.limit)
         }
       });
     })

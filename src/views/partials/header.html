@@ -21,10 +21,10 @@
       
       {% if user %}
       <div class="dropdown dropdown-end ml-2">
-        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:ring-2 ring-primary/30 ring-offset-2 ring-offset-base-100 transition-all {% if user.unreadNotificationsCount > 0 %}indicator{% endif %}">
-          {% if user.unreadNotificationsCount > 0 %}
-          <span class="indicator-item badge badge-primary badge-xs animate-pulse">{{ user.unreadNotificationsCount }}</span>
-          {% endif %}
+        <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar hover:ring-2 ring-primary/30 ring-offset-2 ring-offset-base-100 transition-all indicator">
+          <span id="notification-badge" class="indicator-item badge badge-primary badge-xs animate-pulse {% if not user.unreadNotificationsCount or user.unreadNotificationsCount == 0 %}hidden{% endif %}">
+            {{ user.unreadNotificationsCount or 0 }}
+          </span>
           {% if user.image %}
           <div class="w-10 rounded-full">
             <img src="{{ user.image }}" alt="{{ user.name }}" />
@@ -83,7 +83,7 @@
             <li><a href="/profile" class="rounded-xl"><i class="fa-solid fa-user mr-2"></i>My Profile</a></li>
             <li><a href="/notifications" class="rounded-xl">
               <i class="fa-solid fa-bell mr-2"></i>Notifications
-              {% if user.unreadNotificationsCount > 0 %}<span class="badge badge-primary badge-sm ml-auto">{{ user.unreadNotificationsCount }}</span>{% endif %}
+              <span class="notification-badge-nav badge badge-primary badge-sm ml-auto {% if not user.unreadNotificationsCount or user.unreadNotificationsCount == 0 %}hidden{% endif %}">{{ user.unreadNotificationsCount or 0 }}</span>
             </a></li>
             <li><a href="/enable-2fa" class="rounded-xl"><i class="fa-solid fa-shield-halved mr-2"></i>Security</a></li>
 
@@ -161,7 +161,7 @@
             </li>
             <li><a href="/notifications" class="rounded-xl">
               <i class="fa-solid fa-bell mr-2"></i>Notifications
-              {% if user.unreadNotificationsCount > 0 %}<span class="badge badge-primary badge-sm ml-auto">{{ user.unreadNotificationsCount }}</span>{% endif %}
+              <span class="notification-badge-nav badge badge-primary badge-sm ml-auto {% if not user.unreadNotificationsCount or user.unreadNotificationsCount == 0 %}hidden{% endif %}">{{ user.unreadNotificationsCount or 0 }}</span>
             </a></li>
             <li><a href="/enable-2fa" class="rounded-xl"><i class="fa-solid fa-shield-halved mr-2"></i>Security</a></li>
             <li class="border-t border-base-200/50 mt-2 pt-2">

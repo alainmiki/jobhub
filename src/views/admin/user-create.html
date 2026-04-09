@@ -15,45 +15,57 @@
   <div class="max-w-2xl mx-auto">
     <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
       <div class="card-body p-6">
-        <form method="POST" class="space-y-6">
+        <form method="POST" class="space-y-6" id="userCreateForm">
           <div class="form-control">
             <label class="label py-2">
               <span class="label-text font-medium">Full Name *</span>
             </label>
-            <input type="text" name="name" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+            <input type="text" name="name" id="name" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+            <div class="label">
+              <span class="label-text-alt text-error hidden" id="nameError">Full name is required</span>
+            </div>
           </div>
 
           <div class="form-control">
             <label class="label py-2">
               <span class="label-text font-medium">Email Address *</span>
             </label>
-            <input type="email" name="email" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+            <input type="email" name="email" id="email" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+            <div class="label">
+              <span class="label-text-alt text-error hidden" id="emailError">Please enter a valid email address</span>
+            </div>
           </div>
 
           <div class="form-control">
             <label class="label py-2">
               <span class="label-text font-medium">Role *</span>
             </label>
-            <select name="role" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+            <select name="role" id="role" class="select select-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required>
+              <option value="">Select a role</option>
               <option value="candidate">Candidate</option>
               <option value="employer">Employer</option>
               <option value="admin">Admin</option>
             </select>
+            <div class="label">
+              <span class="label-text-alt text-error hidden" id="roleError">Please select a role</span>
+            </div>
           </div>
 
           <div class="form-control">
             <label class="label py-2">
               <span class="label-text font-medium">Temporary Password *</span>
             </label>
-            <input type="password" name="password" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required minlength="8">
-            <label class="label">
+            <input type="password" name="password" id="password" class="input input-bordered rounded-xl bg-base-200/50 border-base-200/50 focus:border-primary" required minlength="8">
+            <div class="label">
+              <span class="label-text-alt text-error hidden" id="passwordError">Password must be at least 8 characters long</span>
               <span class="label-text-alt text-base-content/60">User will be prompted to change password on first login</span>
-            </label>
+            </div>
           </div>
 
           <div class="card-actions justify-end pt-4">
-            <button type="submit" class="btn btn-primary-gradient rounded-xl">
-              <i class="fa-solid fa-user-plus mr-2"></i>Create User
+            <button type="submit" id="submitBtn" class="btn btn-primary-gradient rounded-xl">
+              <span id="submitText"><i class="fa-solid fa-user-plus mr-2"></i>Create User</span>
+              <span id="loadingText" class="hidden"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Creating User...</span>
             </button>
           </div>
         </form>
@@ -62,3 +74,113 @@
   </div>
 </div>
 {% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const form = document.getElementById('userCreateForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const submitText = document.getElementById('submitText');
+  const loadingText = document.getElementById('loadingText');
+
+  // Validation functions
+  function showError(elementId, message) {
+    const errorElement = document.getElementById(elementId + 'Error');
+    const inputElement = document.getElementById(elementId);
+
+    errorElement.textContent = message;
+    errorElement.classList.remove('hidden');
+    inputElement.classList.add('input-error');
+  }
+
+  function hideError(elementId) {
+    const errorElement = document.getElementById(elementId + 'Error');
+    const inputElement = document.getElementById(elementId);
+
+    errorElement.classList.add('hidden');
+    inputElement.classList.remove('input-error');
+  }
+
+  function validateField(fieldId, validator) {
+    const element = document.getElementById(fieldId);
+    const value = element.value.trim();
+
+    if (!validator(value)) {
+      showError(fieldId, getErrorMessage(fieldId, value));
+      return false;
+    } else {
+      hideError(fieldId);
+      return true;
+    }
+  }
+
+  function getErrorMessage(fieldId, value) {
+    switch(fieldId) {
+      case 'name':
+        return 'Full name is required';
+      case 'email':
+        if (!value) return 'Email address is required';
+        return 'Please enter a valid email address';
+      case 'role':
+        return 'Please select a role';
+      case 'password':
+        if (!value) return 'Password is required';
+        return 'Password must be at least 8 characters long';
+      default:
+        return 'This field is required';
+    }
+  }
+
+  // Real-time validation
+  ['name', 'email', 'role', 'password'].forEach(fieldId => {
+    document.getElementById(fieldId).addEventListener('blur', function() {
+      validateField(fieldId, function(value) {
+        switch(fieldId) {
+          case 'name':
+            return value.length > 0;
+          case 'email':
+            return value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+          case 'role':
+            return value !== '';
+          case 'password':
+            return value.length >= 8;
+          default:
+            return true;
+        }
+      });
+    });
+  });
+
+  // Form submission
+  form.addEventListener('submit', function(e) {
+    // Validate all fields
+    const isValid = ['name', 'email', 'role', 'password'].every(fieldId =>
+      validateField(fieldId, function(value) {
+        switch(fieldId) {
+          case 'name':
+            return value.length > 0;
+          case 'email':
+            return value && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+          case 'role':
+            return value !== '';
+          case 'password':
+            return value.length >= 8;
+          default:
+            return true;
+        }
+      })
+    );
+
+    if (!isValid) {
+      e.preventDefault();
+      return false;
+    }
+
+    // Show loading state
+    submitBtn.disabled = true;
+    submitText.classList.add('hidden');
+    loadingText.classList.remove('hidden');
+
+    // Form will submit normally
+  });
+});
+</script>

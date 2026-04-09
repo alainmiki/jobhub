@@ -405,8 +405,9 @@
           <p class="text-sm text-base-content/60">Changes will be saved to your profile</p>
           <div class="flex gap-3">
             <a href="/profile" class="btn btn-ghost rounded-xl">Cancel</a>
-            <button type="submit" class="btn btn-primary rounded-xl">
-              <i class="fa-solid fa-save mr-2"></i>Save Profile
+            <button type="submit" id="saveBtn" class="btn btn-primary rounded-xl">
+              <span id="saveText"><i class="fa-solid fa-save mr-2"></i>Save Profile</span>
+              <span id="savingText" class="hidden"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Saving...</span>
             </button>
           </div>
         </div>
@@ -527,6 +528,17 @@ document.querySelectorAll('.add-skill-btn').forEach(btn => {
       input.value = currentSkills.join(', ');
     }
   });
+});
+
+// Form submission loading state
+document.getElementById('profile-form').addEventListener('submit', function(e) {
+  const saveBtn = document.getElementById('saveBtn');
+  const saveText = document.getElementById('saveText');
+  const savingText = document.getElementById('savingText');
+
+  saveBtn.disabled = true;
+  saveText.classList.add('hidden');
+  savingText.classList.remove('hidden');
 });
 </script>
 {% endblock %}

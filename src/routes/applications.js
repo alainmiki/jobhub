@@ -22,75 +22,80 @@ export const initApplicationsRouter = (auth) => {
   router.post('/',
     isAuthenticated(auth),
     requireProfileComplete(auth),
-    async (req, res) => {
-      try {
-        const jobId = req.body.jobId;
-        
-        if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
-          req.flash('error', 'Invalid job ID');
-          return res.redirect('/jobs');
-        }
-        
-        const job = await Job.findById(jobId);
-        if (!job || job.status !== 'approved') {
-          req.flash('error', 'Job not available for application');
-          return res.redirect(`/jobs/${jobId}`);
-        }
-        
-        const existingApplication = await Application.findOne({
-          job: jobId,
-          applicantUserId: req.userId
-        });
-
-        if (existingApplication) {
-          req.flash('error', 'You have already applied to this job');
-          return res.redirect(`/jobs/${jobId}`);
-        }
-
-        const userProfile = await UserProfile.findOne({ userId: req.userId });
-        
-        if (!userProfile) {
-          req.flash('error', 'Please complete your profile first');
-          return res.redirect('/profile/edit');
-        }
-        
-        if (!userProfile.resume || !userProfile.resume.url) {
-          req.flash('error', 'Please upload a resume before applying');
-          return res.redirect('/profile/edit');
-        }
-        
-        const application = new Application({
-          job: jobId,
-          candidate: userProfile._id,
-          applicantUserId: req.userId,
-          coverLetter: req.body.coverLetter,
-          resume: userProfile.resume
-        });
-        
-        await application.save();
-        
-        await Job.findByIdAndUpdate(jobId, {
-          $inc: { applicationsCount: 1 }
-        });
-        
-        const notification = new Notification({
-          recipient: job.postedBy,
-          type: 'application_received',
-          title: 'New Application',
-          message: `You received a new application for ${job.title}`,
-          link: `/applications/${application._id}`
-        });
-        await notification.save();
-        
-        logger.info(`Application submitted: ${application._id} for job: ${job._id}`);
-        req.flash('success', 'Application submitted successfully!');
-        return res.redirect(`/jobs/${jobId}?applied=true`);
-      } catch (error) {
-        console.error('[ERROR] Application submission:', error);
-        req.flash('error', 'Failed to submit application. Please try again.');
-        return res.redirect(`/jobs/${req.body.jobId}`);
+    asyncHandler(async (req, res) => {
+      const { jobId, coverLetter, source, priority } = req.body;
+      
+      if (!jobId || !mongoose.Types.ObjectId.isValid(jobId)) {
+        req.flash('error', 'Invalid job ID');
+        return res.redirect('/jobs');
       }
-    }
+      
+      const job = await Job.findById(jobId);
+      if (!job || job.status !== 'approved') {
+        req.flash('error', 'Job not available for application');
+        return res.redirect(`/jobs/${jobId}`);
+      }
+      
+      const existingApplication = await Application.findOne({
+        job: jobId,
+        applicantUserId: req.userId
+      });
+
+      if (existingApplication) {
+        req.flash('error', 'You have already applied to this job');
+        return res.redirect(`/jobs/${jobId}`);
+      }
+
+      const userProfile = await UserProfile.findOne({ userId: req.userId });
+      
+      if (!userProfile) {
+        req.flash('error', 'Please complete your profile first');
+        return res.redirect('/profile/edit');
+      }
+      
+      if (!userProfile.resume || !userProfile.resume.url) {
+        req.flash('error', 'Please upload a resume before applying');
+        return res.redirect('/profile/edit');
+      }
+      
+      const application = new Application({
+        job: jobId,
+        candidate: userProfile._id,
+        applicantUserId: req.userId,
+        coverLetter,
+        resume: userProfile.resume,
+        source: source || 'direct',
+        priority: priority || 'medium'
+      });
+      
+      await application.save();
+      
+      await Job.findByIdAndUpdate(jobId, {
+        $inc: { applicationsCount: 1 }
+      });
+      
+      await logAuditAction(req, 'application_create', 'application', application._id, {
+        jobTitle: job.title,
+        source: application.source
+      });
+
+      const notification = new Notification({
+        recipient: job.postedBy,
+        type: 'application_received',
+        category: 'Application',
+        priority: 'high', // New applications are high priority for employers
+        title: 'New Application',
+        message: `You received a new application for ${job.title}`,
+        link: `/applications/${application._id}`
+      });
+      await notification.save();
+      
+      emitNotification(req, job.postedBy, notification);
+      
+      logger.info(`Application submitted: ${application._id} for job: ${job._id}`);
+      req.flash('success', 'Application submitted successfully!');
+      res.redirect(`/jobs/${jobId}?applied=true`);
+    })
   );
 
   router.get('/my-applications', isAuthenticated(auth), asyncHandler(async (req, res) => {
@@ -262,6 +267,12 @@ export const initApplicationsRouter = (auth) => {
       if (priority) application.priority = priority;
       await application.save();
       
+      await logAuditAction(req, 'application_status_update', 'application', application._id, { 
+        oldStatus: previousStatus, 
+        newStatus: status, 
+        jobTitle: application.job.title 
+      });
+
       const notificationTypes = {
         viewed: 'application_viewed',
         shortlisted: 'application_shortlisted',
@@ -270,12 +281,17 @@ export const initApplicationsRouter = (auth) => {
         interview_scheduled: 'interview_scheduled'
       };
       
+      const statusText = status === 'viewed' ? 'viewed' : status === 'interview_scheduled' ? 'scheduled for an interview' : status;
+
       if (notificationTypes[status]) {
         const notification = new Notification({
           recipient: application.applicantUserId,
           type: notificationTypes[status],
+          category: notificationTypes[status].startsWith('interview') ? 'Interview' : 'Application',
+          priority: status === 'interview_scheduled' ? 'high' : 'medium', // Interview scheduled is high priority
           title: `Application ${status === 'viewed' ? 'Viewed' : status === 'interview_scheduled' ? 'Interview Scheduled' : status.charAt(0).toUpperCase() + status.slice(1)}`,
-          message: `Your application for ${application.job.title} has been ${status === 'viewed' ? 'viewed' : status === 'interview_scheduled' ? 'scheduled for an interview' : status}`,
+          message: `${application.job.title}: ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}.` + 
+                   (notes ? ` Note: ${notes}` : ''),
           link: `/applications/${application._id}`
         });
         await notification.save();
@@ -321,6 +337,8 @@ export const initApplicationsRouter = (auth) => {
         interview_scheduled: 'interview_scheduled'
       };
 
+      const statusText = status.replace('_', ' ');
+
       const results = {
         updated: 0,
         failed: ids.length - applications.length
@@ -328,9 +346,16 @@ export const initApplicationsRouter = (auth) => {
 
       // Iterate and update to trigger pre-save hooks (for timeline) and notifications
       const updatePromises = applications.map(async (app) => {
+        const previousStatus = app.status;
         app.status = status;
         if (notes) app.employerNotes = notes;
         await app.save();
+
+        await logAuditAction(req, 'application_status_update', 'application', app._id, {
+          oldStatus: previousStatus,
+          newStatus: status,
+          jobTitle: app.job.title
+        });
         results.updated++;
 
         // Send individual notifications
@@ -339,7 +364,10 @@ export const initApplicationsRouter = (auth) => {
             recipient: app.applicantUserId,
             type: notificationTypes[status],
             title: `Application ${status.replace('_', ' ')}`,
-            message: `Your application for ${app.job.title} has been updated to ${status.replace('_', ' ')}`,
+            priority: status === 'interview_scheduled' ? 'high' : 'medium',
+            category: notificationTypes[status].startsWith('interview') ? 'Interview' : 'Application',
+            message: `${app.job.title}: ${statusText.charAt(0).toUpperCase() + statusText.slice(1)}.` + 
+                     (notes ? ` Note: ${notes}` : ''),
             link: `/applications/${app._id}`
           });
         }
@@ -429,6 +457,8 @@ export const initApplicationsRouter = (auth) => {
       const notification = new Notification({
         recipient: application.applicantUserId,
         type: 'interview_scheduled',
+        category: 'Interview',
+        priority: 'high',
         title: 'Interview Scheduled',
         message: `Your interview for ${application.job.title} has been scheduled`,
         link: `/applications/${application._id}`

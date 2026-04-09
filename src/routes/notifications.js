@@ -1,7 +1,7 @@
 import express from 'express';
 import Notification from '../models/Notification.js';
 import { createAuthMiddleware, isAuthenticated } from '../middleware/auth.js';
-
+import {asyncHandler} from '../middleware/errorHandler.js';
 const router = express.Router();
 
 export const initNotificationsRouter = (auth) => {
@@ -67,6 +67,18 @@ export const initNotificationsRouter = (auth) => {
       res.status(500).json({ error: 'Failed to update notifications' });
     }
   });
+
+  // GET /notifications/check-updates - Check for new notifications since timestamp
+  router.get('/check-updates', asyncHandler(async (req, res) => {
+    const since = parseInt(req.query.since) || 0;
+    const newNotifications = await Notification.countDocuments({
+      recipient: req.userId,
+      isRead: false,
+      createdAt: { $gt: new Date(since) }
+    });
+
+    res.json({ newNotifications });
+  }));
 
   return router;
 };

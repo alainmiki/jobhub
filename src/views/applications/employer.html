@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% import "macros/pagination.html" as paginationMacro %}
 
 {% block content %}
 <div class="min-h-screen bg-base-200/30 py-8 px-4">
@@ -164,15 +165,7 @@
       </div>
     </div>
 
-    {% if pagination.pages > 1 %}
-    <div class="flex justify-center gap-2">
-      {% for p in range(1, pagination.pages + 1) %}
-      <a href="/applications/employer?page={{ p }}{% if filters.status %}&status={{ filters.status }}{% endif %}" class="btn btn-sm rounded-xl {% if p == pagination.page %}btn-primary{% else %}btn-ghost{% endif %}">
-        {{ p }}
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
+    {{ paginationMacro.render(pagination, filters, "/applications/employer") }}
 
     {% else %}
     <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl">

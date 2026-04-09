@@ -282,6 +282,8 @@ export const initCompanyRouter = (auth) => {
     const notification = new Notification({
       recipient: company.userId,
       type: 'company_verified',
+      priority: 'medium', // Default priority for company verification
+      category: 'Company',
       title: 'Company Verified',
       message: `Your company "${company.name}" has been verified and is now visible to all users.`,
       link: `/company/${company._id}`

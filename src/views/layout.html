@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" type="text/css" />
   <link rel="stylesheet" href="/css/output.css" type="text/css">
   <input type="hidden" id="globalCsrfToken" value="{{ csrfToken }}">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💼</text></svg>">
 </head>
 
@@ -48,6 +49,16 @@
     <i class="fa-solid fa-arrow-up"></i>
   </button>
 
+  <div id="toast-container" class="toast toast-end z-[9999]"></div>
+
+  <div id="socket-status" class="fixed bottom-6 left-6 z-50 flex items-center gap-2 px-3 py-1.5 rounded-full bg-base-200 border border-base-300 shadow-sm text-[10px] font-medium transition-all opacity-0 pointer-events-none">
+    <span class="relative flex h-2 w-2">
+      <span class="status-ping animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"></span>
+      <span class="status-dot relative inline-flex rounded-full h-2 w-2"></span>
+    </span>
+    <span class="status-text uppercase tracking-widest opacity-70">Connecting...</span>
+  </div>
+
   <div class="fixed bottom-6 right-24 z-50 dropdown dropdown-top dropdown-end">
     <div tabindex="0" role="button" class="btn btn-circle shadow-lg hover:scale-110 transition-transform bg-base-200 border border-base-300" aria-label="Select theme">
       <i class="fa-solid fa-palette text-lg"></i>
@@ -63,6 +74,7 @@
     </ul>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const themeControllers = document.querySelectorAll('.theme-controller');
@@ -93,6 +105,132 @@
 
       scrollBtn.addEventListener('click', () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      // Real-time Notification Logic
+      const socket = io();
+      const highPrioritySound = new Audio('/sounds/notification_high_priority.mp3');
+
+      const statusEl = document.getElementById('socket-status');
+      const statusDot = statusEl.querySelector('.status-dot');
+      const statusPing = statusEl.querySelector('.status-ping');
+      const statusText = statusEl.querySelector('.status-text');
+
+      let statusTimeout;
+      function updateSocketStatus(state) {
+        if (statusTimeout) clearTimeout(statusTimeout);
+
+        const config = {
+          connected: { color: 'bg-success', text: 'Live', opacity: 1 },
+          disconnected: { color: 'bg-error', text: 'Offline', opacity: 1 },
+          reconnecting: { color: 'bg-warning', text: 'Reconnecting', opacity: 1 }
+        };
+        
+        const s = config[state];
+        statusDot.className = `status-dot relative inline-flex rounded-full h-2 w-2 ${s.color}`;
+        statusPing.className = `status-ping animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${s.color}`;
+        statusText.innerText = s.text;
+        gsap.to(statusEl, { opacity: s.opacity, duration: 0.4 });
+
+        if (state === 'connected') {
+          statusTimeout = setTimeout(() => {
+            gsap.to(statusEl, { opacity: 0, duration: 1 });
+          }, 5000);
+        }
+      }
+
+      socket.on('connect', () => updateSocketStatus('connected'));
+      socket.on('disconnect', () => updateSocketStatus('disconnected'));
+      socket.on('connect_error', () => updateSocketStatus('disconnected'));
+      socket.on('reconnecting', () => updateSocketStatus('reconnecting'));
+
+      function getIconForNotificationType(type) {
+        const icons = {
+          success: 'fa-check-circle text-success',
+          error: 'fa-circle-xmark text-error',
+          warning: 'fa-triangle-exclamation text-warning',
+          info: 'fa-circle-info text-info'
+        };
+        return icons[type] || 'fa-bell text-primary';
+      }
+
+      function showToast(title, message, type = 'info', priority = 'medium', link = null, id = null) {
+        const toastContainer = document.getElementById('toast-container');
+        const alertDiv = document.createElement('div');
+        
+        alertDiv.className = `alert alert-${type} shadow-lg rounded-xl border border-base-200/50 bg-base-100 ${link ? 'cursor-pointer hover:bg-base-200 transition-colors' : ''}`;
+        alertDiv.innerHTML = `
+          <div class="flex items-start gap-3">
+            <div class="mt-1">
+              <i class="fa-solid ${getIconForNotificationType(type)} text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-sm">${title}</h3>
+              <p class="text-xs opacity-80">${message}</p>
+            </div>
+            <div class="toast-progress absolute bottom-0 left-0 h-1 bg-current opacity-20 w-full rounded-b-xl"></div>
+          </div>
+        `;
+
+        toastContainer.appendChild(alertDiv);
+
+        if (link && id) {
+          alertDiv.addEventListener('click', () => {
+            const csrfToken = document.getElementById('globalCsrfToken')?.value;
+            
+            // Mark as read then redirect
+            fetch(`/notifications/${id}/read`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+              }
+            }).finally(() => {
+              window.location.href = link;
+            });
+          });
+        }
+
+        gsap.fromTo(alertDiv, 
+          { opacity: 0, y: 50, scale: 0.8 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.5, ease: "back.out(1.7)" }
+        );
+
+        // Animate progress bar
+        const progressBar = alertDiv.querySelector('.toast-progress');
+        if (progressBar) {
+          gsap.to(progressBar, { width: 0, duration: 6, ease: "none" });
+        }
+
+        if (priority === 'high' || priority === 'urgent') {
+          highPrioritySound.play().catch(e => console.warn("Autoplay blocked or sound missing."));
+        }
+
+        gsap.to(alertDiv, {
+          opacity: 0,
+          x: 100,
+          duration: 0.5,
+          delay: 6,
+          onComplete: () => alertDiv.remove()
+        });
+      }
+
+      socket.on('notification', (data) => {
+        let alertType = 'info';
+        if (data.type.includes('accepted') || data.type.includes('approved')) alertType = 'success';
+        if (data.type.includes('rejected') || data.type.includes('cancelled')) alertType = 'error';
+        if (data.priority === 'high') alertType = 'warning';
+
+        showToast(data.title, data.message, alertType, data.priority, data.link, data._id);
+
+        // Update all notification badges (header and navigation menus)
+        const badges = document.querySelectorAll('#notification-badge, .notification-badge-nav');
+        badges.forEach(badge => {
+          const current = parseInt(badge.innerText.trim()) || 0;
+          badge.innerText = current + 1;
+          badge.classList.remove('hidden');
+          if (badge.parentElement.classList.contains('avatar')) badge.parentElement.classList.add('indicator');
+        });
       });
     });
   </script>

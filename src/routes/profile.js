@@ -265,6 +265,43 @@ export const initProfileRouter = (auth) => {
     })
   );
 
+    router.get('/settings', asyncHandler(async (req, res) => {
+    let profile = await UserProfile.findOne({ userId: req.userId })
+      .populate('userId', 'name email image createdAt');
+
+    if (!profile) {
+      profile = new UserProfile({ userId: req.userId, role: req.user?.role || 'candidate' });
+      await profile.save();
+      await profile.populate('userId', 'name email image createdAt');
+    }
+    
+    res.render('profile/settings', { profile });
+  }));
+
+  router.post('/settings', asyncHandler(async (req, res) => {
+    let profile = await UserProfile.findOne({ userId: req.userId });
+    
+    if (!profile) {
+      profile = new UserProfile({ userId: req.userId, role: req.user?.role || 'candidate' });
+      await profile.save();
+    }
+
+    const { emailNotifications, jobAlerts, weeklyDigest, visibility } = req.body;
+    
+    const update = {
+      'settings.emailNotifications': emailNotifications === 'true',
+      'settings.jobAlerts': jobAlerts === 'true',
+      'settings.weeklyDigest': weeklyDigest === 'true',
+      'settings.profileVisibility': visibility || 'public'
+    };
+
+    await UserProfile.findOneAndUpdate({ userId: req.userId }, update);
+    
+    req.flash('success', 'Settings updated successfully!');
+    res.redirect('/profile/settings');
+  }));
+
+
   // POST /profile/applications/:id/withdraw - Allow candidates to withdraw applications
   router.post('/applications/:id/withdraw', asyncHandler(async (req, res) => {
     const application = await Application.findOne({
@@ -672,41 +709,6 @@ export const initProfileRouter = (auth) => {
     res.redirect('/profile/interviews');
   }));
 
-  router.get('/settings', asyncHandler(async (req, res) => {
-    let profile = await UserProfile.findOne({ userId: req.userId })
-      .populate('userId', 'name email image createdAt');
-
-    if (!profile) {
-      profile = new UserProfile({ userId: req.userId, role: req.user?.role || 'candidate' });
-      await profile.save();
-      await profile.populate('userId', 'name email image createdAt');
-    }
-    
-    res.render('profile/settings', { profile });
-  }));
-
-  router.post('/settings', asyncHandler(async (req, res) => {
-    let profile = await UserProfile.findOne({ userId: req.userId });
-    
-    if (!profile) {
-      profile = new UserProfile({ userId: req.userId, role: req.user?.role || 'candidate' });
-      await profile.save();
-    }
-
-    const { emailNotifications, jobAlerts, weeklyDigest, visibility } = req.body;
-    
-    const update = {
-      'settings.emailNotifications': emailNotifications === 'true',
-      'settings.jobAlerts': jobAlerts === 'true',
-      'settings.weeklyDigest': weeklyDigest === 'true',
-      'settings.profileVisibility': visibility || 'public'
-    };
-
-    await UserProfile.findOneAndUpdate({ userId: req.userId }, update);
-    
-    req.flash('success', 'Settings updated successfully!');
-    res.redirect('/profile/settings');
-  }));
 
   router.get('/export', asyncHandler(async (req, res) => {
     const profile = await UserProfile.findOne({ userId: req.userId })
