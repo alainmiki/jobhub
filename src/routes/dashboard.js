@@ -52,20 +52,38 @@ export const initDashboardRouter = (auth) => {
     asyncHandler(async (req, res) => {
       const { notifCategory } = req.query;
 
+      // Get applications with populated job data
       const appliedJobs = await Application.find({
         applicantUserId: req.userId
       })
         .populate('job')
         .sort({ createdAt: -1 });
 
+      // Use aggregation to get stats efficiently
+      const statsResult = await Application.aggregate([
+        { $match: { applicantUserId: req.userId } },
+        {
+          $group: {
+            _id: '$status',
+            count: { $sum: 1 }
+          }
+        }
+      ]);
+
       const stats = {
-        total: appliedJobs.length,
-        pending: appliedJobs.filter(a => a.status === 'pending').length,
-        viewed: appliedJobs.filter(a => a.status === 'viewed').length,
-        shortlisted: appliedJobs.filter(a => a.status === 'shortlisted').length,
-        accepted: appliedJobs.filter(a => a.status === 'accepted').length,
-        rejected: appliedJobs.filter(a => a.status === 'rejected').length
+        total: 0,
+        pending: 0,
+        viewed: 0,
+        shortlisted: 0,
+        accepted: 0,
+        rejected: 0,
+        interviewScheduled: 0
       };
+
+      statsResult.forEach(stat => {
+        stats[stat._id] = stat.count;
+        stats.total += stat.count;
+      });
 
       const recentApplications = appliedJobs.slice(0, 5);
 

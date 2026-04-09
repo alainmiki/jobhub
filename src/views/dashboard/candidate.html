@@ -132,7 +132,7 @@
         <div class="space-y-3">
           {% for interview in upcomingInterviews %}
           <div class="flex items-center gap-4 p-4 bg-warning/5 border border-warning/20 rounded-xl">
-            <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <div class="w-12 h-12 bg-warning/10 rounded-xl flex items-center justify-center shrink-0">
               <i class="fa-solid fa-video text-xl text-warning"></i>
             </div>
             <div class="flex-1 min-w-0">
@@ -188,7 +188,7 @@
         <div class="space-y-3">
           {% for notif in recentNotifications %}
           <div class="flex items-start gap-4 p-4 bg-info/5 border border-info/20 rounded-xl">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0
               {% if notif.type == 'application_received' or notif.type == 'application_viewed' %}bg-primary/10 text-primary
               {% elif notif.type == 'interview_scheduled' %}bg-warning/10 text-warning
               {% elif notif.type == 'application_accepted' %}bg-success/10 text-success
@@ -279,7 +279,7 @@
         <div class="space-y-3">
           {% for app in recentApplications %}
           <a href="/applications/{{ app._id }}" class="flex items-center gap-4 p-4 bg-base-200/30 hover:bg-base-200/60 rounded-xl transition-colors group">
-            <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
               {% if app.job and app.job.company and app.job.company.logo %}
               <img src="{{ app.job.company.logo }}" alt="{{ app.job.company.name }}" class="w-8 h-8 object-contain" />
               {% else %}
@@ -331,7 +331,7 @@
         <div class="space-y-3">
           {% for job in recommendedJobs %}
           <a href="/jobs/{{ job._id }}" class="flex items-center gap-4 p-4 rounded-xl bg-base-200/30 hover:bg-base-200/60 transition-colors group">
-            <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
+            <div class="w-12 h-12 bg-base-100 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
               {% if job.company.logo %}
               <img src="{{ job.company.logo }}" alt="{{ job.company.name }}" class="w-8 h-8 object-contain" />
               {% else %}

@@ -2,6 +2,7 @@ import { fromNodeHeaders } from "better-auth/node";
 import UserProfile from '../models/UserProfile.js';
 import validator from 'validator';
 import Notification from '../models/Notification.js'; // Import Notification model
+import logger from '../config/logger.js';
 
 export const createAuthMiddleware = (auth) => {
   return async (req, res, next) => {
@@ -43,7 +44,7 @@ export const createAuthMiddleware = (auth) => {
 
       next();
     } catch (error) {
-      console.error('[Auth Middleware] Error:', error.message);
+      logger.error(`Auth middleware error: ${error.message}`);
       req.authSession = null;
       req.user = null;
       req.userId = null;

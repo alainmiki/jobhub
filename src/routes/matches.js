@@ -4,6 +4,7 @@ import UserProfile from '../models/UserProfile.js';
 import Application from '../models/Application.js';
 import Notification from '../models/Notification.js';
 import { createAuthMiddleware, isAuthenticated } from '../middleware/auth.js';
+import logger from '../config/logger.js';
 
 const router = express.Router();
 
@@ -74,7 +75,7 @@ export const initMatchesRouter = (auth) => {
       
       res.render('matches/index', { matches, profile: candidateProfile });
     } catch (error) {
-      console.error('Match error:', error);
+      logger.error(`Match loading error: ${error.message}`);
       res.status(500).render('error', { message: 'Failed to load matches' });
     }
   });
@@ -113,7 +114,7 @@ export const initMatchesRouter = (auth) => {
       
       res.render('matches/candidates', { job, matches });
     } catch (error) {
-      console.error('Candidate match error:', error);
+      logger.error(`Candidate match loading error: ${error.message}`);
       res.status(500).render('error', { message: 'Failed to load candidates' });
     }
   });
@@ -158,7 +159,7 @@ export const initMatchesRouter = (auth) => {
       
       res.json({ success: true, message: 'Matching process completed' });
     } catch (error) {
-      console.error('Generate match error:', error);
+      logger.error(`Match generation error: ${error.message}`);
       res.status(500).json({ error: 'Failed to generate matches' });
     }
   });

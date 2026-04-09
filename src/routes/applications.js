@@ -177,6 +177,13 @@ export const initApplicationsRouter = (auth) => {
       Application.countDocuments(query)
     ]);
 
+    // Mask candidate emails for privacy - only show after connection is established
+    applications.forEach(app => {
+      if (app.candidate && app.candidate.userId && app.status !== 'accepted' && app.status !== 'offer_extended') {
+        app.candidate.userId.email = app.candidate.userId.email.replace(/(.{2}).*(@.*)/, '$1***$2');
+      }
+    });
+
     const stats = {
       total: await Application.countDocuments({ job: { $in: jobIds } }),
       pending: await Application.countDocuments({ job: { $in: jobIds }, status: 'pending' }),
@@ -431,6 +438,32 @@ export const initApplicationsRouter = (auth) => {
       
       if (application.job.postedBy.toString() !== req.userId) {
         return res.status(403).json({ error: 'Access denied' });
+      }
+
+      // Check for interview conflicts
+      const interviewStart = new Date(scheduledAt);
+      const interviewEnd = new Date(interviewStart.getTime() + (duration || 60) * 60000);
+
+      const conflictingInterview = await Interview.findOne({
+        candidate: application.candidate,
+        status: { $in: ['scheduled', 'confirmed'] },
+        $or: [
+          {
+            scheduledAt: { $lt: interviewEnd },
+            $expr: {
+              $gt: [
+                { $add: ['$scheduledAt', { $multiply: ['$duration', 60000] }] },
+                interviewStart
+              ]
+            }
+          }
+        ]
+      });
+
+      if (conflictingInterview) {
+        return res.status(409).json({
+          error: 'Interview conflict detected. The candidate has another interview scheduled at this time.'
+        });
       }
 
       const profile = await UserProfile.findById(application.candidate);

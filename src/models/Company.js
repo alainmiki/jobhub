@@ -123,4 +123,40 @@ companySchema.methods.toPublicJSON = function() {
   };
 };
 
+// Cascade delete middleware
+companySchema.pre('deleteOne', { document: true, query: false }, async function(next) {
+  try {
+    const companyId = this._id;
+
+    // Import models here to avoid circular dependencies
+    const Job = (await import('./Job.js')).default;
+    const Application = (await import('./Application.js')).default;
+    const Interview = (await import('./Interview.js')).default;
+    const Notification = (await import('./Notification.js')).default;
+
+    // Get all jobs for this company
+    const jobs = await Job.find({ company: companyId });
+    const jobIds = jobs.map(job => job._id);
+
+    // Delete all applications for these jobs
+    await Application.deleteMany({ job: { $in: jobIds } });
+
+    // Delete all interviews for applications of these jobs
+    const applications = await Application.find({ job: { $in: jobIds } });
+    const applicationIds = applications.map(app => app._id);
+    await Interview.deleteMany({ application: { $in: applicationIds } });
+
+    // Delete notifications related to these jobs/applications
+    await Notification.deleteMany({ link: { $regex: `(${jobIds.join('|')}|${applicationIds.join('|')})` } });
+
+    // Delete all jobs
+    await Job.deleteMany({ company: companyId });
+
+    next();
+  } catch (error) {
+    console.error('Error in company cascade delete:', error);
+    next(error);
+  }
+});
+
 export default mongoose.model('Company', companySchema);
