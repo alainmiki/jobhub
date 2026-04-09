@@ -393,6 +393,14 @@ export const initApplicationsRouter = (auth) => {
   );
 
   router.post('/:id/withdraw', isAuthenticated(auth), asyncHandler(async (req, res) => {
+    // CSRF check
+    if (!req.body._csrf) {
+      return res.status(403).json({ error: 'CSRF token missing' });
+    }
+    if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
+      return res.status(403).json({ error: 'CSRF token invalid' });
+    }
+
     const application = await Application.findById(req.params.id);
     
     if (!application) {

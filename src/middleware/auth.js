@@ -1,5 +1,6 @@
 import { fromNodeHeaders } from "better-auth/node";
 import UserProfile from '../models/UserProfile.js';
+import mongoose from 'mongoose';
 import validator from 'validator';
 import Notification from '../models/Notification.js'; // Import Notification model
 import logger from '../config/logger.js';
@@ -20,20 +21,24 @@ export const createAuthMiddleware = (auth) => {
           req.user.role = session.user.role;
         }
 
-        // Fetch user profile
-        const userProfile = await UserProfile.findOne({ userId: session.user.id });
-        if (userProfile) {
-          req.userProfile = userProfile;
-          if (!req.user.role) {
-            req.user.role = userProfile.role;
-          }
+        if (session.user.id && mongoose.isValidObjectId(session.user.id)) {
+          try {
+            const userProfile = await UserProfile.findOne({ userId: session.user.id });
+            if (userProfile) {
+              req.userProfile = userProfile;
+              if (!req.user.role) {
+                req.user.role = userProfile.role;
+              }
 
-          // Fetch unread notification count
-          const unreadNotificationsCount = await Notification.countDocuments({
-            recipient: req.userId,
-            isRead: false
-          });
-          req.user.unreadNotificationsCount = unreadNotificationsCount;
+              const unreadNotificationsCount = await Notification.countDocuments({
+                recipient: req.userId,
+                isRead: false
+              });
+              req.user.unreadNotificationsCount = unreadNotificationsCount;
+            }
+          } catch (innerError) {
+            logger.warn(`Failed to load user profile for auth middleware: ${innerError.message}`);
+          }
         }
       } else {
         req.authSession = null;

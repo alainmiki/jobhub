@@ -72,10 +72,15 @@ export const initProfileRouter = (auth) => {
       await profile.save();
       await profile.populate('userId', 'name email image');
     }
+
+    // Generate idempotency key for form submission
+    const idempotencyKey = `profile-edit-${req.userId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
     res.render('profile/edit', {
       profile,
       showGuidance: req.query.complete === 'true',
-      csrfToken: req.csrfToken ? req.csrfToken() : ''
+      csrfToken: req.csrfToken ? req.csrfToken() : '',
+      idempotencyKey
     });
   }));
 
@@ -191,15 +196,29 @@ export const initProfileRouter = (auth) => {
           : skills.split(',').map(s => s.trim()).filter(s => s !== '');
       }
 
-      if (education && Array.isArray(education)) {
-        profileUpdates.education = education.filter(e => e.institution).map(e => ({
+      if (education) {
+        let educationArray = [];
+        if (Array.isArray(education)) {
+          educationArray = education;
+        } else if (typeof education === 'object') {
+          // Handle case where education comes as an object with numeric keys
+          educationArray = Object.values(education);
+        }
+        profileUpdates.education = educationArray.filter(e => e && e.institution).map(e => ({
           ...e,
           current: e.current === 'true' || e.current === 'on'
         }));
       }
 
-      if (experience && Array.isArray(experience)) {
-        profileUpdates.experience = experience.filter(e => e.company).map(e => ({
+      if (experience) {
+        let experienceArray = [];
+        if (Array.isArray(experience)) {
+          experienceArray = experience;
+        } else if (typeof experience === 'object') {
+          // Handle case where experience comes as an object with numeric keys
+          experienceArray = Object.values(experience);
+        }
+        profileUpdates.experience = experienceArray.filter(e => e && e.company).map(e => ({
           ...e,
           current: e.current === 'true' || e.current === 'on'
         }));
@@ -283,6 +302,14 @@ export const initProfileRouter = (auth) => {
   }));
 
   router.post('/settings', asyncHandler(async (req, res) => {
+    // CSRF check
+    if (!req.body._csrf) {
+      return res.status(403).json({ error: 'CSRF token missing' });
+    }
+    if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
+      return res.status(403).json({ error: 'CSRF token invalid' });
+    }
+
     let profile = await UserProfile.findOne({ userId: req.userId });
     
     if (!profile) {
@@ -308,6 +335,14 @@ export const initProfileRouter = (auth) => {
 
   // POST /profile/applications/:id/withdraw - Allow candidates to withdraw applications
   router.post('/applications/:id/withdraw', asyncHandler(async (req, res) => {
+    // CSRF check
+    if (!req.body._csrf) {
+      return res.status(403).json({ error: 'CSRF token missing' });
+    }
+    if (req.csrfToken && req.csrfToken() !== req.body._csrf) {
+      return res.status(403).json({ error: 'CSRF token invalid' });
+    }
+
     const application = await Application.findOne({
       _id: req.params.id,
       applicantUserId: req.userId

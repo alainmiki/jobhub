@@ -192,7 +192,13 @@ io.on('connection', (socket) => {
   logger.info(`User connected to socket: ${socket.userId}`);
 });
 
-app.use(csrf());
+app.use((req, res, next) => {
+  // Skip CSRF for multipart forms - handle manually in routes
+  if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
+    return next();
+  }
+  csrf()(req, res, next);
+});
 app.use(flash());
 
 const safeFlash = (req, type, message) => {

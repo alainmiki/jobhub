@@ -260,6 +260,7 @@
             {% if application.status != 'accepted' and application.status != 'rejected' and application.status != 'withdrawn' %}
             <div class="divider"></div>
             <form method="POST" action="/applications/{{ application._id }}/withdraw" onsubmit="return confirm('Are you sure you want to withdraw this application?');">
+              <input type="hidden" name="_csrf" value="{{ csrfToken }}">
               <button type="submit" class="btn btn-error btn-outline btn-block rounded-xl">
                 <i class="fa-solid fa-xmark mr-2"></i>Withdraw Application
               </button>
