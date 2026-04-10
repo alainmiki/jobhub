@@ -36,6 +36,8 @@ import { initNotificationsRouter } from './routes/notifications.js';
 import { initMatchesRouter } from './routes/matches.js';
 import { initAdminRouter } from './routes/admin.js';
 import { initAuthRouter } from './routes/auth.js';
+import { initHelpRouter } from './routes/help.js';
+import { initLegalRouter } from './routes/legal.js';
 
 import Job from './models/Job.js';
 
@@ -129,15 +131,17 @@ app.use(cors({
 
 app.use(helmet({
   contentSecurityPolicy: {
+    useDefaults: true, // Start with Helmet's default CSP
     directives: {
+      
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      scriptSrcAttr: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
-      fontSrc: ["'self'", "https://cdnjs.cloudflare.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https:"],
-      frameSrc: ["'self'"]
+      "script-src": ["'self'","'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      "script-src-attr": ["'self'","'unsafe-inline'",],
+      "style-src": ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdnjs.cloudflare.com"],
+      "font-src": ["'self'", "https://cdnjs.cloudflare.com"],
+      "img-src": ["'self'", "data:", "https:"],
+      "connect-src": ["'self'", "https:"],
+      "frame-src": ["'self'"]
     }
   },
   crossOriginEmbedderPolicy: false
@@ -272,6 +276,8 @@ app.use('/employer', initEmployerRouter(auth));
 app.use('/admin', initAdminRouter(auth));
 app.use('/notifications', initNotificationsRouter(auth));
 app.use('/matches', initMatchesRouter(auth));
+app.use('/help', initHelpRouter(auth));
+app.use('/legal', initLegalRouter(auth));
 
 // Make io accessible to routers via req
 app.use((req, res, next) => {

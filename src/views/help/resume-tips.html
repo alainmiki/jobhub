@@ -1,0 +1,298 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-12 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <a href="/help" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-4">
+        <i class="fas fa-arrow-left"></i>
+        Back to Help Center
+      </a>
+      <h1 class="text-4xl font-bold text-base-content mb-4">Resume Tips</h1>
+      <p class="text-lg text-base-content/70">
+        Professional advice to create a standout resume that gets noticed by employers.
+      </p>
+    </div>
+
+    <!-- Resume Essentials -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg mb-8">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Resume Essentials</h2>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div>
+            <h3 class="text-xl font-semibold text-base-content mb-4">Key Sections to Include</h3>
+            <div class="space-y-4">
+              <div class="bg-primary/5 border-l-4 border-primary pl-4">
+                <h4 class="font-medium text-base-content">Contact Information</h4>
+                <p class="text-sm text-base-content/70">Name, phone, email, LinkedIn, portfolio (if applicable)</p>
+              </div>
+              <div class="bg-success/5 border-l-4 border-success pl-4">
+                <h4 class="font-medium text-base-content">Professional Summary</h4>
+                <p class="text-sm text-base-content/70">3-5 sentence overview of your experience and goals</p>
+              </div>
+              <div class="bg-warning/5 border-l-4 border-warning pl-4">
+                <h4 class="font-medium text-base-content">Work Experience</h4>
+                <p class="text-sm text-base-content/70">Reverse chronological order, quantifiable achievements</p>
+              </div>
+              <div class="bg-info/5 border-l-4 border-info pl-4">
+                <h4 class="font-medium text-base-content">Education</h4>
+                <p class="text-sm text-base-content/70">Degrees, certifications, relevant coursework</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-base-content mb-4">Optional Sections</h3>
+            <div class="space-y-4">
+              <div class="bg-base-200/50 pl-4 rounded">
+                <h4 class="font-medium text-base-content">Skills</h4>
+                <p class="text-sm text-base-content/70">Technical skills, soft skills, languages</p>
+              </div>
+              <div class="bg-base-200/50 pl-4 rounded">
+                <h4 class="font-medium text-base-content">Projects</h4>
+                <p class="text-sm text-base-content/70">Personal projects, open-source contributions</p>
+              </div>
+              <div class="bg-base-200/50 pl-4 rounded">
+                <h4 class="font-medium text-base-content">Certifications</h4>
+                <p class="text-sm text-base-content/70">Professional certifications and licenses</p>
+              </div>
+              <div class="bg-base-200/50 pl-4 rounded">
+                <h4 class="font-medium text-base-content">Awards & Honors</h4>
+                <p class="text-sm text-base-content/70">Recognition, scholarships, achievements</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Best Practices -->
+    <div class="grid md:grid-cols-2 gap-8 mb-8">
+      <!-- Do's -->
+      <div class="card bg-success/5 border border-success/20 shadow-lg">
+        <div class="card-body p-6">
+          <h3 class="text-xl font-bold text-success mb-4 flex items-center">
+            <i class="fas fa-check-circle mr-3"></i>
+            Best Practices
+          </h3>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <i class="fas fa-check text-success mt-1"></i>
+              <span class="text-base-content/80">Keep it to 1-2 pages for most professionals</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-check text-success mt-1"></i>
+              <span class="text-base-content/80">Use action verbs (achieved, improved, managed)</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-check text-success mt-1"></i>
+              <span class="text-base-content/80">Quantify achievements with numbers and metrics</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-check text-success mt-1"></i>
+              <span class="text-base-content/80">Tailor your resume for each job application</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-check text-success mt-1"></i>
+              <span class="text-base-content/80">Use consistent formatting and professional fonts</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-check text-success mt-1"></i>
+              <span class="text-base-content/80">Proofread multiple times for errors</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Don'ts -->
+      <div class="card bg-error/5 border border-error/20 shadow-lg">
+        <div class="card-body p-6">
+          <h3 class="text-xl font-bold text-error mb-4 flex items-center">
+            <i class="fas fa-times-circle mr-3"></i>
+            Common Mistakes to Avoid
+          </h3>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <i class="fas fa-times text-error mt-1"></i>
+              <span class="text-base-content/80">Don't include irrelevant personal information</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-times text-error mt-1"></i>
+              <span class="text-base-content/80">Avoid generic objective statements</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-times text-error mt-1"></i>
+              <span class="text-base-content/80">Don't use tiny fonts or strange formatting</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-times text-error mt-1"></i>
+              <span class="text-base-content/80">Avoid listing duties instead of achievements</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-times text-error mt-1"></i>
+              <span class="text-base-content/80">Don't include references or "references available upon request"</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <i class="fas fa-times text-error mt-1"></i>
+              <span class="text-base-content/80">Avoid outdated or incorrect contact information</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sample Resume Structure -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg mb-8">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Sample Resume Structure</h2>
+        <div class="bg-base-200/30 rounded-lg p-6 font-mono text-sm">
+          <div class="space-y-2">
+            <div class="text-lg font-bold">[Your Full Name]</div>
+            <div>[Phone Number] | [Email Address] | [LinkedIn URL] | [Location]</div>
+            <br>
+            <div class="text-base font-semibold">PROFESSIONAL SUMMARY</div>
+            <div>Results-driven marketing professional with 5+ years of experience in digital marketing and brand management. Proven track record of increasing engagement by 40% and driving revenue growth through strategic campaigns.</div>
+            <br>
+            <div class="text-base font-semibold">WORK EXPERIENCE</div>
+            <div class="font-medium">Senior Marketing Specialist | TechCorp Inc. | Jan 2022 - Present</div>
+            <div>• Developed and executed digital marketing campaigns that increased website traffic by 35%</div>
+            <div>• Managed social media presence across 5 platforms, growing follower base by 50,000</div>
+            <div>• Collaborated with design team to create compelling content that improved conversion rates by 25%</div>
+            <br>
+            <div class="font-medium">Marketing Coordinator | StartupXYZ | Jun 2019 - Dec 2021</div>
+            <div>• Coordinated product launches and marketing initiatives for 10+ products</div>
+            <div>• Analyzed campaign performance and provided insights that optimized future strategies</div>
+            <div>• Managed email marketing campaigns with open rates consistently above industry average</div>
+            <br>
+            <div class="text-base font-semibold">EDUCATION</div>
+            <div class="font-medium">Bachelor of Business Administration | University Name | 2015 - 2019</div>
+            <div>Marketing Major, GPA: 3.7/4.0</div>
+            <br>
+            <div class="text-base font-semibold">SKILLS</div>
+            <div>• Digital Marketing • SEO/SEM • Social Media Management • Google Analytics</div>
+            <div>• Content Creation • Email Marketing • Campaign Management • Data Analysis</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATS Optimization -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg mb-8">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">ATS Optimization Tips</h2>
+        <p class="text-base-content/80 mb-6">
+          Applicant Tracking Systems (ATS) are used by most companies to filter resumes. Follow these tips to ensure your resume passes through ATS filters:
+        </p>
+        <div class="grid md:grid-cols-3 gap-6">
+          <div class="bg-primary/5 border border-primary/20 rounded-lg p-4">
+            <h3 class="font-semibold text-primary mb-3">Keyword Optimization</h3>
+            <ul class="text-sm text-base-content/80 space-y-2">
+              <li>• Include relevant keywords from the job description</li>
+              <li>• Use industry-specific terms and skills</li>
+              <li>• Balance keywords naturally in context</li>
+              <li>• Include both abbreviated and full terms (e.g., "SEO" and "Search Engine Optimization")</li>
+            </ul>
+          </div>
+          <div class="bg-success/5 border border-success/20 rounded-lg p-4">
+            <h3 class="font-semibold text-success mb-3">Format for ATS</h3>
+            <ul class="text-sm text-base-content/80 space-y-2">
+              <li>• Use standard fonts (Arial, Calibri, Times New Roman)</li>
+              <li>• Avoid tables, columns, graphics, or unusual formatting</li>
+              <li>• Save as .docx, .pdf, or plain text</li>
+              <li>• Use clear section headings</li>
+            </ul>
+          </div>
+          <div class="bg-warning/5 border border-warning/20 rounded-lg p-4">
+            <h3 class="font-semibold text-warning mb-3">Content Structure</h3>
+            <ul class="text-sm text-base-content/80 space-y-2">
+              <li>• Put contact info at the top</li>
+              <li>• Use standard section names (Experience, Education, Skills)</li>
+              <li>• Include quantifiable achievements</li>
+              <li>• Keep consistent date formats</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resume Review Checklist -->
+    <div class="card bg-gradient-to-r from-primary/5 to-info/5 border border-primary/20 shadow-lg">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Resume Review Checklist</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-base-content mb-4">Before Submitting</h3>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">Contact information is complete and professional</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">No spelling or grammatical errors</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">Resume is tailored to the specific job</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">Achievements are quantified with numbers</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">File format is compatible with ATS systems</span>
+              </label>
+            </div>
+          </div>
+          <div>
+            <h3 class="font-semibold text-base-content mb-4">Final Touches</h3>
+            <div class="space-y-3">
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">Font and formatting are consistent</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">File is saved with a professional name</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">Resume length is appropriate (1-2 pages)</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">References are prepared separately</span>
+              </label>
+              <label class="flex items-center gap-3 cursor-pointer">
+                <input type="checkbox" class="checkbox checkbox-primary" disabled>
+                <span class="text-base-content/80">Had someone else review for feedback</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="mt-8 text-center">
+      <div class="bg-base-100 border border-base-200 rounded-lg p-8">
+        <h3 class="text-xl font-semibold text-base-content mb-4">Need Help with Your Resume?</h3>
+        <p class="text-base-content/70 mb-6">
+          Our professional resume writing service can help you create a standout resume that gets results.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/help/interview-prep" class="btn btn-primary">
+            <i class="fas fa-arrow-right mr-2"></i>
+            Interview Preparation
+          </a>
+          <a href="/help" class="btn btn-outline">
+            <i class="fas fa-question-circle mr-2"></i>
+            Back to Help Center
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

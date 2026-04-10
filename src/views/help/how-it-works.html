@@ -1,0 +1,278 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-12 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <a href="/help" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-4">
+        <i class="fas fa-arrow-left"></i>
+        Back to Help Center
+      </a>
+      <h1 class="text-4xl font-bold text-base-content mb-4">How It Works</h1>
+      <p class="text-lg text-base-content/70">
+        A step-by-step guide to getting started with our job portal platform.
+      </p>
+    </div>
+
+    <!-- Steps -->
+    <div class="space-y-8">
+      <!-- Step 1 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-primary">1</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Create Your Account</h2>
+              <p class="text-base-content/80 mb-4">
+                Sign up as a candidate or employer. Choose the right account type for your needs and verify your email address to get started.
+              </p>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <h3 class="font-semibold text-base-content mb-2">For Candidates:</h3>
+                  <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                    <li>Access thousands of job opportunities</li>
+                    <li>Apply to jobs with one click</li>
+                    <li>Track your applications</li>
+                    <li>Receive personalized job recommendations</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-base-content mb-2">For Employers:</h3>
+                  <ul class="list-disc list-inside text-base-content/70 space-y-1">
+                    <li>Post jobs to reach qualified candidates</li>
+                    <li>Review and manage applications</li>
+                    <li>Access candidate profiles</li>
+                    <li>Communicate with potential hires</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-success">2</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Complete Your Profile</h2>
+              <p class="text-base-content/80 mb-4">
+                Build a comprehensive profile that showcases your skills and experience to potential employers or clients.
+              </p>
+              <div class="bg-base-200/50 rounded-lg p-6">
+                <h3 class="font-semibold text-base-content mb-3">Essential Profile Elements:</h3>
+                <div class="grid md:grid-cols-2 gap-6">
+                  <div>
+                    <h4 class="font-medium text-base-content mb-2">Personal Information</h4>
+                    <ul class="text-sm text-base-content/70 space-y-1">
+                      <li>• Professional photo</li>
+                      <li>• Contact details</li>
+                      <li>• Location preferences</li>
+                      <li>• Work authorization status</li>
+                    </ul>
+                  </div>
+                  <div>
+                    <h4 class="font-medium text-base-content mb-2">Professional Details</h4>
+                    <ul class="text-sm text-base-content/70 space-y-1">
+                      <li>• Work experience</li>
+                      <li>• Education background</li>
+                      <li>• Skills and competencies</li>
+                      <li>• Career objectives</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-warning/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-warning">3</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Find or Post Opportunities</h2>
+              <p class="text-base-content/80 mb-4">
+                Whether you're looking for your next role or hiring talent, our platform makes it easy to connect.
+              </p>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-primary/5 border border-primary/20 rounded-lg p-6">
+                  <h3 class="font-semibold text-primary mb-3">For Job Seekers</h3>
+                  <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-search text-primary mt-1"></i>
+                      <div>
+                        <p class="font-medium text-base-content">Advanced Search</p>
+                        <p class="text-sm text-base-content/70">Use filters for location, salary, experience, and keywords</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-bell text-primary mt-1"></i>
+                      <div>
+                        <p class="font-medium text-base-content">Job Alerts</p>
+                        <p class="text-sm text-base-content/70">Get notified when matching jobs are posted</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-bookmark text-primary mt-1"></i>
+                      <div>
+                        <p class="font-medium text-base-content">Save Jobs</p>
+                        <p class="text-sm text-base-content/70">Keep track of interesting opportunities</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-success/5 border border-success/20 rounded-lg p-6">
+                  <h3 class="font-semibold text-success mb-3">For Employers</h3>
+                  <div class="space-y-3">
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-plus-circle text-success mt-1"></i>
+                      <div>
+                        <p class="font-medium text-base-content">Post Jobs</p>
+                        <p class="text-sm text-base-content/70">Create detailed job descriptions with our easy-to-use form</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-users text-success mt-1"></i>
+                      <div>
+                        <p class="font-medium text-base-content">Review Applications</p>
+                        <p class="text-sm text-base-content/70">Access candidate profiles and application materials</p>
+                      </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                      <i class="fas fa-calendar text-success mt-1"></i>
+                      <div>
+                        <p class="font-medium text-base-content">Schedule Interviews</p>
+                        <p class="text-sm text-base-content/70">Coordinate with candidates directly through the platform</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-info/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-info">4</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Connect and Succeed</h2>
+              <p class="text-base-content/80 mb-4">
+                Use our communication tools to build relationships and advance your career or find the perfect candidate.
+              </p>
+              <div class="bg-info/5 border border-info/20 rounded-lg p-6">
+                <h3 class="font-semibold text-info mb-3">Communication Features</h3>
+                <div class="grid md:grid-cols-3 gap-4">
+                  <div class="text-center">
+                    <i class="fas fa-envelope text-2xl text-info mb-2"></i>
+                    <p class="font-medium text-base-content">Messaging</p>
+                    <p class="text-sm text-base-content/70">Direct communication between employers and candidates</p>
+                  </div>
+                  <div class="text-center">
+                    <i class="fas fa-calendar-check text-2xl text-info mb-2"></i>
+                    <p class="font-medium text-base-content">Interview Scheduling</p>
+                    <p class="text-sm text-base-content/70">Coordinate interview times and logistics</p>
+                  </div>
+                  <div class="text-center">
+                    <i class="fas fa-star text-2xl text-info mb-2"></i>
+                    <p class="font-medium text-base-content">Feedback System</p>
+                    <p class="text-sm text-base-content/70">Rate and review your experience</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Getting Started Tips -->
+    <div class="mt-12 card bg-gradient-to-r from-primary/5 to-success/5 border border-primary/20 shadow-lg">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Getting Started Tips</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-base-content mb-3">Quick Tips for Success</h3>
+            <ul class="space-y-2 text-base-content/80">
+              <li class="flex items-start gap-3">
+                <i class="fas fa-check-circle text-success mt-1"></i>
+                <span>Complete your profile with detailed information</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-check-circle text-success mt-1"></i>
+                <span>Upload a professional resume or portfolio</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-check-circle text-success mt-1"></i>
+                <span>Set up job alerts for relevant opportunities</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-check-circle text-success mt-1"></i>
+                <span>Customize your job search preferences</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-semibold text-base-content mb-3">Common Mistakes to Avoid</h3>
+            <ul class="space-y-2 text-base-content/80">
+              <li class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-warning mt-1"></i>
+                <span>Don't use generic or incomplete profiles</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-warning mt-1"></i>
+                <span>Avoid applying to irrelevant positions</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-warning mt-1"></i>
+                <span>Don't forget to follow up on applications</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-exclamation-triangle text-warning mt-1"></i>
+                <span>Keep your contact information current</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="mt-8 text-center">
+      <div class="bg-base-100 border border-base-200 rounded-lg p-8">
+        <h3 class="text-xl font-semibold text-base-content mb-4">Ready to Get Started?</h3>
+        <p class="text-base-content/70 mb-6">
+          Now that you know how our platform works, create your account and start your journey today.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/sign-up" class="btn btn-primary">
+            <i class="fas fa-user-plus mr-2"></i>
+            Create Account
+          </a>
+          <a href="/help" class="btn btn-outline">
+            <i class="fas fa-question-circle mr-2"></i>
+            Back to Help Center
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

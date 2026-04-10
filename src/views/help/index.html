@@ -1,0 +1,214 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-12 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-base-content mb-4">Help Center</h1>
+      <p class="text-lg text-base-content/70 max-w-2xl mx-auto">
+        Find answers to common questions and get the most out of our job portal platform.
+      </p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+      <a href="/help/how-it-works" class="card bg-base-100 hover:bg-base-100/80 border border-base-200 shadow-lg transition-all duration-200 hover:shadow-xl group">
+        <div class="card-body p-6 text-center">
+          <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+            <i class="fas fa-play-circle text-2xl text-primary"></i>
+          </div>
+          <h3 class="font-semibold text-base-content mb-2">How It Works</h3>
+          <p class="text-sm text-base-content/60">Learn the basics of using our platform</p>
+        </div>
+      </a>
+
+      <a href="/help/resume-tips" class="card bg-base-100 hover:bg-base-100/80 border border-base-200 shadow-lg transition-all duration-200 hover:shadow-xl group">
+        <div class="card-body p-6 text-center">
+          <div class="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-success/20 transition-colors">
+            <i class="fas fa-file-alt text-2xl text-success"></i>
+          </div>
+          <h3 class="font-semibold text-base-content mb-2">Resume Tips</h3>
+          <p class="text-sm text-base-content/60">Optimize your resume for better results</p>
+        </div>
+      </a>
+
+      <a href="/help/interview-prep" class="card bg-base-100 hover:bg-base-100/80 border border-base-200 shadow-lg transition-all duration-200 hover:shadow-xl group">
+        <div class="card-body p-6 text-center">
+          <div class="w-16 h-16 bg-warning/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-warning/20 transition-colors">
+            <i class="fas fa-comments text-2xl text-warning"></i>
+          </div>
+          <h3 class="font-semibold text-base-content mb-2">Interview Prep</h3>
+          <p class="text-sm text-base-content/60">Prepare for successful interviews</p>
+        </div>
+      </a>
+
+      <a href="/help/salary-guide" class="card bg-base-100 hover:bg-base-100/80 border border-base-200 shadow-lg transition-all duration-200 hover:shadow-xl group">
+        <div class="card-body p-6 text-center">
+          <div class="w-16 h-16 bg-info/10 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:bg-info/20 transition-colors">
+            <i class="fas fa-dollar-sign text-2xl text-info"></i>
+          </div>
+          <h3 class="font-semibold text-base-content mb-2">Salary Guide</h3>
+          <p class="text-sm text-base-content/60">Understand salary expectations</p>
+        </div>
+      </a>
+    </div>
+
+    <!-- FAQ Section -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Frequently Asked Questions</h2>
+
+        <div class="space-y-4">
+          <!-- FAQ Item 1 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">How do I create an account?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>To create an account, click on "Sign Up" in the top navigation. Choose your role (Candidate or Employer), fill in your details including name, email, and password, then verify your email. For employers, you'll need to create a company profile after registration.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 2 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">How do I search for jobs?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>Use the search bar on the homepage or jobs page. You can search by keywords, location, company, or job type. Use filters to narrow down results by salary range, experience level, and job category.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 3 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">How do I apply for a job?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>Click on a job posting, review the details, and click "Apply Now". Upload your resume and fill in any required information. You'll receive a confirmation email, and employers will be notified of your application.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 4 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">How do employers post jobs?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>After creating an employer account and company profile, go to your dashboard and click "Post a Job". Fill in job details including title, description, requirements, salary, and location. Jobs are reviewed before being published.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 5 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">How do I reset my password?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>Click "Forgot Password" on the sign-in page, enter your email address, and follow the instructions sent to your email. The link will expire in 24 hours for security.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 6 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">What file formats are accepted for resumes?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>We accept PDF, DOC, DOCX, and TXT formats for resume uploads. Maximum file size is 5MB. Ensure your resume is up-to-date and formatted properly for best results.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 7 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">How long does job approval take?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>Job postings are typically reviewed within 24 hours during business days. You'll receive an email notification once your job is approved and published, or if it requires revisions.</p>
+            </div>
+          </div>
+
+          <!-- FAQ Item 8 -->
+          <div class="faq-item border border-base-200 rounded-lg">
+            <button class="faq-toggle w-full text-left p-4 flex items-center justify-between hover:bg-base-200/50 transition-colors rounded-lg">
+              <span class="font-medium text-base-content">Can I edit my job posting after it's published?</span>
+              <i class="fas fa-chevron-down text-base-content/60 transition-transform duration-200"></i>
+            </button>
+            <div class="faq-content hidden p-4 pt-0 text-base-content/80">
+              <p>Yes, you can edit active job postings from your employer dashboard. Some changes may require re-approval. Once a job is closed or filled, it cannot be edited.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Support -->
+    <div class="mt-12 text-center">
+      <div class="card bg-primary/5 border border-primary/20 shadow-lg">
+        <div class="card-body p-8">
+          <h3 class="text-xl font-semibold text-base-content mb-4">Still need help?</h3>
+          <p class="text-base-content/70 mb-6">
+            Can't find what you're looking for? Our support team is here to help.
+          </p>
+          <a href="mailto:support@jobhub.com" class="btn btn-primary">
+            <i class="fas fa-envelope mr-2"></i>
+            Contact Support
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const faqToggles = document.querySelectorAll('.faq-toggle');
+
+  faqToggles.forEach(toggle => {
+    toggle.addEventListener('click', function() {
+      const item = this.parentElement;
+      const content = item.querySelector('.faq-content');
+      const icon = this.querySelector('i');
+
+      // Toggle content visibility
+      content.classList.toggle('hidden');
+
+      // Rotate icon
+      icon.classList.toggle('rotate-180');
+
+      // Close other FAQs
+      document.querySelectorAll('.faq-item').forEach(otherItem => {
+        if (otherItem !== item) {
+          otherItem.querySelector('.faq-content').classList.add('hidden');
+          otherItem.querySelector('i').classList.remove('rotate-180');
+        }
+      });
+    });
+  });
+});
+</script>
+
+<style>
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+.faq-content {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 500px; }
+}
+</style>
+{% endblock %}

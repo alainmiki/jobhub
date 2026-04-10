@@ -1,0 +1,414 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30 py-12 px-4">
+  <div class="max-w-4xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <a href="/help" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-4">
+        <i class="fas fa-arrow-left"></i>
+        Back to Help Center
+      </a>
+      <h1 class="text-4xl font-bold text-base-content mb-4">Interview Preparation</h1>
+      <p class="text-lg text-base-content/70">
+        Comprehensive guide to acing your job interviews with confidence and professionalism.
+      </p>
+    </div>
+
+    <!-- Interview Types -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg mb-8">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Common Interview Types</h2>
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="bg-primary/5 border border-primary/20 rounded-lg p-6">
+            <div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fas fa-user-tie text-primary text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-base-content mb-2">Phone Screening</h3>
+            <p class="text-sm text-base-content/70 mb-3">Initial conversation to assess basic qualifications and fit.</p>
+            <ul class="text-xs text-base-content/60 space-y-1">
+              <li>• 15-30 minutes</li>
+              <li>• Basic questions</li>
+              <li>• Comfortable setting</li>
+            </ul>
+          </div>
+
+          <div class="bg-success/5 border border-success/20 rounded-lg p-6">
+            <div class="w-12 h-12 bg-success/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fas fa-users text-success text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-base-content mb-2">Panel Interview</h3>
+            <p class="text-sm text-base-content/70 mb-3">Multiple interviewers from different departments or levels.</p>
+            <ul class="text-xs text-base-content/60 space-y-1">
+              <li>• 45-90 minutes</li>
+              <li>• Diverse perspectives</li>
+              <li>• Team dynamics</li>
+            </ul>
+          </div>
+
+          <div class="bg-warning/5 border border-warning/20 rounded-lg p-6">
+            <div class="w-12 h-12 bg-warning/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fas fa-laptop text-warning text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-base-content mb-2">Video Interview</h3>
+            <p class="text-sm text-base-content/70 mb-3">Remote interviews using video conferencing platforms.</p>
+            <ul class="text-xs text-base-content/60 space-y-1">
+              <li>• Technical setup required</li>
+              <li>• Professional background</li>
+              <li>• Strong internet connection</li>
+            </ul>
+          </div>
+
+          <div class="bg-info/5 border border-info/20 rounded-lg p-6">
+            <div class="w-12 h-12 bg-info/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fas fa-brain text-info text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-base-content mb-2">Technical Interview</h3>
+            <p class="text-sm text-base-content/70 mb-3">Focus on technical skills, problem-solving, and expertise.</p>
+            <ul class="text-xs text-base-content/60 space-y-1">
+              <li>• Code challenges</li>
+              <li>• System design</li>
+              <li>• Technical questions</li>
+            </ul>
+          </div>
+
+          <div class="bg-secondary/5 border border-secondary/20 rounded-lg p-6">
+            <div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fas fa-handshake text-secondary text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-base-content mb-2">Behavioral Interview</h3>
+            <p class="text-sm text-base-content/70 mb-3">Questions about past experiences and how you handled situations.</p>
+            <ul class="text-xs text-base-content/60 space-y-1">
+              <li>• STAR method</li>
+              <li>• Past experiences</li>
+              <li>• Problem-solving skills</li>
+            </ul>
+          </div>
+
+          <div class="bg-accent/5 border border-accent/20 rounded-lg p-6">
+            <div class="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
+              <i class="fas fa-building text-accent text-xl"></i>
+            </div>
+            <h3 class="font-semibold text-base-content mb-2">Case Interview</h3>
+            <p class="text-sm text-base-content/70 mb-3">Business problems or scenarios to solve during the interview.</p>
+            <ul class="text-xs text-base-content/60 space-y-1">
+              <li>• Consulting-style</li>
+              <li>• Analytical thinking</li>
+              <li>• Presentation skills</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Preparation Steps -->
+    <div class="space-y-8 mb-8">
+      <!-- Step 1 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-primary">1</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Research the Company</h2>
+              <p class="text-base-content/80 mb-4">
+                Understanding the company culture, values, and recent developments shows genuine interest and preparation.
+              </p>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="font-semibold text-base-content mb-3">What to Research</h3>
+                  <ul class="space-y-2 text-base-content/80">
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-check-circle text-success mt-1"></i>
+                      <span>Company mission, vision, and values</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-check-circle text-success mt-1"></i>
+                      <span>Recent news and industry position</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-check-circle text-success mt-1"></i>
+                      <span>Company culture and work environment</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-check-circle text-success mt-1"></i>
+                      <span>Key products, services, and competitors</span>
+                    </li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-base-content mb-3">How to Research</h3>
+                  <ul class="space-y-2 text-base-content/80">
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-search text-primary mt-1"></i>
+                      <span>Visit company website and blog</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-newspaper text-primary mt-1"></i>
+                      <span>Check recent news articles</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-users text-primary mt-1"></i>
+                      <span>Review employee reviews on Glassdoor</span>
+                    </li>
+                    <li class="flex items-start gap-3">
+                      <i class="fas fa-linkedin text-primary mt-1"></i>
+                      <span>Check LinkedIn company page</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-success/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-success">2</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Prepare Your Answers</h2>
+              <p class="text-base-content/80 mb-4">
+                Practice common interview questions and prepare thoughtful answers that highlight your skills and experience.
+              </p>
+              <div class="bg-success/5 border border-success/20 rounded-lg p-6">
+                <h3 class="font-semibold text-success mb-4">Common Interview Questions</h3>
+                <div class="space-y-4">
+                  <div>
+                    <p class="font-medium text-base-content">"Tell me about yourself"</p>
+                    <p class="text-sm text-base-content/70">Keep it professional, focus on career highlights, 1-2 minutes</p>
+                  </div>
+                  <div>
+                    <p class="font-medium text-base-content">"What are your strengths/weaknesses?"</p>
+                    <p class="text-sm text-base-content/70">Choose relevant strengths, frame weaknesses positively</p>
+                  </div>
+                  <div>
+                    <p class="font-medium text-base-content">"Why do you want to work here?"</p>
+                    <p class="text-sm text-base-content/70">Show research, align with company values</p>
+                  </div>
+                  <div>
+                    <p class="font-medium text-base-content">"Where do you see yourself in 5 years?"</p>
+                    <p class="text-sm text-base-content/70">Show ambition but realism, tie to company growth</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-warning/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-warning">3</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Practice and Rehearse</h2>
+              <p class="text-base-content/80 mb-4">
+                Practice your answers, body language, and responses to build confidence and reduce anxiety.
+              </p>
+              <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-warning/5 border border-warning/20 rounded-lg p-4">
+                  <h3 class="font-semibold text-warning mb-3">Practice Methods</h3>
+                  <ul class="text-sm text-base-content/80 space-y-2">
+                    <li>• Record yourself answering questions</li>
+                    <li>• Practice with a friend or mentor</li>
+                    <li>• Use mock interview services</li>
+                    <li>• Time your responses</li>
+                    <li>• Focus on clear, concise answers</li>
+                  </ul>
+                </div>
+                <div class="bg-info/5 border border-info/20 rounded-lg p-4">
+                  <h3 class="font-semibold text-info mb-3">Body Language Tips</h3>
+                  <ul class="text-sm text-base-content/80 space-y-2">
+                    <li>• Maintain eye contact</li>
+                    <li>• Smile and show enthusiasm</li>
+                    <li>• Use open gestures</li>
+                    <li>• Sit up straight</li>
+                    <li>• Lean slightly forward</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="card bg-base-100 border border-base-200 shadow-lg">
+        <div class="card-body p-8">
+          <div class="flex items-start gap-6">
+            <div class="w-16 h-16 bg-info/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+              <span class="text-2xl font-bold text-info">4</span>
+            </div>
+            <div class="flex-1">
+              <h2 class="text-2xl font-bold text-base-content mb-4">Follow Up</h2>
+              <p class="text-base-content/80 mb-4">
+                Send a thank-you note after the interview to reinforce your interest and leave a positive impression.
+              </p>
+              <div class="bg-info/5 border border-info/20 rounded-lg p-6">
+                <h3 class="font-semibold text-info mb-3">Thank-You Email Tips</h3>
+                <div class="space-y-3">
+                  <div class="flex items-start gap-3">
+                    <i class="fas fa-clock text-info mt-1"></i>
+                    <div>
+                      <p class="font-medium text-base-content">Send within 24 hours</p>
+                      <p class="text-sm text-base-content/70">While the interview is still fresh in their minds</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <i class="fas fa-envelope text-info mt-1"></i>
+                    <div>
+                      <p class="font-medium text-base-content">Personalize for each interviewer</p>
+                      <p class="text-sm text-base-content/70">Reference specific conversation points</p>
+                    </div>
+                  </div>
+                  <div class="flex items-start gap-3">
+                    <i class="fas fa-handshake text-info mt-1"></i>
+                    <div>
+                      <p class="font-medium text-base-content">Reiterate your interest</p>
+                      <p class="text-sm text-base-content/70">Express enthusiasm for the role and company</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STAR Method -->
+    <div class="card bg-base-100 border border-base-200 shadow-lg mb-8">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Using the STAR Method</h2>
+        <p class="text-base-content/80 mb-6">
+          The STAR method helps structure answers to behavioral interview questions by providing a clear framework.
+        </p>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div>
+            <div class="space-y-6">
+              <div class="bg-primary/5 border-l-4 border-primary pl-6">
+                <h3 class="font-semibold text-primary text-lg">S - Situation</h3>
+                <p class="text-base-content/80">Set the context by describing the situation you were in.</p>
+                <p class="text-sm text-base-content/70 italic">"In my previous role as a marketing coordinator..."</p>
+              </div>
+              <div class="bg-success/5 border-l-4 border-success pl-6">
+                <h3 class="font-semibold text-success text-lg">T - Task</h3>
+                <p class="text-base-content/80">Explain the task or challenge you needed to address.</p>
+                <p class="text-sm text-base-content/70 italic">"I was responsible for increasing social media engagement..."</p>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="space-y-6">
+              <div class="bg-warning/5 border-l-4 border-warning pl-6">
+                <h3 class="font-semibold text-warning text-lg">A - Action</h3>
+                <p class="text-base-content/80">Describe the specific actions you took to resolve the issue.</p>
+                <p class="text-sm text-base-content/70 italic">"I developed a content calendar and collaborated with the design team..."</p>
+              </div>
+              <div class="bg-info/5 border-l-4 border-info pl-6">
+                <h3 class="font-semibold text-info text-lg">R - Result</h3>
+                <p class="text-base-content/80">Share the results of your actions, focusing on impact.</p>
+                <p class="text-sm text-base-content/70 italic">"This resulted in a 40% increase in engagement and 25% more website traffic."</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 bg-base-200/50 rounded-lg p-4">
+          <h3 class="font-semibold text-base-content mb-2">STAR Example</h3>
+          <p class="text-sm text-base-content/80 italic">
+            "In my previous role as a marketing coordinator (Situation), I was responsible for increasing social media engagement for our product launches (Task). I developed a content calendar and collaborated with the design team to create eye-catching graphics and videos (Action). This resulted in a 40% increase in engagement and drove 25% more traffic to our website (Result)."
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Interview Tips -->
+    <div class="card bg-gradient-to-r from-primary/5 to-success/5 border border-primary/20 shadow-lg mb-8">
+      <div class="card-body p-8">
+        <h2 class="text-2xl font-bold text-base-content mb-6">Interview Day Tips</h2>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <h3 class="font-semibold text-base-content mb-4">Before the Interview</h3>
+            <ul class="space-y-3 text-base-content/80">
+              <li class="flex items-start gap-3">
+                <i class="fas fa-clock text-primary mt-1"></i>
+                <span>Arrive 10-15 minutes early (or log in early for virtual)</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-briefcase text-primary mt-1"></i>
+                <span>Bring extra copies of your resume and portfolio</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-search text-primary mt-1"></i>
+                <span>Prepare questions to ask the interviewer</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-mobile-alt text-primary mt-1"></i>
+                <span>Test your technology for virtual interviews</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-coffee text-primary mt-1"></i>
+                <span>Get a good night's sleep and eat well</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="font-semibold text-base-content mb-4">During the Interview</h3>
+            <ul class="space-y-3 text-base-content/80">
+              <li class="flex items-start gap-3">
+                <i class="fas fa-handshake text-success mt-1"></i>
+                <span>Greet everyone professionally with a firm handshake</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-smile text-success mt-1"></i>
+                <span>Smile, make eye contact, and show enthusiasm</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-listen text-success mt-1"></i>
+                <span>Listen carefully and answer thoughtfully</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-question text-success mt-1"></i>
+                <span>Ask insightful questions about the role and company</span>
+              </li>
+              <li class="flex items-start gap-3">
+                <i class="fas fa-thumbs-up text-success mt-1"></i>
+                <span>Thank the interviewer for their time</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Next Steps -->
+    <div class="mt-8 text-center">
+      <div class="bg-base-100 border border-base-200 rounded-lg p-8">
+        <h3 class="text-xl font-semibold text-base-content mb-4">Ready for Your Interview?</h3>
+        <p class="text-base-content/70 mb-6">
+          Use our interview preparation checklist to ensure you're fully ready for success.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="/help/salary-guide" class="btn btn-primary">
+            <i class="fas fa-arrow-right mr-2"></i>
+            Salary Negotiation
+          </a>
+          <a href="/help" class="btn btn-outline">
+            <i class="fas fa-question-circle mr-2"></i>
+            Back to Help Center
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
