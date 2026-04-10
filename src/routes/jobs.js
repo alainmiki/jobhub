@@ -349,7 +349,7 @@ export const initJobsRouter = (auth) => {
         
         logger.info(`Job deleted: ${req.params.id} by user: ${req.userId}`);
         req.flash('success', 'Job deleted successfully.');
-        return res.redirect('/dashboard/employer');
+        return res.redirect('/employer');
       } catch (error) {
         logger.error('Error deleting job:', error);
         return res.status(500).render('error', { message: 'Failed to delete job' });

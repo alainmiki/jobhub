@@ -38,7 +38,6 @@ import { initAdminRouter } from './routes/admin.js';
 import { initAuthRouter } from './routes/auth.js';
 
 import Job from './models/Job.js';
-import { log } from 'console';
 
 dotenv.config();
 validateEnv();

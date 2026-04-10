@@ -923,7 +923,7 @@ export const initProfileRouter = (auth) => {
         type: 'message_from_candidate',
         title: 'New message from candidate',
         message: `You have a new message regarding the application for "${application.job.title}"`,
-        link: `/dashboard/employer/applications/${application._id}`
+        link: `/employer/applications/${application._id}`
       });
       await notification.save();
     }

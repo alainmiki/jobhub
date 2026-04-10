@@ -177,7 +177,7 @@ export const initCompanyRouter = (auth) => {
     
     if (!company) {
       req.flash('error', 'Company not found or you do not have permission.');
-      return res.redirect('/dashboard/employer');
+      return res.redirect('/employer');
     }
     
     res.render('company/edit', { 
@@ -214,7 +214,7 @@ export const initCompanyRouter = (auth) => {
       
       if (!company) {
         req.flash('error', 'Company not found or you do not have permission.');
-        return res.redirect('/dashboard/employer');
+        return res.redirect('/employer');
       }
 
       const updates = {
@@ -273,7 +273,7 @@ export const initCompanyRouter = (auth) => {
     
     logger.info(`Company deleted: ${req.params.id} by user: ${req.userId}`);
     req.flash('success', 'Company profile deleted successfully');
-    res.json({ success: true, redirect: '/dashboard/employer' });
+    res.json({ success: true, redirect: '/employer' });
   }));
 
   router.post('/:id/verify', isAuthenticated(auth), asyncHandler(async (req, res) => {

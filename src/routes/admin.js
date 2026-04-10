@@ -17,6 +17,36 @@ import { JOB_TYPE, JOB_LOCATION, JOB_CATEGORY, EXPERIENCE_LEVEL } from '../confi
 
 const router = express.Router();
 
+/**
+ * BETTER-AUTH INTEGRATION PATTERN FOR ADMIN ROUTES
+ * 
+ * This module manages all user-related operations while respecting better-auth's backend:
+ * 
+ * 1. USER CREATION (POST /users):
+ *    - Uses auth.api.signUpEmail() to create users with better-auth
+ *    - Passes role as an inputable additional field from better-auth config
+ *    - Better-auth hooks automatically create UserProfile for new users
+ *    - Admin can specify role at creation time
+ * 
+ * 2. USER QUERIES/LISTING (GET /users):
+ *    - Uses User Mongoose model (backed by better-auth's "user" collection)
+ *    - Direct Mongoose queries are safe here as User model is a proper abstraction
+ *    - Ensures consistency with better-auth data model
+ * 
+ * 3. USER UPDATES (PUT /users/:id, POST /users/:id/role, etc):
+ *    - Uses User model findByIdAndUpdate() to update better-auth's user collection
+ *    - Maintains role, email, name, and isActive fields as defined in better-auth config
+ *    - Syncs UserProfile when role changes
+ * 
+ * 4. USER DELETION (POST /users/:id/delete):
+ *    - Uses user.deleteOne() to trigger cascade delete middleware
+ *    - Properly cleans up all related data (applications, notifications, interviews, etc)
+ *    - Cascade middleware ensures referential integrity
+ * 
+ * KEY PRINCIPLE: All user data flows through better-auth's managed collection
+ * accessed via the User Mongoose model, ensuring consistency and proper validation.
+ */
+
 
 export const initAdminRouter = (auth) => {
   const authInstance = auth;
@@ -105,53 +135,78 @@ export const initAdminRouter = (auth) => {
     asyncHandler(async (req, res) => {
       const { name, email, role, password } = req.body;
 
-      // Check if user already exists
+      // Check if user already exists via better-auth database
       const existingUser = await User.findOne({ email });
       if (existingUser) {
         req.flash('error', 'User with this email already exists');
         return res.redirect('/admin/users/create');
       }
 
-      // Use better-auth signUp to create the user
-      const signUpResult = await authInstance.api.signUp({
-        email,
-        password,
-        name
+      // Use better-auth signUpEmail API to create the user with role field
+      const signUpResult = await authInstance.api.signUpEmail({
+        body: {
+          email,
+          password,
+          name,
+          role // Include role as it's an inputable additional field in better-auth
+        },
+        headers: req.headers,
+        asResponse: true
       });
 
-      if (signUpResult.error) {
-        req.flash('error', signUpResult.error.message || 'Failed to create user');
+      if (!signUpResult.ok) {
+        const errorData = await signUpResult.json();
+        req.flash('error', errorData.message || 'Failed to create user');
         return res.redirect('/admin/users/create');
       }
 
-      const createdUser = signUpResult.data?.user;
+      const response = await signUpResult.json();
+      const createdUser = response?.user;
+      
       if (!createdUser) {
         req.flash('error', 'Failed to create user');
         return res.redirect('/admin/users/create');
       }
 
-      // Update the User model with role
-      await User.findByIdAndUpdate(createdUser.id, { role, isActive: true }, { upsert: true });
+      // IMPORTANT: We intentionally DO NOT apply response headers with:
+      //   response.headers.forEach((v, k) => res.append(k, v));
+      // This prevents admin-created users from being auto-logged in.
+      // Auto sign-in is enabled in auth.js config (autoSignIn: true), but
+      // admin-created users should require explicit login for security.
+      // Contrast this with auth.js signup route which DOES apply headers.
 
-      // Create UserProfile
-      await UserProfile.create({
-        userId: createdUser.id,
-        role,
-        isActive: true
-      });
+      // Update the User model with role and isActive if not set by better-auth
+      await User.findByIdAndUpdate(
+        createdUser.id, 
+        { role, isActive: true }, 
+        { upsert: true }
+      );
+
+      // Create UserProfile with the admin-created status
+      await UserProfile.findOneAndUpdate(
+        { userId: createdUser.id },
+        { 
+          userId: createdUser.id,
+          role,
+          isActive: true,
+          isProfileComplete: false
+        },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
 
       await logAuditAction(req, 'user_create', 'user', createdUser.id, {
         email: createdUser.email,
         role
       });
 
-      logger.info(`Admin ${req.userId} created user ${createdUser.email}`);
+      logger.info(`Admin ${req.userId} created user ${createdUser.email} with role ${role}`);
       req.flash('success', 'User created successfully');
       res.redirect('/admin/users');
   }));
 
   // POST /admin/users/:id/delete - Delete user
   router.post('/users/:id/delete', idParamValidator, asyncHandler(async (req, res) => {
+    // Query the user from better-auth managed collection through our User model
     const user = await User.findById(req.params.id);
     if (!user) {
       req.flash('error', 'User not found');
@@ -164,15 +219,21 @@ export const initAdminRouter = (auth) => {
       return res.redirect('/admin/users');
     }
 
-    await UserProfile.deleteMany({ userId: user._id });
-    await User.findByIdAndDelete(req.params.id);
+    const userEmail = user.email;
+    const userId = user._id;
 
-    await logAuditAction(req, 'user_delete', 'user', user._id, {
-      email: user.email,
+    // Delete user profile and all related data (triggers cascade delete middleware on User model)
+    await UserProfile.deleteMany({ userId: user._id });
+    
+    // Use deleteOne to trigger the cascade delete middleware
+    await user.deleteOne();
+
+    await logAuditAction(req, 'user_delete', 'user', userId, {
+      email: userEmail,
       role: user.role
     });
 
-    logger.info(`Admin ${req.userId} deleted user ${user.email}`);
+    logger.info(`Admin ${req.userId} deleted user ${userEmail} (${userId})`);
     req.flash('success', 'User deleted successfully');
     res.redirect('/admin/users');
   }));
@@ -245,31 +306,54 @@ export const initAdminRouter = (auth) => {
     validate,
     asyncHandler(async (req, res) => {
       const { name, email, role } = req.body;
-      const updates = {};
-      if (name) updates.name = name;
-      if (email) updates.email = email;
-      if (role) updates.role = role;
-
-      const user = await User.findByIdAndUpdate(req.params.id, updates, { returnDocument: 'after' });
+      
+      // Fetch user from better-auth managed collection
+      const user = await User.findById(req.params.id);
       if (!user) {
         req.flash('error', 'User not found');
         return res.redirect('/admin/users');
       }
 
+      // Prepare updates for better-auth user collection
+      const updates = {};
+      if (name) {
+        updates.name = name;
+      }
+      if (email && email !== user.email) {
+        // Check if new email is already taken
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+          req.flash('error', 'Email is already in use');
+          return res.redirect(`/admin/users/${req.params.id}/edit`);
+        }
+        updates.email = email;
+      }
+      if (role) {
+        updates.role = role;
+      }
+
+      // Update user in better-auth managed collection through User model
+      const updatedUser = await User.findByIdAndUpdate(
+        req.params.id, 
+        updates, 
+        { returnDocument: 'after', new: true }
+      );
+
+      // Sync UserProfile if role changed
       if (role) {
         await UserProfile.findOneAndUpdate(
-          { userId: user.id },
+          { userId: updatedUser._id },
           { role },
-          { upsert: true, setDefaultsOnInsert: true }
+          { upsert: true }
         );
       }
 
-      await logAuditAction(req, 'user_update', 'user', user._id, {
+      await logAuditAction(req, 'user_update', 'user', updatedUser._id, {
         updates,
-        email: user.email
+        email: updatedUser.email
       });
 
-      logger.info(`Admin ${req.userId} updated user ${user.email}`);
+      logger.info(`Admin ${req.userId} updated user ${updatedUser.email}`);
       req.flash('success', 'User updated successfully');
       res.redirect(`/admin/users/${req.params.id}`);
     })
@@ -304,32 +388,39 @@ export const initAdminRouter = (auth) => {
     asyncHandler(async (req, res) => {
       const { role } = req.body;
 
-    const user = await User.findByIdAndUpdate(req.params.id, { role }, { returnDocument: 'after' });
-    if (!user) {
-      return res.status(404).json({ success: false, error: 'User not found' });
-    }
+      // Update role in better-auth managed user collection
+      const user = await User.findByIdAndUpdate(
+        req.params.id, 
+        { role }, 
+        { returnDocument: 'after', new: true }
+      );
+      
+      if (!user) {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
 
-    // Sync the UserProfile role with upsert to handle users who haven't set up a profile yet
-    await UserProfile.findOneAndUpdate(
-      { userId: user.id },
-      { role },
-      { upsert: true, setDefaultsOnInsert: true }
-    );
+      // Sync the UserProfile role with better-auth user collection
+      await UserProfile.findOneAndUpdate(
+        { userId: user._id },
+        { role },
+        { upsert: true, setDefaultsOnInsert: true }
+      );
 
-    await logAuditAction(req, 'user_role_update', 'user', user._id, {
-      oldRole: user.role,
-      newRole: role,
-      email: user.email
-    });
+      await logAuditAction(req, 'user_role_update', 'user', user._id, {
+        oldRole: user.role,
+        newRole: role,
+        email: user.email
+      });
 
-    logger.info(`Admin ${req.userId} updated role for ${user.email} to ${role}`);
+      logger.info(`Admin ${req.userId} updated role for ${user.email} to ${role}`);
 
-    req.flash('success', `User role updated to ${role} successfully.`);
-    res.json({ success: true, redirect: `/admin/users/${req.params.id}` });
+      req.flash('success', `User role updated to ${role} successfully.`);
+      res.json({ success: true, redirect: `/admin/users/${req.params.id}` });
   }));
 
   // POST /admin/users/:id/toggle-status - Toggle user account status
   router.post('/users/:id/toggle-status', idParamValidator, asyncHandler(async (req, res) => {
+    // Fetch user from better-auth managed collection
     const user = await User.findById(req.params.id);
 
     if (!user) {
@@ -337,18 +428,24 @@ export const initAdminRouter = (auth) => {
       return res.redirect('/admin/users');
     }
 
+    // Toggle isActive status in better-auth managed collection
     const oldStatus = user.isActive;
-    user.isActive = !user.isActive;
-    await user.save();
+    const newStatus = !oldStatus;
 
-    await logAuditAction(req, user.isActive ? 'user_activate' : 'user_deactivate', 'user', user._id, {
+    await User.findByIdAndUpdate(
+      req.params.id,
+      { isActive: newStatus },
+      { new: true }
+    );
+
+    await logAuditAction(req, newStatus ? 'user_activate' : 'user_deactivate', 'user', user._id, {
       oldStatus,
-      newStatus: user.isActive,
+      newStatus,
       email: user.email
     });
 
-    logger.info(`Admin ${req.userId} toggled status for user ${user._id} to ${user.isActive}`);
-    req.flash('success', `User account ${user.isActive ? 'activated' : 'deactivated'} successfully.`);
+    logger.info(`Admin ${req.userId} toggled status for user ${user.email} from ${oldStatus} to ${newStatus}`);
+    req.flash('success', `User account ${newStatus ? 'activated' : 'deactivated'} successfully.`);
     res.redirect(`/admin/users/${req.params.id}`);
   }));
 
