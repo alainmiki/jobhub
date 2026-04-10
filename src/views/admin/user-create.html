@@ -7,7 +7,7 @@
       <h1 class="text-3xl font-bold tracking-tight mb-1">Create New User</h1>
       <p class="text-base-content/60">Add a new user to the platform</p>
     </div>
-    <a href="/dashboard/admin/users" class="btn btn-ghost btn-sm rounded-xl">
+    <a href="/admin/users" class="btn btn-ghost btn-sm rounded-xl">
       <i class="fa-solid fa-arrow-left mr-2"></i>Back to Users
     </a>
   </div>
@@ -16,6 +16,7 @@
     <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl gsap-reveal stagger-1">
       <div class="card-body p-6">
         <form method="POST" class="space-y-6" id="userCreateForm">
+          <input type="hidden" name="_csrf" value="{{{{ csrfToken }}}}">
           <div class="form-control">
             <label class="label py-2">
               <span class="label-text font-medium">Full Name *</span>

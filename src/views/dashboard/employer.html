@@ -13,7 +13,7 @@
           <a href="/company" class="btn btn-outline rounded-xl">
             <i class="fa-solid fa-building mr-2"></i>Company Profile
           </a>
-          <a href="/dashboard/employer/applications" class="btn btn-info rounded-xl">
+          <a href="/employer/applications" class="btn btn-info rounded-xl">
             <i class="fa-solid fa-users mr-2"></i>Candidate Applications
           </a>
           <a href="/jobs/new" class="btn btn-primary-gradient rounded-xl">
@@ -127,7 +127,7 @@
 
     {% if company %}
     <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-      <a href="/jobs" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-primary/50 hover:shadow-lg transition-all group">
+      <a href="/employer/jobs" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-primary/50 hover:shadow-lg transition-all group">
         <div class="card-body p-5 flex-row items-center gap-4">
           <div class="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <i class="fa-solid fa-list text-2xl text-primary"></i>
@@ -140,7 +140,7 @@
         </div>
       </a>
       
-      <a href="/dashboard/employer/applications" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-secondary/50 hover:shadow-lg transition-all group">
+      <a href="/employer/applications" class="card bg-base-100 border border-base-200/50 rounded-2xl hover:border-secondary/50 hover:shadow-lg transition-all group">
         <div class="card-body p-5 flex-row items-center gap-4">
           <div class="w-14 h-14 rounded-xl bg-secondary/10 flex items-center justify-center group-hover:bg-secondary/20 transition-colors">
             <i class="fa-solid fa-users text-2xl text-secondary"></i>
@@ -174,7 +174,7 @@
           <h2 class="font-bold text-lg flex items-center gap-2">
             <i class="fa-solid fa-clock text-primary"></i>Recent Applications
           </h2>
-          <a href="/dashboard/employer/applications" class="btn btn-ghost btn-sm rounded-xl">View All</a>
+          <a href="/employer/applications" class="btn btn-ghost btn-sm rounded-xl">View All</a>
         </div>
         
         {% if recentApplications and recentApplications.length > 0 %}

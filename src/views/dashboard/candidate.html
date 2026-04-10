@@ -179,7 +179,7 @@
             <i class="fa-solid fa-bell text-info"></i>Recent Notifications
           </h2>
           <div class="flex gap-2">
-            <form action="/dashboard/notifications/read-all" method="POST" class="inline">
+            <form action="/candidate/notifications/read-all" method="POST" class="inline">
               <input type="hidden" name="_csrf" value="{{ csrfToken }}">
               <button type="submit" class="btn btn-ghost btn-sm rounded-xl text-xs">Mark All as Read</button>
             </form>
@@ -190,7 +190,7 @@
         <!-- Category Filter -->
         <div class="flex flex-wrap gap-2 mb-6 overflow-x-auto pb-2">
           {% for cat in ['All', 'Application', 'Interview', 'Job', 'Profile', 'System'] %}
-          <a href="/dashboard/candidate?notifCategory={{ cat }}" 
+          <a href="/candidate?notifCategory={{ cat }}" 
              class="btn btn-xs rounded-lg {% if activeNotifCategory == cat %}btn-primary{% else %}btn-ghost bg-base-200/50{% endif %}">
             {{ cat }}
           </a>

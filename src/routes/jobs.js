@@ -190,7 +190,7 @@ export const initJobsRouter = (auth) => {
       body('salary.min').optional().isInt({ min: 0 }),
       body('salary.max').optional().isInt({ min: 0 })
     ],
-    validate,
+    // validate,
     async (req, res) => {
       try {
         const company = await Company.findOne({ userId: req.userId });
@@ -256,7 +256,7 @@ export const initJobsRouter = (auth) => {
     }
   });
 
-  router.put('/:id',
+  router.post('/:id/edit',
     isAuthenticated(auth),
     isEmployer(auth),
     [
@@ -275,7 +275,7 @@ export const initJobsRouter = (auth) => {
       body('applicationDeadline').optional().isISO8601(),
       body('isRemote').optional().isBoolean()
     ],
-    validate,
+    // validate,
     async (req, res) => {
       try {
         const job = await Job.findOne({
@@ -335,7 +335,7 @@ export const initJobsRouter = (auth) => {
     isAuthenticated(auth),
     isEmployer(auth),
     [param('id').isMongoId().withMessage('Invalid job ID')],
-    validate,
+    // validate,
     async (req, res) => {
       try {
         const job = await Job.findOneAndDelete({

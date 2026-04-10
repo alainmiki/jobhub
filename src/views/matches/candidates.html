@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold">Find Candidates</h1>
         <p class="text-base-content/60">Search and browse qualified candidates</p>
       </div>
-      <a href="/dashboard/employer" class="btn btn-ghost rounded-xl">
+      <a href="/employer" class="btn btn-ghost rounded-xl">
         <i class="fa-solid fa-arrow-left mr-2"></i>Back to Dashboard
       </a>
     </div>
@@ -128,7 +128,7 @@
               <a href="/profile/{{ candidate.userId._id }}" class="btn btn-outline btn-sm">
                 <i class="fa-solid fa-eye mr-1"></i>View Profile
               </a>
-              <a href="/dashboard/employer/applications?search={{ candidate.userId.name }}" class="btn btn-ghost btn-sm" title="View applications from this candidate">
+              <a href="/employer/applications?search={{ candidate.userId.name }}" class="btn btn-ghost btn-sm" title="View applications from this candidate">
                 <i class="fa-solid fa-file-lines mr-1"></i>Applications
               </a>
             </div>

@@ -4,10 +4,20 @@
 <div class="min-h-screen bg-base-200/30 py-8 px-4">
   <div class="max-w-4xl mx-auto">
     <!-- Back Button -->
-    <a href="/jobs" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
-      <i class="fas fa-arrow-left"></i>
-      Back to Jobs
-    </a>
+     
+     {% if user.role == 'employer'  %}
+     <a href="/employer/jobs" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
+       <i class="fas fa-arrow-left"></i>
+       Back to Jobs
+     </a>
+     {% else %}
+     <a href="/jobs" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
+       <i class="fas fa-arrow-left"></i>
+       Back to Jobs
+     </a>
+      
+     {% endif %}
+      
     
     <!-- Job Header Card -->
     <div class="card bg-base-100 border border-base-200 shadow-lg mb-6">
@@ -111,14 +121,20 @@
             <div class="alert alert-success mb-4">
               <i class="fas fa-check-circle text-xl"></i>
               <div>
-                <h3 class="font-bold">Application Submitted</h3>
+                <h3 class="font-bold">Application Submitted </h3>
                 <p class="text-sm">Your application is being reviewed</p>
               </div>
             </div>
             {% elif user %}
+            {% if user.role == 'employer'  %}
+            <a  href="/jobs/{{job._id}}/edit" class="btn btn-info btn-block btn-lg rounded-full">Edit <i class="fas fa-edit mr-2"></i> </a>
+            {% else %}
             <button class="btn btn-primary btn-block btn-lg rounded-full" id="applyBtn">
               <i class="fas fa-paper-plane mr-2"></i>Apply Now
             </button>
+      
+            {% endif %}
+            
             <p class="text-center text-xs text-base-content/50 mt-2">Easy apply - takes less than 1 minute</p>
             {% if not userProfile or not userProfile.resume %}
             <div class="alert alert-warning mt-4 rounded-xl bg-warning/10 border border-warning/20">

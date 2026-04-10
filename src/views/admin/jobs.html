@@ -8,7 +8,7 @@
         <h1 class="text-3xl font-bold">Job Management</h1>
         <p class="text-base-content/60">Manage all jobs on the platform</p>
       </div>
-      <a href="/dashboard/admin/jobs/create" class="btn btn-primary rounded-xl">
+      <a href="/admin/jobs/create" class="btn btn-primary rounded-xl">
         <i class="fa-solid fa-plus mr-2"></i>Create Job
       </a>
     </div>
@@ -86,9 +86,9 @@
                 <td>{{ job.createdAt | date('MMM d, YYYY') }}</td>
                 <td>
                   <div class="flex gap-2">
-                    <a href="/dashboard/admin/jobs/{{ job._id }}" class="btn btn-sm btn-ghost">View</a>
-                    <a href="/dashboard/admin/jobs/{{ job._id }}/edit" class="btn btn-sm btn-outline">Edit</a>
-                    <form method="POST" action="/dashboard/admin/jobs/{{ job._id }}?_method=DELETE" class="inline" onsubmit="return confirm('Are you sure?')">
+                    <a href="/admin/jobs/{{ job._id }}" class="btn btn-sm btn-ghost">View</a>
+                    <a href="/admin/jobs/{{ job._id }}/edit" class="btn btn-sm btn-outline">Edit</a>
+                    <form method="POST" action="/admin/jobs/{{ job._id }}?_method=DELETE" class="inline" onsubmit="return confirm('Are you sure?')">
                       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
                       <button type="submit" class="btn btn-sm btn-error">Delete</button>
                     </form>

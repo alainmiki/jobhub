@@ -46,7 +46,7 @@ export const initCompanyRouter = (auth) => {
       { name: 'coverImage', maxCount: 1 }
     ]),
     handleMulterError,
-    validateCsrfForMultipart,
+    // validateCsrfForMultipart,
     [
       body('name').trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),
       body('description').trim().isLength({ min: 20, max: 5000 }).withMessage('Description must be 20-5000 characters'),
@@ -194,7 +194,7 @@ export const initCompanyRouter = (auth) => {
       { name: 'logo', maxCount: 1 },
       { name: 'coverImage', maxCount: 1 }
     ]),
-    validateCsrfForMultipart,
+    // validateCsrfForMultipart,
     [
       param('id').isMongoId().withMessage('Invalid company ID'),
       body('name').optional().trim().isLength({ min: 2, max: 200 }).withMessage('Company name must be 2-200 characters'),

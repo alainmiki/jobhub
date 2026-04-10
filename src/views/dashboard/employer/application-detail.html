@@ -10,7 +10,7 @@
         <p class="text-sm text-primary font-medium mt-1">Applied for: {{ job.title }}</p>
       </div>
       <div class="flex gap-3">
-        <a href="/dashboard/employer/applications" class="btn btn-ghost rounded-xl">
+        <a href="/employer/applications" class="btn btn-ghost rounded-xl">
           <i class="fa-solid fa-arrow-left mr-2"></i>Back to Applications
         </a>
         <select onchange="updateStatus('{{ application._id }}', this.value)" class="select select-bordered">
@@ -307,7 +307,7 @@ function updateStatus(applicationId, status) {
   const notes = status === 'rejected' ? prompt('Add notes (optional):') : '';
   if (status === 'rejected' && notes === null) return;
 
-  fetch(`/dashboard/employer/applications/${applicationId}/status`, {
+  fetch(`/employer/applications/${applicationId}/status`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -357,7 +357,7 @@ document.getElementById('messageForm').addEventListener('submit', function(e) {
     return;
   }
 
-  fetch(`/dashboard/employer/applications/{{ application._id }}/message`, {
+  fetch(`/employer/applications/{{ application._id }}/message`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -394,7 +394,7 @@ document.getElementById('interviewForm').addEventListener('submit', function(e) 
     return;
   }
 
-  fetch(`/dashboard/employer/applications/{{ application._id }}/interview`, {
+  fetch(`/employer/applications/{{ application._id }}/interview`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

@@ -1,0 +1,200 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-base-200/30">
+  <!-- Header -->
+  <div class="bg-base-100 border-b border-base-200/50">
+    <div class="max-w-7xl mx-auto py-8 px-4">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-3xl md:text-4xl font-bold tracking-tight mb-2">My Jobs</h1>
+          <p class="text-base-content/60">Manage all job postings for {{ company.name }}</p>
+        </div>
+        <div class="flex gap-3">
+          <a href="/jobs/new" class="btn btn-primary-gradient rounded-xl">
+            <i class="fa-solid fa-plus mr-2"></i>Post New Job
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-7xl mx-auto py-8 px-4">
+    <!-- Filters -->
+    <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl mb-6">
+      <div class="card-body">
+        <form class="flex flex-col md:flex-row gap-4 items-end">
+          <div class="form-control flex-1">
+            <label class="label">
+              <span class="label-text font-semibold">Search Jobs</span>
+            </label>
+            <input 
+              type="text" 
+              name="search" 
+              placeholder="Search by title or description..." 
+              value="{{ filters.search or '' }}"
+              class="input input-bordered rounded-xl"
+            />
+          </div>
+
+          <div class="form-control w-full md:w-48">
+            <label class="label">
+              <span class="label-text font-semibold">Status</span>
+            </label>
+            <select name="status" class="select select-bordered rounded-xl">
+              <option value="all" {% if filters.status == 'all' or not filters.status %}selected{% endif %}>All Status</option>
+              <option value="pending" {% if filters.status == 'pending' %}selected{% endif %}>Pending</option>
+              <option value="approved" {% if filters.status == 'approved' %}selected{% endif %}>Active</option>
+              <option value="rejected" {% if filters.status == 'rejected' %}selected{% endif %}>Rejected</option>
+              <option value="closed" {% if filters.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+
+          <div class="form-control w-full md:w-48">
+            <label class="label">
+              <span class="label-text font-semibold">Sort By</span>
+            </label>
+            <select name="sort" class="select select-bordered rounded-xl">
+              <option value="newest" {% if filters.sort == 'newest' or not filters.sort %}selected{% endif %}>Newest First</option>
+              <option value="views" {% if filters.sort == 'views' %}selected{% endif %}>Most Views</option>
+              <option value="applications" {% if filters.sort == 'applications' %}selected{% endif %}>Most Applications</option>
+            </select>
+          </div>
+
+          <button type="submit" class="btn btn-primary rounded-xl">
+            <i class="fa-solid fa-search mr-2"></i>Search
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Jobs List -->
+    {% if jobs and jobs.length > 0 %}
+      <div class="space-y-4">
+        {% for job in jobs %}
+        <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl hover:shadow-md hover:border-primary/30 transition-all">
+          <div class="card-body p-5">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <h3 class="text-lg font-bold">{{ job.title }}</h3>
+                  <div class="badge badge-{% if job.status == 'approved' %}success{% elif job.status == 'pending' %}warning{% else %}error{% endif %}">
+                    {{ job.status }}
+                  </div>
+                </div>
+                <p class="text-base-content/60 text-sm mb-3">
+                  <i class="fa-solid fa-map-pin mr-2"></i>{{ job.location }}
+                  {% if job.type %}<span class="ml-4"><i class="fa-solid fa-briefcase mr-2"></i>{{ job.type }}</span>{% endif %}
+                </p>
+                <div class="flex flex-wrap gap-3 text-sm">
+                  <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-eye text-info"></i>
+                    <strong>{{ job.views or 0 }}</strong> views
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-users text-secondary"></i>
+                    <strong>{{ job.applicationsCount or 0 }}</strong> applications
+                  </span>
+                  <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-calendar text-base-content/50"></i>
+                    {{ job.createdAt | date('M d, YYYY') }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <a href="/jobs/{{ job._id }}" class="btn btn-sm btn-ghost rounded-lg">
+                  <i class="fa-solid fa-eye mr-2"></i>View
+                </a>
+                <a href="/jobs/{{ job._id }}/edit" class="btn btn-sm btn-outline rounded-lg">
+                  <i class="fa-solid fa-edit mr-2"></i>Edit
+                </a>
+                <button 
+                  onclick="deleteJob('{{ job._id }}')" 
+                  class="btn btn-sm btn-outline btn-error rounded-lg"
+                >
+                  <i class="fa-solid fa-trash mr-2"></i>Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- Pagination -->
+      {% if pagination.totalPages > 1 %}
+      <div class="mt-8 flex justify-center">
+        <div class="join">
+          {% if pagination.page > 1 %}
+            <a href="?search={{ filters.search or '' }}&status={{ filters.status or 'all' }}&sort={{ filters.sort or 'newest' }}&page=1" class="join-item btn btn-sm rounded-l-xl">
+              <i class="fa-solid fa-angles-left"></i>
+            </a>
+            <a href="?search={{ filters.search or '' }}&status={{ filters.status or 'all' }}&sort={{ filters.sort or 'newest' }}&page={{ pagination.page - 1 }}" class="join-item btn btn-sm">
+              <i class="fa-solid fa-angle-left"></i>
+            </a>
+          {% endif %}
+
+          {% for p in range(1, pagination.totalPages + 1) %}
+            {% if p == pagination.page %}
+              <button class="join-item btn btn-sm btn-active">{{ p }}</button>
+            {% else %}
+              <a href="?search={{ filters.search or '' }}&status={{ filters.status or 'all' }}&sort={{ filters.sort or 'newest' }}&page={{ p }}" class="join-item btn btn-sm">
+                {{ p }}
+              </a>
+            {% endif %}
+          {% endfor %}
+
+          {% if pagination.page < pagination.totalPages %}
+            <a href="?search={{ filters.search or '' }}&status={{ filters.status or 'all' }}&sort={{ filters.sort or 'newest' }}&page={{ pagination.page + 1 }}" class="join-item btn btn-sm">
+              <i class="fa-solid fa-angle-right"></i>
+            </a>
+            <a href="?search={{ filters.search or '' }}&status={{ filters.status or 'all' }}&sort={{ filters.sort or 'newest' }}&page={{ pagination.totalPages }}" class="join-item btn btn-sm rounded-r-xl">
+              <i class="fa-solid fa-angles-right"></i>
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    {% else %}
+    <div class="card bg-base-100 border border-base-200/50 rounded-2xl">
+      <div class="card-body text-center py-12">
+        <div class="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <i class="fa-solid fa-briefcase text-3xl text-primary"></i>
+        </div>
+        <h3 class="text-lg font-bold mb-2">No jobs found</h3>
+        <p class="text-base-content/60 mb-6">You haven't posted any jobs yet or they don't match your filters.</p>
+        <a href="/jobs/new" class="btn btn-primary-gradient rounded-xl">
+          <i class="fa-solid fa-plus mr-2"></i>Post Your First Job
+        </a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function deleteJob(jobId) {
+  if (confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+    fetch(`/jobs/${jobId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        window.location.href = data.redirect || '/employer/jobs';
+      } else {
+        alert('Error deleting job: ' + (data.error || 'Unknown error'));
+      }
+    })
+    .catch(error => {
+      console.error('Error:', error);
+      alert('Failed to delete job');
+    });
+  }
+}
+</script>
+{% endblock %}

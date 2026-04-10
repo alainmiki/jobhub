@@ -8,7 +8,7 @@
       <h1 class="text-3xl font-bold tracking-tight mb-1">User Management</h1>
       <p class="text-base-content/60">Manage and review platform users</p>
     </div>
-    <a href="/dashboard/admin" class="btn btn-ghost btn-sm rounded-xl">
+    <a href="/admin" class="btn btn-ghost btn-sm rounded-xl">
       <i class="fa-solid fa-arrow-left mr-2"></i>Back
     </a>
   </div>
@@ -63,7 +63,7 @@
                     <i class="fa-solid fa-ellipsis-vertical"></i>
                   </button>
                   <ul tabindex="0" class="dropdown-content z-50 menu p-2 shadow-xl bg-base-100 rounded-xl w-44 border border-base-200/50">
-                    <li><a href="/dashboard/admin/users/{{ user._id }}" class="rounded-lg"><i class="fa-solid fa-eye mr-2"></i>View Details</a></li>
+                    <li><a href="/admin/users/{{ user._id }}" class="rounded-lg"><i class="fa-solid fa-eye mr-2"></i>View Details</a></li>
                     <li>
                       <button onclick="openRoleModal('{{ user._id }}', '{{ user.role }}')" class="rounded-lg"><i class="fa-solid fa-user-pen mr-2"></i>Change Role</button>
                     </li>
@@ -76,7 +76,7 @@
         </table>
       </div>
 
-      {{ paginationMacro.render(pagination, filters, "/dashboard/admin/users") }}
+      {{ paginationMacro.render(pagination, filters, "/admin/users") }}
     </div>
   </div>
 </div>
@@ -122,7 +122,7 @@ document.getElementById('roleForm').addEventListener('submit', async (e) => {
   const role = document.getElementById('modalRoleSelect').value;
   
   try {
-    const res = await fetch(`/dashboard/admin/users/${userId}/role`, {
+    const res = await fetch(`/admin/users/${userId}/role`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role })

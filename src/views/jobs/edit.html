@@ -3,13 +3,13 @@
 {% block content %}
 <div class="min-h-screen bg-base-200/30 py-8 px-4">
   <div class="max-w-4xl mx-auto">
-    <a href="/dashboard/employer" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
+    <a href="/employer" class="inline-flex items-center gap-2 text-base-content/60 hover:text-primary transition-colors mb-6">
       <i class="fas fa-arrow-left"></i> Back to Dashboard
     </a>
     
     <h1 class="text-3xl font-bold mb-6">Edit Job</h1>
     
-    <form method="POST" action="/jobs/{{ job._id }}?_method=PUT" class="space-y-6">
+    <form method="POST" action="/jobs/{{ job._id }}/edit" class="space-y-6">
       <input type="hidden" name="_csrf" value="{{ csrfToken }}">
       
       <div class="card bg-base-100 border border-base-200 shadow-lg">
@@ -134,14 +134,21 @@
             <label class="label">
               <span class="label-text font-medium">Requirements (one per line)</span>
             </label>
-            <textarea name="requirements" class="textarea textarea-bordered h-24 rounded-xl" placeholder="5+ years experience&#10;Bachelor's degree&#10;Strong communication skills">{{ job.requirements ? job.requirements.join('\n') : '' }}</textarea>
+            <textarea name="requirements" class="textarea textarea-bordered h-24 rounded-xl" placeholder="5+ years experience&#10;Bachelor's degree&#10;Strong communication skills">
+              
+
+              {% for req in job.requirements %}
+              {{req}}
+              {% endfor %}
+            </textarea>
           </div>
           
           <div class="form-control">
             <label class="label">
               <span class="label-text font-medium">Skills (comma separated)</span>
             </label>
-            <input type="text" name="skills" value="{{ job.skills ? job.skills.join(', ') : '' }}" class="input input-bordered rounded-xl" placeholder="React, Node.js, TypeScript, AWS" />
+            <input type="text" name="skills" value="{% for skill in job.skills %}{{ skill|safe }},
+                {% endfor %} " class="input input-bordered rounded-xl" placeholder="React, Node.js, TypeScript, AWS" />
           </div>
         </div>
       </div>

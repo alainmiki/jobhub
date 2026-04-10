@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="min-h-screen bg-base-200/30">
+<div class="min-h-screen bg-base-200/30 py-8">
   {% if company.coverImage %}
   <div class="h-48 md:h-64 bg-base-200 relative overflow-hidden">
     <img src="{{ company.coverImage }}" alt="{{ company.name }}" class="w-full h-full object-cover" />
@@ -58,7 +58,7 @@
               <a href="/company/{{ company._id }}/edit" class="btn btn-outline btn-sm rounded-xl">
                 <i class="fa-solid fa-pen-to-square mr-2"></i>Edit Profile
               </a>
-              <a href="/dashboard/employer" class="btn btn-primary btn-sm rounded-xl">
+              <a href="/employer" class="btn btn-primary btn-sm rounded-xl">
                 <i class="fa-solid fa-gauge-high mr-2"></i>Dashboard
               </a>
             </div>

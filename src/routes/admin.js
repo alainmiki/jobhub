@@ -17,6 +17,7 @@ import { JOB_TYPE, JOB_LOCATION, JOB_CATEGORY, EXPERIENCE_LEVEL } from '../confi
 
 const router = express.Router();
 
+
 export const initAdminRouter = (auth) => {
   const authInstance = auth;
   router.use(isAuthenticated(auth));
@@ -53,7 +54,7 @@ export const initAdminRouter = (auth) => {
 
       logger.info(`Admin dashboard stats: users=${totalUsers}, employers=${totalEmployers}, candidates=${totalCandidates}, companies=${totalCompanies}, jobs=${totalJobs}, pendingJobs=${pendingJobs}, pendingCompanies=${pendingCompanies}, applications=${totalApplications}`);
 
-      res.render('admin/dashboard', {
+      res.render('dashboard/admin', {
         csrfToken: req.csrfToken ? req.csrfToken() : '',
         stats: {
           totalUsers: totalUsers || 0,
@@ -69,7 +70,7 @@ export const initAdminRouter = (auth) => {
       });
     } catch (error) {
       logger.error('Error loading admin dashboard:', error);
-      res.render('admin/dashboard', {
+      res.render('dashboard/admin', {
         csrfToken: req.csrfToken ? req.csrfToken() : '',
         stats: {
           totalUsers: 0,

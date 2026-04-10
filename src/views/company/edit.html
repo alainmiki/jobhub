@@ -37,7 +37,7 @@
       </div>
       {% endif %}
 
-      <form action="/company/{{ company._id }}?_method=PUT" method="POST" class="space-y-5">
+      <form action="/company/{{ company._id }}" method="POST" class="space-y-5">
         <input type="hidden" name="_gotcha" style="display:none">
         <input type="hidden" name="_csrf" value="{{ csrfToken }}">
         

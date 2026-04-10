@@ -66,13 +66,13 @@
               <li><a href="/admin/companies?status=pending" class="rounded-xl"><i class="fa-solid fa-building mr-2 text-primary"></i>Pending Companies</a></li>
             {% elseif user.role == 'employer' %}
               <li class="menu-title text-[10px] opacity-50 uppercase tracking-widest">Employer</li>
-              <li><a href="/dashboard/employer" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
-              <li><a href="/jobs" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2 text-primary"></i>My Jobs</a></li>
+              <li><a href="/employer" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
+              <li><a href="/employer/jobs" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2 text-primary"></i>My Jobs</a></li>
               <li><a href="/applications/employer" class="rounded-xl"><i class="fa-solid fa-file-lines mr-2 text-primary"></i>Applications</a></li>
-              <li><a href="/matches" class="rounded-xl"><i class="fa-solid fa-users mr-2 text-primary"></i>Find Candidates</a></li>
+              <li><a href="/matches/candidates" class="rounded-xl"><i class="fa-solid fa-users mr-2 text-primary"></i>Find Candidates</a></li>
               {% else %}
               <li class="menu-title text-[10px] opacity-50 uppercase tracking-widest">Candidate</li>
-              <li><a href="/dashboard/candidate" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
+              <li><a href="/candidate" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2 text-primary"></i>Dashboard</a></li>
               <li><a href="/jobs" class="rounded-xl"><i class="fa-solid fa-magnifying-glass mr-2 text-primary"></i>Browse Jobs</a></li>
               <li><a href="/applications/my-applications" class="rounded-xl"><i class="fa-solid fa-file-lines mr-2 text-primary"></i>My Applications</a></li>
               <li><a href="/profile/interviews" class="rounded-xl"><i class="fa-solid fa-calendar-check mr-2 text-primary"></i>Interviews</a></li>
@@ -144,21 +144,22 @@
               <li><a href="/admin/jobs?status=pending" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2"></i>Pending Jobs</a></li>
               <li><a href="/admin/companies?status=pending" class="rounded-xl"><i class="fa-solid fa-building mr-2"></i>Pending Companies</a></li>
             {% elseif user.role == 'employer' %}
-              <li><a href="/dashboard/employer" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
-              <li><a href="/jobs" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2"></i>My Jobs</a></li>
+              <li><a href="/employer" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
+              <li><a href="/employer/jobs" class="rounded-xl"><i class="fa-solid fa-briefcase mr-2"></i>My Jobs</a></li>
               <li><a href="/applications/employer" class="rounded-xl"><i class="fa-solid fa-file-lines mr-2"></i>Applications</a></li>
               <li><a href="/matches/candidates" class="rounded-xl"><i class="fa-solid fa-users mr-2"></i>Find Candidates</a></li>
               <li><a href="/company" class="rounded-xl"><i class="fa-solid fa-building mr-2"></i>Company Profile</a></li>
             {% else %}
-              <li><a href="/dashboard/candidate" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
+              <li><a href="/candidate" class="rounded-xl"><i class="fa-solid fa-gauge-high mr-2"></i>Dashboard</a></li>
               <li><a href="/applications/my-applications" class="rounded-xl"><i class="fa-solid fa-file-lines mr-2"></i>My Applications</a></li>
               <li><a href="/profile/interviews" class="rounded-xl"><i class="fa-solid fa-calendar-check mr-2"></i>Interviews</a></li>
-              <li><a href="/profile" class="rounded-xl"><i class="fa-solid fa-user mr-2"></i>My Profile</a></li>
+              
             {% endif %}
 
             <li class="border-t border-base-200/50 mt-2 pt-2">
               <span class="menu-title text-[10px] opacity-50 uppercase tracking-widest">Account</span>
             </li>
+            <li><a href="/profile" class="rounded-xl"><i class="fa-solid fa-user mr-2"></i>My Profile</a></li>
             <li><a href="/notifications" class="rounded-xl">
               <i class="fa-solid fa-bell mr-2"></i>Notifications
               <span class="notification-badge-nav badge badge-primary badge-sm ml-auto {% if not user.unreadNotificationsCount or user.unreadNotificationsCount == 0 %}hidden{% endif %}">{{ user.unreadNotificationsCount or 0 }}</span>
