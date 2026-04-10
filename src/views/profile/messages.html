@@ -80,10 +80,14 @@ function loadMessages(applicationId) {
     .then(data => {
       if (data.success) {
         displayMessages(data.messages, data.application);
+      } else {
+        console.error('Error:', data.error);
+        alert('Error loading messages: ' + (data.error || 'Unknown error'));
       }
     })
     .catch(error => {
       console.error('Error loading messages:', error);
+      alert('Failed to load messages');
     });
 }
 
@@ -92,7 +96,7 @@ function displayMessages(messages, application) {
   content.innerHTML = `
     <div class="flex items-center justify-between mb-6">
       <div>
-        <h3 class="font-bold text-xl">${application.company.name}</h3>
+        <h3 class="font-bold text-xl">${application.job.company.name}</h3>
         <p class="text-base-content/60">${application.job.title}</p>
       </div>
     </div>
@@ -133,20 +137,26 @@ function displayMessages(messages, application) {
   `;
 
   // Scroll to bottom
-  const messagesList = document.getElementById('messagesList');
-  messagesList.scrollTop = messagesList.scrollHeight;
+  setTimeout(() => {
+    const messagesList = document.getElementById('messagesList');
+    if (messagesList) {
+      messagesList.scrollTop = messagesList.scrollHeight;
+    }
+  }, 0);
 
   // Handle form submission
   document.getElementById('replyForm').addEventListener('submit', function(e) {
     e.preventDefault();
     const message = document.getElementById('replyMessage').value.trim();
-    if (!message) return;
+    if (!message) {
+      alert('Please enter a message');
+      return;
+    }
 
-    fetch(`/profile/messages/${applicationId}/reply`, {
+    fetch(`/profile/messages/${currentApplicationId}/reply`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': '{{ csrfToken }}'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ message })
     })
@@ -154,14 +164,14 @@ function displayMessages(messages, application) {
     .then(data => {
       if (data.success) {
         document.getElementById('replyMessage').value = '';
-        loadMessages(applicationId); // Reload messages
+        loadMessages(currentApplicationId); // Reload messages
       } else {
         alert('Failed to send message: ' + (data.error || 'Unknown error'));
       }
     })
     .catch(error => {
       console.error('Error sending message:', error);
-      alert('Failed to send message');
+      alert('Failed to send message: ' + error.message);
     });
   });
 }

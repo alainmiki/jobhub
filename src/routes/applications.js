@@ -9,7 +9,7 @@ import UserProfile from '../models/UserProfile.js';
 import Notification from '../models/Notification.js';
 import Company from '../models/Company.js';
 import Interview from '../models/Interview.js';
-import { createAuthMiddleware, isAuthenticated, isRole, isEmployer, requireProfileComplete } from '../middleware/auth.js';
+import { createAuthMiddleware, isAuthenticated, isRole, isEmployer, requireProfileComplete, validateCsrfForApi } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate } from '../middleware/validation.js';
 import { logAuditAction, emitNotification } from '../utils/helpers.js';
@@ -645,6 +645,148 @@ export const initApplicationsRouter = (auth) => {
     
     logger.info(`Application notes updated: ${application._id}`);
     res.json({ success: true });
+  }));
+
+  // PUT /interviews/:id - Update interview details (reschedule, update notes, etc)
+  router.put('/interviews/:id', isAuthenticated(auth), asyncHandler(async (req, res) => {
+    const { scheduledAt, duration, timezone, location, notes, status } = req.body;
+    
+    const interview = await Interview.findById(req.params.id);
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+
+    // Authorization: only interviewer, scheduler, or admin can update
+    const application = await Application.findById(interview.application);
+    if (interview.interviewer.toString() !== req.userId && 
+        interview.scheduledBy.toString() !== req.userId &&
+        req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const previousDate = interview.scheduledAt;
+    
+    // Update allowed fields
+    if (scheduledAt) interview.scheduledAt = new Date(scheduledAt);
+    if (duration) interview.duration = duration;
+    if (timezone) interview.timezone = timezone;
+    if (location) interview.location = location;
+    if (notes) interview.notes = notes;
+    if (status) interview.status = status;
+
+    if (scheduledAt && duration) {
+      interview.endTime = new Date(new Date(scheduledAt).getTime() + (duration * 60000));
+    }
+
+    await interview.save();
+
+    // Send notification about rescheduling if date changed
+    if (scheduledAt && previousDate.getTime() !== new Date(scheduledAt).getTime()) {
+      const notification = new Notification({
+        recipient: application.applicantUserId,
+        type: 'interview_rescheduled',
+        category: 'Interview',
+        priority: 'high',
+        title: 'Interview Rescheduled',
+        message: `Your interview for ${application.job.title} has been rescheduled to ${new Date(scheduledAt).toLocaleDateString()}`,
+        link: `/applications/${application._id}`
+      });
+      await notification.save();
+      emitNotification(req, application.applicantUserId, notification);
+    }
+
+    logger.info(`Interview updated: ${interview._id}`);
+    res.json({ success: true, interview });
+  }));
+
+  // DELETE /interviews/:id - Cancel interview
+  router.delete('/interviews/:id', isAuthenticated(auth), asyncHandler(async (req, res) => {
+    const interview = await Interview.findById(req.params.id);
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+
+    // Authorization: only interviewer, scheduler, or admin can cancel
+    const application = await Application.findById(interview.application);
+    if (interview.interviewer.toString() !== req.userId && 
+        interview.scheduledBy.toString() !== req.userId &&
+        req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    interview.status = 'cancelled';
+    await interview.save();
+
+    // Update application status back to shortlisted
+    application.status = 'shortlisted';
+    await application.save();
+
+    // Send notification about cancellation
+    const job = await Job.findById(application.job);
+    const notification = new Notification({
+      recipient: application.applicantUserId,
+      type: 'interview_cancelled',
+      category: 'Interview',
+      priority: 'high',
+      title: 'Interview Cancelled',
+      message: `Your interview for ${job.title} has been cancelled`,
+      link: `/applications/${application._id}`
+    });
+    await notification.save();
+    emitNotification(req, application.applicantUserId, notification);
+
+    logger.info(`Interview cancelled: ${interview._id}`);
+    res.json({ success: true, message: 'Interview cancelled' });
+  }));
+
+  // POST /interviews/:id/feedback - Submit interview feedback
+  router.post('/interviews/:id/feedback', isAuthenticated(auth), asyncHandler(async (req, res) => {
+    const { rating, strengths, improvements, recommendation } = req.body;
+
+    const interview = await Interview.findById(req.params.id);
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+
+    // Only interviewer can submit feedback
+    if (interview.interviewer.toString() !== req.userId && req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Only the interviewer can submit feedback' });
+    }
+
+    interview.feedback = {
+      rating: parseInt(rating),
+      strengths,
+      improvements,
+      recommendation,
+      submittedAt: new Date()
+    };
+    
+    await interview.save();
+
+    logger.info(`Interview feedback submitted: ${interview._id}`);
+    res.json({ success: true, feedback: interview.feedback });
+  }));
+
+  // GET /interviews/:id - Get interview details
+  router.get('/interviews/:id', isAuthenticated(auth), asyncHandler(async (req, res) => {
+    const interview = await Interview.findById(req.params.id)
+      .populate('application')
+      .populate('interviewer', 'name email image')
+      .populate('candidate', 'name bio skills');
+
+    if (!interview) {
+      return res.status(404).json({ error: 'Interview not found' });
+    }
+
+    // Authorization check
+    const application = await Application.findById(interview.application);
+    if (interview.interviewer.toString() !== req.userId &&
+        application.applicantUserId.toString() !== req.userId &&
+        req.user?.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    res.json({ success: true, interview });
   }));
 
   return router;

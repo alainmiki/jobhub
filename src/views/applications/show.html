@@ -341,17 +341,22 @@
 
               <div class="form-control">
                 <label class="label"><span class="label-text font-semibold">Duration (minutes)</span></label>
-                <input type="number" name="duration" class="input input-bordered rounded-xl" value="60" min="15" max="480" />
+                <input type="number" name="duration" class="input input-bordered rounded-xl" value="60" min="15" max="480" required />
+              </div>
+
+              <div class="form-control">
+                <label class="label"><span class="label-text font-semibold">Location/Timezone</span></label>
+                <input type="text" name="timezone" class="input input-bordered rounded-xl" value="UTC" placeholder="UTC or timezone..." required />
               </div>
 
               <div class="form-control">
                 <label class="label"><span class="label-text font-semibold">Meeting Link</span></label>
-                <input type="url" name="meetingLink" class="input input-bordered rounded-xl" placeholder="https://zoom.us/..." />
+                <input type="url" name="location" class="input input-bordered rounded-xl" placeholder="https://zoom.us/... or meeting location" />
               </div>
 
               <div class="form-control">
-                <label class="label"><span class="label-text font-semibold">Notes</span></label>
-                <textarea name="notes" class="textarea textarea-bordered rounded-xl" rows="2" placeholder="Additional instructions..."></textarea>
+                <label class="label"><span class="label-text font-semibold">Additional Notes</span></label>
+                <textarea name="notes" class="textarea textarea-bordered rounded-xl" rows="2" placeholder="Additional instructions for the interview..."></textarea>
               </div>
 
               <button type="submit" class="btn btn-warning btn-block rounded-xl">
@@ -386,19 +391,27 @@ function setRating(rating) {
 async function updateStatus() {
   const status = document.getElementById('status-select').value;
   const notes = document.getElementById('employer-notes').value;
+  const csrfToken = document.querySelector('input[name="_csrf"]')?.value || '';
   
   try {
-    const res = await fetch('/applications/{{ application._id }}/status', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status, notes })
+    const res = await fetch('/employer/applications/{{ application._id }}/status', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify({ status, notes, _csrf: csrfToken })
     });
     const data = await res.json();
     if (data.success) {
-      location.reload();
+      alertify.success('Application status updated successfully!');
+      setTimeout(() => location.reload(), 1000);
+    } else {
+      alertify.error('Error: ' + (data.error || 'Failed to update status'));
     }
   } catch (err) {
     console.error('Error updating status:', err);
+    alertify.error('Error updating status: ' + err.message);
   }
 }
 
@@ -409,19 +422,30 @@ async function saveApplication() {
 document.getElementById('interview-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const formData = new FormData(e.target);
-  
+  const csrfToken = document.querySelector('input[name="_csrf"]')?.value || '';
+
+  // Add CSRF token to form data
+  const data = Object.fromEntries(formData);
+  data._csrf = csrfToken;
+
   try {
-    const res = await fetch('/applications/{{ application._id }}/schedule-interview', {
+    const res = await fetch('/employer/applications/{{ application._id }}/interview', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.fromEntries(formData))
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken
+      },
+      body: JSON.stringify(data)
     });
-    const data = await res.json();
-    if (data.success) {
+    const result = await res.json();
+    if (result.success) {
       location.reload();
+    } else {
+      alert('Error: ' + (result.error || 'Failed to schedule interview'));
     }
   } catch (err) {
     console.error('Error scheduling interview:', err);
+    alert('Error scheduling interview: ' + err.message);
   }
 });
 </script>

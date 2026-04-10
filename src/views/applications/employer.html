@@ -196,11 +196,10 @@ async function updateStatus(id, status) {
     const csrfToken = document.getElementById('globalCsrfToken')?.value || '';
     const res = await fetch(`/applications/${id}/status`, {
       method: 'PUT',
-      headers: { 
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrfToken
+      headers: {
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ status, notes: '' })
+      body: JSON.stringify({ status, notes: '', _csrf: csrfToken })
     });
     if (res.ok) {
       location.reload();

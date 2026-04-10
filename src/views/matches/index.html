@@ -14,15 +14,15 @@
       </div>
     </div>
     
-    {% if jobs.length %}
+    {% if matches and matches.length > 0 %}
     <div class="grid grid-cols-1 gap-6">
-      {% for job in jobs %}
+      {% for match in matches %}
       <div class="card bg-base-100 shadow-sm border border-base-200/50 rounded-2xl hover:shadow-md transition-all group">
         <div class="card-body p-6">
           <div class="flex flex-col md:flex-row gap-6">
             <div class="w-16 h-16 bg-base-200 rounded-2xl flex items-center justify-center flex-shrink-0 overflow-hidden group-hover:bg-primary/10 transition-colors">
-              {% if job.company and job.company.logo %}
-              <img src="{{ job.company.logo }}" alt="{{ job.company.name }}" class="w-10 h-10 object-contain" />
+              {% if match.job.company and match.job.company.logo %}
+              <img src="{{ match.job.company.logo }}" alt="{{ match.job.company.name }}" class="w-10 h-10 object-contain" />
               {% else %}
               <i class="fa-solid fa-building text-2xl text-base-content/30 group-hover:text-primary transition-colors"></i>
               {% endif %}
@@ -32,27 +32,27 @@
               <div class="flex justify-between items-start gap-4">
                 <div>
                   <h2 class="text-xl font-bold group-hover:text-primary transition-colors mb-1">
-                    <a href="/jobs/{{ job._id }}">{{ job.title }}</a>
+                    <a href="/jobs/{{ match.job._id }}">{{ match.job.title }}</a>
                   </h2>
-                  <p class="text-base-content/70 font-medium">{{ job.company.name if job.company else 'Company Name' }}</p>
+                  <p class="text-base-content/70 font-medium">{{ match.job.company.name if match.job.company else 'Company Name' }}</p>
                 </div>
                 <div class="text-right hidden sm:block">
                   <div class="text-sm font-semibold text-success bg-success/10 px-3 py-1 rounded-full flex items-center gap-1">
-                    <i class="fa-solid fa-chart-line"></i> Strong Match
+                    <i class="fa-solid fa-chart-line"></i>{{ match.score }}% Match
                   </div>
                 </div>
               </div>
               
               <div class="flex flex-wrap gap-4 text-sm text-base-content/50 mt-4">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> {{ job.location }}</span>
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-briefcase"></i> {{ job.type | title }}</span>
-                {% if job.salary %}
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-money-bill-wave"></i> {{ job.salary.currency }} {{ job.salary.min | number }} - {{ job.salary.max | number }}</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> {{ match.job.location }}</span>
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-briefcase"></i> {{ match.job.type | title }}</span>
+                {% if match.job.salary %}
+                <span class="flex items-center gap-1.5"><i class="fa-solid fa-money-bill-wave"></i> {{ match.job.salary.currency or 'USD' }} {{ match.job.salary.min | number }} - {{ match.job.salary.max | number }}</span>
                 {% endif %}
               </div>
               
               <div class="flex flex-wrap gap-2 mt-4">
-                {% for skill in job.skills %}
+                {% for skill in match.job.skills %}
                 <span class="badge badge-sm badge-outline border-base-300">{{ skill }}</span>
                 {% endfor %}
               </div>
@@ -62,8 +62,8 @@
           <div class="divider my-4 opacity-50"></div>
           
           <div class="flex items-center justify-between">
-            <span class="text-xs text-base-content/40">Matched on {{ job.skills | length }} of your skills</span>
-            <a href="/jobs/{{ job._id }}" class="btn btn-primary btn-sm rounded-xl px-6">
+            <span class="text-xs text-base-content/40">Matched on {{ match.job.skills | length }} of your skills</span>
+            <a href="/jobs/{{ match.job._id }}" class="btn btn-primary btn-sm rounded-xl px-6">
               Apply Now <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
             </a>
           </div>

@@ -213,15 +213,34 @@ export const isOwner = (auth, resourceOwnerField = 'userId') => {
  */
 export const validateCsrfForMultipart = (req, res, next) => {
   const token = req.body._csrf || req.headers['x-csrf-token'];
-  
+
   if (!token) {
     return res.status(403).json({ error: 'CSRF token missing from form submission' });
   }
-  
+
   // Verify token using csurf internal check if available
   if (req.csrfToken && req.csrfToken() !== token) {
     return res.status(403).json({ error: 'CSRF token invalid or expired' });
   }
-  
+
+  next();
+};
+
+/**
+ * CSRF token validation for JSON API requests
+ * Checks for CSRF token in request headers
+ */
+export const validateCsrfForApi = (req, res, next) => {
+  const token = req.headers['x-csrf-token'];
+
+  if (!token) {
+    return res.status(403).json({ error: 'CSRF token missing from request headers' });
+  }
+
+  // Verify token using csurf internal check if available
+  if (req.csrfToken && req.csrfToken() !== token) {
+    return res.status(403).json({ error: 'CSRF token invalid or expired' });
+  }
+
   next();
 };

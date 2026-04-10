@@ -170,10 +170,9 @@ function updateStatus(applicationId, status) {
   fetch(`/employer/applications/${applicationId}/status`, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': '{{ csrfToken }}'
+      'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ status })
+    body: JSON.stringify({ status, _csrf: '{{ csrfToken }}' })
   })
   .then(response => response.json())
   .then(data => {

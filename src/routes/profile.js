@@ -921,6 +921,8 @@ export const initProfileRouter = (auth) => {
       const notification = new Notification({
         recipient: employerUserId,
         type: 'message_from_candidate',
+        category: 'Application',
+        priority: 'medium',
         title: 'New message from candidate',
         message: `You have a new message regarding the application for "${application.job.title}"`,
         link: `/employer/applications/${application._id}`

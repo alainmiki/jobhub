@@ -1,5 +1,5 @@
 import express from 'express';
-import { isAuthenticated, isRole } from '../middleware/auth.js';
+import { isAuthenticated, isRole, validateCsrfForApi } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { paginate } from '../middleware/pagination.js';
 import { sanitizeRegex, logAuditAction, emitNotification } from '../utils/helpers.js';
@@ -241,6 +241,7 @@ export const initEmployerRouter = (auth) => {
 
   // POST /applications/:id/status - Update application status
   router.post('/applications/:id/status',
+    isAuthenticated(auth),
     asyncHandler(async (req, res) => {
       const { status, notes } = req.body;
       const company = await Company.findOne({ userId: req.userId });
@@ -275,6 +276,8 @@ export const initEmployerRouter = (auth) => {
       const notification = new Notification({
         recipient: application.applicantUserId,
         type: 'application_status_update',
+        category: 'Application',
+        priority: 'high',
         title: 'Application Status Updated',
         message: `Your application for ${job.title} has been ${status}`,
         link: `/profile/applications`
@@ -318,6 +321,8 @@ export const initEmployerRouter = (auth) => {
       const notification = new Notification({
         recipient: application.applicantUserId,
         type: 'message_from_employer',
+        category: 'Application',
+        priority: 'medium',
         title: 'New message from employer',
         message: `You have a new message regarding your application for ${job.title}`,
         link: `/profile/messages`
@@ -384,6 +389,8 @@ export const initEmployerRouter = (auth) => {
       const notification = new Notification({
         recipient: application.applicantUserId,
         type: 'interview_scheduled',
+        category: 'Interview',
+        priority: 'high',
         title: 'Interview Scheduled',
         message: `You have an interview scheduled for ${job.title} on ${interview.scheduledAt.toLocaleDateString()}`,
         link: `/profile/applications`
@@ -479,11 +486,57 @@ export const initEmployerRouter = (auth) => {
         filters: { search, skills, location, experience, sort },
         pagination: {
           page: req.pagination.page,
-          limit: req.pagination.limit,
-          total,
-          pages: Math.ceil(total / req.pagination.limit)
+          totalPages: Math.ceil(total / req.pagination.limit),
+          total
         }
       });
+    })
+  );
+  // POST /applications/interviews/:id/feedback - Submit interview feedback
+  router.post('/applications/interviews/:id/feedback',
+    asyncHandler(async (req, res) => {
+      const { rating, strengths, improvements, recommendation } = req.body;
+
+      const interview = await Interview.findById(req.params.id);
+      if (!interview) {
+        return res.status(404).json({ error: 'Interview not found' });
+      }
+
+      // Only interviewer can submit feedback
+      if (interview.interviewer.toString() !== req.userId && req.user?.role !== 'admin') {
+        return res.status(403).json({ error: 'Only the interviewer can submit feedback' });
+      }
+
+      interview.feedback = {
+        rating: parseInt(rating),
+        strengths,
+        improvements,
+        recommendation,
+        submittedAt: new Date()
+      };
+      
+      await interview.save();
+
+      // Send notification to candidate about feedback
+      const application = await Application.findById(interview.application)
+        .populate('job', 'title');
+      
+      if (application) {
+        const notification = new Notification({
+          recipient: application.applicantUserId,
+          type: 'interview_feedback_received',
+          category: 'Interview',
+          priority: 'medium',
+          title: 'Interview Feedback Received',
+          message: `You have received feedback for your interview for ${application.job.title}`,
+          link: `/applications/${application._id}`
+        });
+        await notification.save();
+        emitNotification(req, application.applicantUserId, notification);
+      }
+
+      logger.info(`Interview feedback submitted: ${interview._id}`);
+      res.json({ success: true, feedback: interview.feedback });
     })
   );
 

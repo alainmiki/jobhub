@@ -7,7 +7,7 @@ const router = express.Router();
 export const initNotificationsRouter = (auth) => {
   router.use(createAuthMiddleware(auth));
 
-  router.get('/', isAuthenticated(auth), async (req, res) => {
+  router.get('/', isAuthenticated(auth), asyncHandler(async (req, res) => {
     try {
       const notifications = await Notification.find({ recipient: req.userId })
         .sort({ createdAt: -1 })
@@ -20,56 +20,105 @@ export const initNotificationsRouter = (auth) => {
       
       res.render('notifications/index', { csrfToken: req.csrfToken ? req.csrfToken() : '', notifications, unreadCount });
     } catch (error) {
-      console.error('Error fetching notifications:', error);
+      logger.error(`Error fetching notifications: ${error.message}`);
+      req.flash('error', 'Failed to load notifications');
       res.status(500).render('error', { message: 'Failed to load notifications' });
     }
-  });
+  }));
 
-  router.get('/unread', isAuthenticated(auth), async (req, res) => {
+  router.get('/unread', isAuthenticated(auth), asyncHandler(async (req, res) => {
     try {
       const notifications = await Notification.find({
         recipient: req.userId,
         isRead: false
       }).sort({ createdAt: -1 });
-      
-      res.json(notifications);
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      res.status(500).json({ error: 'Failed to load notifications' });
-    }
-  });
 
-  router.post('/read/:id', isAuthenticated(auth), async (req, res) => {
+      const unreadCount = notifications.length;
+
+      res.render('notifications/index', {
+        csrfToken: req.csrfToken ? req.csrfToken() : '',
+        notifications,
+        unreadCount,
+        filter: 'unread'
+      });
+    } catch (error) {
+      logger.error(`Error fetching unread notifications: ${error.message}`);
+      req.flash('error', 'Failed to load notifications');
+      res.redirect('/notifications');
+    }
+  }));
+
+  router.post('/read/:id', isAuthenticated(auth), asyncHandler(async (req, res) => {
     try {
       const notification = await Notification.findOneAndUpdate(
         { _id: req.params.id, recipient: req.userId },
         { isRead: true, readAt: new Date() },
-        { new: true }
+        { returnDocument: 'after' }
       );
-      
-      res.json(notification);
-    } catch (error) {
-      console.error('Error marking notification as read:', error);
-      res.status(500).json({ error: 'Failed to update notification' });
-    }
-  });
 
-  router.post('/read-all', isAuthenticated(auth), async (req, res) => {
+      // Check if this is an AJAX request (for toast notifications)
+      const isAjax = req.headers['content-type']?.includes('application/json') ||
+                     req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                     req.xhr;
+
+      if (isAjax) {
+        // Return JSON for AJAX requests (toast notifications)
+        if (notification) {
+          res.json({ success: true, notification });
+        } else {
+          res.status(404).json({ error: 'Notification not found' });
+        }
+      } else {
+        // Use flash messages and redirect for form submissions
+        if (notification) {
+          req.flash('success', 'Notification marked as read');
+        } else {
+          req.flash('error', 'Notification not found');
+        }
+
+        // Redirect back to notifications page or referrer
+        const redirectTo = req.get('Referrer') || '/notifications';
+        res.redirect(redirectTo);
+      }
+    } catch (error) {
+      logger.error(`Error marking notification as read: ${error.message}`);
+
+      const isAjax = req.headers['content-type'] === 'application/json' ||
+                     req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                     req.xhr;
+
+      if (isAjax) {
+        res.status(500).json({ error: 'Failed to update notification' });
+      } else {
+        req.flash('error', 'Failed to update notification');
+        res.redirect('/notifications');
+      }
+    }
+  }));
+
+  router.post('/read-all', isAuthenticated(auth), asyncHandler(async (req, res) => {
     try {
-      await Notification.updateMany(
+      const result = await Notification.updateMany(
         { recipient: req.userId, isRead: false },
         { isRead: true, readAt: new Date() }
       );
-      
-      res.json({ success: true });
+
+      if (result.modifiedCount > 0) {
+        req.flash('success', `Marked ${result.modifiedCount} notification${result.modifiedCount !== 1 ? 's' : ''} as read`);
+      } else {
+        req.flash('info', 'No unread notifications to mark');
+      }
+
+      res.redirect('/notifications');
     } catch (error) {
-      console.error('Error marking all notifications as read:', error);
-      res.status(500).json({ error: 'Failed to update notifications' });
+      logger.error(`Error marking all notifications as read: ${error.message}`);
+      req.flash('error', 'Failed to update notifications');
+      res.redirect('/notifications');
     }
-  });
+  }));
 
   // GET /notifications/check-updates - Check for new notifications since timestamp
-  router.get('/check-updates', asyncHandler(async (req, res) => {
+  router.get('/check-updates', isAuthenticated(auth), asyncHandler(async (req, res) => {
     const since = parseInt(req.query.since) || 0;
     const newNotifications = await Notification.countDocuments({
       recipient: req.userId,

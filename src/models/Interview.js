@@ -60,11 +60,10 @@ interviewSchema.index({ candidate: 1, scheduledAt: 1, status: 1 });
 interviewSchema.index({ interviewer: 1, scheduledAt: 1, status: 1 });
 interviewSchema.index({ status: 1 });
 
-interviewSchema.pre('save', function(next) {
+interviewSchema.pre('save', async function() {
   if (this.isModified('status') && this.status === 'completed' && !this.endTime) {
     this.endTime = new Date();
   }
-  next();
 });
 
 export default mongoose.model('Interview', interviewSchema);

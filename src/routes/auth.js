@@ -43,6 +43,7 @@ export const initAuthRouter = (auth) => {
             return res.redirect('/candidate');
           }
         }}
+        
     } catch (error) {
       return res.render('sign-in', { 
         error: error.message, 

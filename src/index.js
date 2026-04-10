@@ -208,6 +208,19 @@ app.use((req, res, next) => {
   if (req.headers['content-type'] && req.headers['content-type'].startsWith('multipart/form-data')) {
     return next();
   }
+  
+  // Skip CSRF for internal API endpoints that don't need it
+  const skipCsrfPaths = [
+    /^\/employer\/applications\/.*\/status$/,
+    /^\/employer\/applications\/.*\/message$/,
+    /^\/employer\/applications\/.*\/interview$/,
+    /^\/employer\/applications\/interviews\/.*\/feedback$/
+  ];
+  
+  if (skipCsrfPaths.some(pattern => pattern.test(req.path))) {
+    return next();
+  }
+  
   csrf()(req, res, next);
 });
 app.use(flash());

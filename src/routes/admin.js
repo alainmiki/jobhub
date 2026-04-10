@@ -334,9 +334,9 @@ export const initAdminRouter = (auth) => {
 
       // Update user in better-auth managed collection through User model
       const updatedUser = await User.findByIdAndUpdate(
-        req.params.id, 
-        updates, 
-        { returnDocument: 'after', new: true }
+        req.params.id,
+        updates,
+        { returnDocument: 'after' }
       );
 
       // Sync UserProfile if role changed
@@ -390,9 +390,9 @@ export const initAdminRouter = (auth) => {
 
       // Update role in better-auth managed user collection
       const user = await User.findByIdAndUpdate(
-        req.params.id, 
-        { role }, 
-        { returnDocument: 'after', new: true }
+        req.params.id,
+        { role },
+        { returnDocument: 'after' }
       );
       
       if (!user) {
@@ -435,7 +435,7 @@ export const initAdminRouter = (auth) => {
     await User.findByIdAndUpdate(
       req.params.id,
       { isActive: newStatus },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     await logAuditAction(req, newStatus ? 'user_activate' : 'user_deactivate', 'user', user._id, {
@@ -785,7 +785,7 @@ export const initAdminRouter = (auth) => {
     const company = await Company.findByIdAndUpdate(
       req.params.id,
       { verified: true, verifiedAt: new Date() },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!company) {
@@ -807,7 +807,7 @@ export const initAdminRouter = (auth) => {
     const company = await Company.findByIdAndUpdate(
       req.params.id,
       { verified: false },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!company) {
@@ -833,7 +833,7 @@ export const initAdminRouter = (auth) => {
         approvedBy: req.userId,
         approvedAt: new Date()
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!job) {
@@ -855,7 +855,7 @@ export const initAdminRouter = (auth) => {
     const job = await Job.findByIdAndUpdate(
       req.params.id,
       { status: 'rejected' },
-      { new: true }
+      { returnDocument: 'after' }
     );
 
     if (!job) {

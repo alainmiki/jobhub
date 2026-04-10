@@ -183,8 +183,9 @@
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
-                'X-CSRF-Token': csrfToken
-              }
+                'X-Requested-With': 'XMLHttpRequest'
+              },
+              body: JSON.stringify({ _csrf: csrfToken })
             }).finally(() => {
               window.location.href = link;
             });

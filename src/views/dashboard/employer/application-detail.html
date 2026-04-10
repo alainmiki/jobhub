@@ -2,118 +2,122 @@
 
 {% block content %}
 <div class="min-h-screen bg-base-200/30 py-8 px-4">
-  <div class="max-w-4xl mx-auto">
+  <div class="max-w-5xl mx-auto">
+    <!-- Header -->
     <div class="flex justify-between items-start mb-8">
       <div>
         <h1 class="text-3xl font-bold">{{ application.applicantUserId.name }}</h1>
         <p class="text-base-content/60">{{ application.applicantUserId.email }}</p>
         <p class="text-sm text-primary font-medium mt-1">Applied for: {{ job.title }}</p>
       </div>
-      <div class="flex gap-3">
-        <a href="/employer/applications" class="btn btn-ghost rounded-xl">
-          <i class="fa-solid fa-arrow-left mr-2"></i>Back to Applications
-        </a>
-        <select onchange="updateStatus('{{ application._id }}', this.value)" class="select select-bordered">
-          <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
-          <option value="viewed" {% if application.status == 'viewed' %}selected{% endif %}>Viewed</option>
-          <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
-          <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
-          <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
-        </select>
-      </div>
+      <a href="/employer/applications" class="btn btn-ghost rounded-xl">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Applications
+      </a>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <!-- Main Content -->
       <div class="lg:col-span-2 space-y-6">
+        <!-- Status Card -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h2 class="card-title text-xl mb-4">Application Status</h2>
+            
+            <div class="mb-4">
+              <div class="flex items-center justify-between mb-4">
+                <span class="font-semibold">Current Status:</span>
+                <span class="badge badge-lg {% if application.status == 'accepted' %}badge-success{% elif application.status == 'rejected' %}badge-error{% elif application.status == 'shortlisted' %}badge-info{% elif application.status == 'viewed' %}badge-warning{% else %}badge-ghost{% endif %}">{{ application.status | title }}</span>
+              </div>
+              
+              <select id="statusSelect" class="select select-bordered w-full rounded-xl" onchange="updateApplicationStatus()">
+                <option value="pending" {% if application.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="viewed" {% if application.status == 'viewed' %}selected{% endif %}>Viewed</option>
+                <option value="shortlisted" {% if application.status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                <option value="interview_scheduled" {% if application.status == 'interview_scheduled' %}selected{% endif %}>Interview Scheduled</option>
+                <option value="accepted" {% if application.status == 'accepted' %}selected{% endif %}>Accepted</option>
+                <option value="rejected" {% if application.status == 'rejected' %}selected{% endif %}>Rejected</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <!-- Application Details -->
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
             <h2 class="card-title text-xl mb-4">Application Details</h2>
 
-            <div class="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <p class="text-sm font-medium text-base-content/60">Status</p>
-                <span class="badge {% if application.status == 'accepted' %}badge-success{% elif application.status == 'rejected' %}badge-error{% elif application.status == 'shortlisted' %}badge-info{% elif application.status == 'viewed' %}badge-warning{% else %}badge-ghost{% endif %} badge-lg">
-                  {{ application.status | title }}
-                </span>
-              </div>
-              <div>
-                <p class="text-sm font-medium text-base-content/60">Applied Date</p>
-                <p class="font-medium">{{ application.createdAt | date('MMM d, YYYY') }}</p>
-              </div>
-            </div>
-
             {% if application.coverLetter %}
-            <div class="mb-6">
-              <h3 class="font-bold text-lg mb-3">Cover Letter</h3>
-              <div class="p-4 bg-base-200/50 rounded-xl">
-                <p class="whitespace-pre-line">{{ application.coverLetter }}</p>
+            <div class="mb-4">
+              <h3 class="font-bold text-lg mb-2">Cover Letter</h3>
+              <div class="p-4 bg-base-200/30 rounded-xl">
+                <p class="whitespace-pre-wrap">{{ application.coverLetter }}</p>
               </div>
             </div>
             {% endif %}
 
             {% if application.employerNotes %}
-            <div class="mb-6">
-              <h3 class="font-bold text-lg mb-3">Your Notes</h3>
+            <div class="mb-4">
+              <h3 class="font-bold text-lg mb-2">Your Notes</h3>
               <div class="p-4 bg-info/10 rounded-xl border border-info/20">
-                <p class="whitespace-pre-line">{{ application.employerNotes }}</p>
+                <p class="whitespace-pre-wrap">{{ application.employerNotes }}</p>
               </div>
             </div>
             {% endif %}
 
-            <!-- Actions -->
-            <div class="flex gap-3 mt-6">
-              <button onclick="updateStatus('{{ application._id }}', 'shortlisted')" class="btn btn-info">
-                <i class="fa-solid fa-star mr-2"></i>Shortlist
-              </button>
-              <button onclick="scheduleInterview('{{ application._id }}')" class="btn btn-primary">
-                <i class="fa-solid fa-calendar mr-2"></i>Schedule Interview
-              </button>
-            <button onclick="showMessageModal()" class="btn btn-outline">
-              <i class="fa-solid fa-envelope mr-2"></i>Send Message
-            </button>
+            <div class="text-sm space-y-1 text-base-content/60">
+              <p>Applied: {{ application.createdAt | date('MMM d, YYYY h:mm A') }}</p>
+              {% if application.viewedAt %}<p>Viewed: {{ application.viewedAt | date('MMM d, YYYY h:mm A') }}</p>{% endif %}
             </div>
           </div>
-        <!-- Interview Information -->
+        </div>
+
+        <!-- Interview Card -->
         {% if application.interview %}
-        <div class="card bg-base-100 shadow-lg">
+        <div class="card bg-base-100 shadow-lg border border-warning/30">
           <div class="card-body">
             <h2 class="card-title text-xl mb-4">
-              <i class="fa-solid fa-calendar mr-2"></i>Interview Scheduled
+              <i class="fa-solid fa-calendar-check text-warning mr-2"></i>Interview Scheduled
             </h2>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <p class="text-sm font-medium text-base-content/60">Date & Time</p>
+                <p class="text-sm font-semibold text-base-content/60">Date & Time</p>
                 <p class="font-medium">{{ application.interview.scheduledAt | date('MMM d, YYYY h:mm A') }}</p>
-                <p class="text-sm text-base-content/60">{{ application.interview.timezone }}</p>
               </div>
               <div>
-                <p class="text-sm font-medium text-base-content/60">Type & Duration</p>
+                <p class="text-sm font-semibold text-base-content/60">Type & Duration</p>
                 <p class="font-medium">{{ application.interview.type | title }} ({{ application.interview.duration }} min)</p>
               </div>
               {% if application.interview.location %}
               <div class="md:col-span-2">
-                <p class="text-sm font-medium text-base-content/60">Location/Link</p>
+                <p class="text-sm font-semibold text-base-content/60">Location/Meeting Link</p>
                 <p class="font-medium">{{ application.interview.location }}</p>
               </div>
               {% endif %}
             </div>
 
             {% if application.interview.notes %}
-            <div class="mt-4">
-              <p class="text-sm font-medium text-base-content/60">Notes</p>
+            <div class="mb-4">
+              <p class="text-sm font-semibold text-base-content/60">Notes</p>
               <p class="text-sm">{{ application.interview.notes }}</p>
             </div>
             {% endif %}
 
-            <div class="flex gap-3 mt-6">
-              <span class="badge badge-info badge-lg">{{ application.interview.status | title }}</span>
+            <div class="flex items-center gap-3">
+              <span class="badge badge-warning">{{ application.interview.status | title }}</span>
+              {% if application.interview.status == 'completed' and not application.interview.feedback.submittedAt %}
+              <button onclick="openFeedbackModal('{{ application.interview._id }}')" class="btn btn-sm btn-outline">
+                <i class="fa-solid fa-pen mr-1"></i>Submit Feedback
+              </button>
+              {% elif application.interview.feedback and application.interview.feedback.submittedAt %}
+              <span class="badge badge-success">Feedback Submitted</span>
+              {% endif %}
             </div>
           </div>
         </div>
         {% endif %}
+
+        <!-- Candidate Profile -->
         {% if application.candidate %}
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
@@ -138,11 +142,11 @@
             {% endif %}
 
             {% if application.candidate.experience and application.candidate.experience.length > 0 %}
-            <div class="mb-4">
+            <div>
               <h3 class="font-bold mb-2">Experience</h3>
-              <div class="space-y-3">
+              <div class="space-y-2">
                 {% for exp in application.candidate.experience %}
-                <div class="p-3 bg-base-200/50 rounded-lg">
+                <div class="p-3 bg-base-200/30 rounded-lg">
                   <h4 class="font-semibold">{{ exp.title }}</h4>
                   <p class="text-sm text-base-content/60">{{ exp.company }}{% if exp.location %} · {{ exp.location }}{% endif %}</p>
                   <p class="text-xs text-base-content/50">
@@ -160,44 +164,52 @@
 
       <!-- Sidebar -->
       <div class="space-y-6">
+        <!-- Actions Card -->
+        <div class="card bg-base-100 shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title text-lg mb-4">Quick Actions</h3>
+            <div class="space-y-2">
+              <button onclick="openScheduleModal()" class="btn btn-primary btn-block rounded-xl">
+                <i class="fa-solid fa-calendar mr-2"></i>Schedule Interview
+              </button>
+              <button onclick="openMessageModal()" class="btn btn-outline btn-block rounded-xl">
+                <i class="fa-solid fa-envelope mr-2"></i>Send Message
+              </button>
+              <button onclick="quickAccept()" class="btn btn-success btn-sm btn-block rounded-xl">
+                <i class="fa-solid fa-check mr-2"></i>Accept
+              </button>
+              <button onclick="quickReject()" class="btn btn-error btn-sm btn-block rounded-xl">
+                <i class="fa-solid fa-times mr-2"></i>Reject
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Job Details -->
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
             <h3 class="card-title text-lg mb-4">Job Details</h3>
             <div class="space-y-2 text-sm">
               <div>
-                <span class="font-medium">Title:</span> {{ job.title }}
+                <span class="font-semibold text-base-content/60 block">Title</span>
+                <span>{{ job.title }}</span>
               </div>
               <div>
-                <span class="font-medium">Location:</span> {{ job.location }}
+                <span class="font-semibold text-base-content/60 block">Location</span>
+                <span>{{ job.location }}</span>
               </div>
               <div>
-                <span class="font-medium">Type:</span> {{ job.type }}
+                <span class="font-semibold text-base-content/60 block">Type</span>
+                <span>{{ job.type | title }}</span>
               </div>
               {% if job.salary %}
               <div>
-                <span class="font-medium">Salary:</span> ${{ job.salary.min }} - ${{ job.salary.max }}
+                <span class="font-semibold text-base-content/60 block">Salary</span>
+                <span>${{ job.salary.min }} - ${{ job.salary.max }}</span>
               </div>
               {% endif %}
             </div>
-            <a href="/jobs/{{ job._id }}" class="btn btn-outline btn-sm w-full mt-4">
-              View Job Posting
-            </a>
-          </div>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="card bg-base-100 shadow-lg">
-          <div class="card-body">
-            <h3 class="card-title text-lg mb-4">Quick Actions</h3>
-            <div class="space-y-2">
-              <button onclick="updateStatus('{{ application._id }}', 'accepted')" class="btn btn-success btn-sm w-full">
-                <i class="fa-solid fa-check mr-2"></i>Accept Application
-              </button>
-              <button onclick="updateStatus('{{ application._id }}', 'rejected')" class="btn btn-error btn-sm w-full">
-                <i class="fa-solid fa-times mr-2"></i>Reject Application
-              </button>
-            </div>
+            <a href="/jobs/{{ job._id }}" class="btn btn-outline btn-sm w-full mt-4 rounded-xl">View Job Posting</a>
           </div>
         </div>
       </div>
@@ -205,217 +217,334 @@
   </div>
 </div>
 
-<!-- Message Modal -->
-<div id="messageModal" class="modal">
+<!-- Schedule Interview Modal -->
+<dialog id="scheduleModal" class="modal">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4">Send Message to {{ application.applicantUserId.name }}</h3>
-    <form id="messageForm">
+    <h2 class="font-bold text-lg mb-4">Schedule Interview</h2>
+    <form id="scheduleForm" class="space-y-4">
       <div class="form-control">
-        <label class="label">
-          <span class="label-text">Message</span>
-        </label>
-        <textarea id="messageText" name="message" class="textarea textarea-bordered" rows="4" placeholder="Type your message here..." required></textarea>
+        <label class="label"><span class="label-text font-semibold">Interview Type</span></label>
+        <select name="type" class="select select-bordered rounded-xl" required>
+          <option value="video" selected>Video Call</option>
+          <option value="phone">Phone Call</option>
+          <option value="onsite">On-site</option>
+          <option value="technical">Technical Interview</option>
+          <option value="behavioral">Behavioral Interview</option>
+          <option value="panel">Panel Interview</option>
+        </select>
       </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Date & Time</span></label>
+        <input type="datetime-local" name="scheduledAt" class="input input-bordered rounded-xl" required />
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Duration (minutes)</span></label>
+        <input type="number" name="duration" class="input input-bordered rounded-xl" value="60" min="15" max="480" required />
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Timezone</span></label>
+        <select name="timezone" class="select select-bordered rounded-xl" required>
+          <option value="UTC" selected>UTC</option>
+          <option value="America/New_York">Eastern Time</option>
+          <option value="America/Chicago">Central Time</option>
+          <option value="America/Denver">Mountain Time</option>
+          <option value="America/Los_Angeles">Pacific Time</option>
+          <option value="Europe/London">London</option>
+          <option value="Europe/Paris">Paris</option>
+          <option value="Asia/Tokyo">Tokyo</option>
+        </select>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Meeting Link / Location</span></label>
+        <input type="text" name="location" class="input input-bordered rounded-xl" placeholder="https://zoom.us/... or meeting location" />
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Additional Notes</span></label>
+        <textarea name="notes" class="textarea textarea-bordered rounded-xl" rows="2" placeholder="Interview instructions..."></textarea>
+      </div>
+
+      <div class="modal-action">
+        <button type="button" class="btn" onclick="closeScheduleModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Schedule Interview</button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
+
+<!-- Message Modal -->
+<dialog id="messageModal" class="modal">
+  <div class="modal-box">
+    <h2 class="font-bold text-lg mb-4">Send Message to {{ application.applicantUserId.name }}</h2>
+    <form id="messageForm" class="space-y-4">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Message</span></label>
+        <textarea name="message" id="messageText" class="textarea textarea-bordered rounded-xl" rows="5" placeholder="Type your message..." required></textarea>
+      </div>
+
       <div class="modal-action">
         <button type="button" class="btn" onclick="closeMessageModal()">Cancel</button>
         <button type="submit" class="btn btn-primary">Send Message</button>
       </div>
     </form>
   </div>
-</div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
 
-<!-- Interview Modal -->
-<div id="interviewModal" class="modal">
+<!-- Feedback Modal -->
+<dialog id="feedbackModal" class="modal">
   <div class="modal-box">
-    <h3 class="font-bold text-lg mb-4">Schedule Interview with {{ application.applicantUserId.name }}</h3>
-    <form id="interviewForm">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Interview Type</span>
-          </label>
-          <select id="interviewType" name="type" class="select select-bordered" required>
-            <option value="video">Video Call</option>
-            <option value="phone">Phone Call</option>
-            <option value="onsite">On-site</option>
-            <option value="technical">Technical Assessment</option>
-            <option value="behavioral">Behavioral Interview</option>
-            <option value="panel">Panel Interview</option>
-          </select>
-        </div>
+    <h2 class="font-bold text-lg mb-4">Submit Interview Feedback</h2>
+    <form id="feedbackForm" class="space-y-4">
+      <input type="hidden" id="feedbackInterviewId" name="interviewId" />
 
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Duration (minutes)</span>
-          </label>
-          <select id="interviewDuration" name="duration" class="select select-bordered" required>
-            <option value="30">30 minutes</option>
-            <option value="60" selected>60 minutes</option>
-            <option value="90">90 minutes</option>
-            <option value="120">120 minutes</option>
-          </select>
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Rating</span></label>
+        <div class="flex gap-2">
+          {% for i in range(1, 6) %}
+          <button type="button" class="rating-btn w-12 h-12 rounded-lg border-2 border-base-300 text-2xl transition-all" data-rating="{{ i }}" onclick="setRating({{ i }})">
+            <i class="fa-solid fa-star"></i>
+          </button>
+          {% endfor %}
         </div>
-
-        <div class="form-control md:col-span-2">
-          <label class="label">
-            <span class="label-text">Date & Time</span>
-          </label>
-          <input type="datetime-local" id="interviewDateTime" name="scheduledAt" class="input input-bordered" required>
-        </div>
-
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Timezone</span>
-          </label>
-          <select id="interviewTimezone" name="timezone" class="select select-bordered" required>
-            <option value="UTC">UTC</option>
-            <option value="America/New_York">Eastern Time</option>
-            <option value="America/Chicago">Central Time</option>
-            <option value="America/Denver">Mountain Time</option>
-            <option value="America/Los_Angeles">Pacific Time</option>
-            <option value="Europe/London">London</option>
-            <option value="Europe/Paris">Paris</option>
-            <option value="Asia/Tokyo">Tokyo</option>
-          </select>
-        </div>
-
-        <div class="form-control">
-          <label class="label">
-            <span class="label-text">Location/Link</span>
-          </label>
-          <input type="text" id="interviewLocation" name="location" class="input input-bordered" placeholder="Meeting link or location">
-        </div>
+        <input type="hidden" id="ratingValue" name="rating" value="0" required />
       </div>
 
       <div class="form-control">
-        <label class="label">
-          <span class="label-text">Notes (optional)</span>
-        </label>
-        <textarea id="interviewNotes" name="notes" class="textarea textarea-bordered" rows="3" placeholder="Additional notes for the interview..."></textarea>
+        <label class="label"><span class="label-text font-semibold">Strengths</span></label>
+        <textarea name="strengths" class="textarea textarea-bordered rounded-xl" rows="2" placeholder="What were their strengths?" required></textarea>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Areas for Improvement</span></label>
+        <textarea name="improvements" class="textarea textarea-bordered rounded-xl" rows="2" placeholder="Areas to improve..."></textarea>
+      </div>
+
+      <div class="form-control">
+        <label class="label"><span class="label-text font-semibold">Recommendation</span></label>
+        <select name="recommendation" class="select select-bordered rounded-xl" required>
+          <option value="">Select...</option>
+          <option value="hire">Hire</option>
+          <option value="no_hire">Do Not Hire</option>
+          <option value="undecided">Undecided</option>
+        </select>
       </div>
 
       <div class="modal-action">
-        <button type="button" class="btn" onclick="closeInterviewModal()">Cancel</button>
-        <button type="submit" class="btn btn-primary">Schedule Interview</button>
+        <button type="button" class="btn" onclick="closeFeedbackModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Submit Feedback</button>
       </div>
     </form>
   </div>
-</div>
+  <form method="dialog" class="modal-backdrop"><button>close</button></form>
+</dialog>
 
 <script>
-function updateStatus(applicationId, status) {
-  const notes = status === 'rejected' ? prompt('Add notes (optional):') : '';
-  if (status === 'rejected' && notes === null) return;
+let selectedRating = 0;
 
-  fetch(`/employer/applications/${applicationId}/status`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': '{{ csrfToken }}'
-    },
-    body: JSON.stringify({ status, notes })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      location.reload();
-    } else {
-      alert('Error updating status');
-    }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error updating status');
-  });
+function openScheduleModal() {
+  document.getElementById('scheduleModal').showModal();
 }
 
-function scheduleInterview(applicationId) {
-  document.getElementById('interviewModal').classList.add('modal-open');
+function closeScheduleModal() {
+  document.getElementById('scheduleModal').close();
+  document.getElementById('scheduleForm').reset();
 }
 
-function closeInterviewModal() {
-  document.getElementById('interviewModal').classList.remove('modal-open');
-  document.getElementById('interviewForm').reset();
-}
-
-function showMessageModal() {
-  document.getElementById('messageModal').classList.add('modal-open');
+function openMessageModal() {
+  document.getElementById('messageModal').showModal();
 }
 
 function closeMessageModal() {
-  document.getElementById('messageModal').classList.remove('modal-open');
+  document.getElementById('messageModal').close();
   document.getElementById('messageForm').reset();
 }
 
-// Handle message form submission
-document.getElementById('messageForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  const message = document.getElementById('messageText').value.trim();
+function openFeedbackModal(interviewId) {
+  document.getElementById('feedbackInterviewId').value = interviewId;
+  document.getElementById('feedbackModal').showModal();
+}
 
-  if (!message) {
-    alert('Please enter a message');
+function closeFeedbackModal() {
+  document.getElementById('feedbackModal').close();
+  document.getElementById('feedbackForm').reset();
+  selectedRating = 0;
+  resetRatingButtons();
+}
+
+function setRating(rating) {
+  selectedRating = rating;
+  document.getElementById('ratingValue').value = rating;
+  
+  document.querySelectorAll('.rating-btn').forEach((btn, idx) => {
+    if (idx < rating) {
+      btn.classList.add('border-warning', 'bg-warning/10', 'text-warning');
+    } else {
+      btn.classList.remove('border-warning', 'bg-warning/10', 'text-warning');
+    }
+  });
+}
+
+function resetRatingButtons() {
+  document.querySelectorAll('.rating-btn').forEach(btn => {
+    btn.classList.remove('border-warning', 'bg-warning/10', 'text-warning');
+  });
+}
+
+function updateApplicationStatus() {
+  const status = document.getElementById('statusSelect').value;
+  updateStatus('{{ application._id }}', status);
+}
+
+function quickAccept() {
+  if (confirm('Accept this application?')) {
+    updateStatus('{{ application._id }}', 'accepted');
+  }
+}
+
+function quickReject() {
+  const notes = prompt('Rejection reason (optional):');
+  if (notes !== null) {
+    updateStatus('{{ application._id }}', 'rejected', notes);
+  }
+}
+
+function updateStatus(appId, status, notes = '') {
+  const payload = { status };
+  if (notes) payload.notes = notes;
+
+  fetch(`/employer/applications/${appId}/status`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      showNotification('Application status updated', 'success');
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showNotification('Error: ' + (data.error || 'Failed to update'), 'error');
+    }
+  })
+  .catch(e => {
+    console.error(e);
+    showNotification('Error updating status', 'error');
+  });
+}
+
+document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+  
+  const date = new Date(data.scheduledAt);
+  if (date <= new Date()) {
+    showNotification('Please select a future date', 'error');
     return;
   }
 
-  fetch(`/employer/applications/{{ application._id }}/message`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': '{{ csrfToken }}'
-    },
-    body: JSON.stringify({ message })
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      alert('Message sent successfully!');
+  try {
+    const res = await fetch(`/employer/applications/{{ application._id }}/interview`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+      showNotification('Interview scheduled successfully', 'success');
+      closeScheduleModal();
+      setTimeout(() => location.reload(), 1500);
+    } else {
+      showNotification('Error: ' + (result.error || 'Failed to schedule'), 'error');
+    }
+  } catch (error) {
+    console.error(error);
+    showNotification('Error scheduling interview', 'error');
+  }
+});
+
+document.getElementById('messageForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const message = document.getElementById('messageText').value.trim();
+  if (!message) {
+    showNotification('Please enter a message', 'error');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/employer/applications/{{ application._id }}/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message })
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+      showNotification('Message sent successfully', 'success');
       closeMessageModal();
     } else {
-      alert('Error sending message');
+      showNotification('Error: ' + (result.error || 'Failed to send'), 'error');
     }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error sending message');
-  });
+  } catch (error) {
+    console.error(error);
+    showNotification('Error sending message', 'error');
+  }
 });
 
-// Handle interview form submission
-document.getElementById('interviewForm').addEventListener('submit', function(e) {
+document.getElementById('feedbackForm').addEventListener('submit', async (e) => {
   e.preventDefault();
-
-  const formData = new FormData(e.target);
-  const interviewData = Object.fromEntries(formData);
-
-  // Validate date is in the future
-  const scheduledDate = new Date(interviewData.scheduledAt);
-  if (scheduledDate <= new Date()) {
-    alert('Please select a date and time in the future');
+  
+  if (selectedRating === 0) {
+    showNotification('Please select a rating', 'error');
     return;
   }
 
-  fetch(`/employer/applications/{{ application._id }}/interview`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': '{{ csrfToken }}'
-    },
-    body: JSON.stringify(interviewData)
-  })
-  .then(response => response.json())
-  .then(data => {
-    if (data.success) {
-      alert('Interview scheduled successfully!');
-      closeInterviewModal();
-      location.reload(); // Refresh to show updated status
+  const interviewId = document.getElementById('feedbackInterviewId').value;
+  const formData = new FormData(e.target);
+  const data = Object.fromEntries(formData);
+
+  try {
+    const res = await fetch(`/employer/applications/interviews/${interviewId}/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    
+    const result = await res.json();
+    if (result.success) {
+      showNotification('Feedback submitted successfully', 'success');
+      closeFeedbackModal();
+      setTimeout(() => location.reload(), 1500);
     } else {
-      alert('Error scheduling interview: ' + (data.error || 'Unknown error'));
+      showNotification('Error: ' + (result.error || 'Failed to submit'), 'error');
     }
-  })
-  .catch(error => {
-    console.error('Error:', error);
-    alert('Error scheduling interview');
-  });
+  } catch (error) {
+    console.error(error);
+    showNotification('Error submitting feedback', 'error');
+  }
 });
+
+function showNotification(message, type = 'info') {
+  // Create toast notification using browser API or custom
+  if (window.alertify) {
+    alertify[type](message);
+  } else {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    const div = document.createElement('div');
+    div.className = `alert alert-${type} shadow-lg fixed bottom-4 right-4 w-96 z-50`;
+    div.innerHTML = `<div><span>${message}</span></div>`;
+    document.body.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+  }
+}
 </script>
 {% endblock %}
